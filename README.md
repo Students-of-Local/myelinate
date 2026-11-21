@@ -3,11 +3,11 @@
 <p align="center">
   <a href="https://github.com/baney75/myelinate/actions/workflows/check.yml"><img src="https://github.com/baney75/myelinate/actions/workflows/check.yml/badge.svg" alt="Package check workflow status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-a54320" alt="License: MIT"></a>
-  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-2.7.0-16313b" alt="Version 2.7.0"></a>
+  <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-3.0.0-16313b" alt="Version 3.0.0"></a>
   <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-plugin-a54320" alt="Claude Code plugin"></a>
 </p>
 
-**An open-source agent skill suite that turns “teach me this” into explanation, practice, feedback, and a reason to come back.**
+**Learn anything, and learn it well: a class, a language, an instrument, a trade, a codebase. An open-source tutor for your AI assistant that teaches, checks what you can do, and brings it back before you forget.**
 
 Ask about a concept. Bring your course materials if you have them. Myelinate routes the request to the right skill, teaches in manageable steps, and checks what you can do with it. It is honest, not agreeable: it won’t confirm a wrong answer or cave when you push back on a correct correction, and it changes its mind on evidence. It is a set of Markdown skills for a capable AI assistant, not a separate model or a hosted tutoring service. Its examples and depth can fit children, high-school students, university learners, professionals, and people studying on their own.
 
@@ -38,12 +38,12 @@ The Claude apps, Codex and other assistants: see [Install](#install).
 
 ## What's inside
 
-`SKILL.md` is a router. It reads what you are after and hands the request, with your context, to one of sixteen skills. Installed as a plugin, each one loads by itself when the moment fits:
+`SKILL.md` is a router. It reads what you are after and hands the request, with your context, to one of nineteen skills. Installed as a plugin, each one loads by itself when the moment fits:
 
 | Skill | What it does |
 | --- | --- |
-| [tutor](skills/tutor/SKILL.md) | For a class you're enrolled in: gathers your syllabus, study guide, notes and textbook (including uploads), then teaches live in chat or voice in your course's scope and notation, one step at a time, with rendered diagrams and interactive 3D models. Loads on its own when your assistant's memory shows the question belongs to a class. |
-| [teach](skills/teach/SKILL.md) | For learning that isn't for a class (a personal goal, a work skill, a project you'll sell or open-source): designs the curriculum and lesson plans at the learner's level, anchors them in your project, and teaches each lesson live. |
+| [tutor](skills/tutor/SKILL.md) | For a class you're enrolled in: gathers your syllabus, study guide, notes and textbook (including uploads), then teaches live in chat or voice in your course's scope and notation, one step at a time, with rendered diagrams and interactive 3D models. Loads on its own when the conversation shows the question belongs to a class. |
+| [teach](skills/teach/SKILL.md) | For anything you're learning outside a class: a work skill, a language, an instrument, a trade, a sport. Designs the curriculum at your level. For a skill you do with your hands or body, it gives you the whole small version, a drill, how to judge it yourself, and the gate to the next stage. |
 | [assignment](skills/assignment/SKILL.md) | Help on homework, lab reports, essays and coding assignments that teaches you to do them instead of doing them for you. Tool steps (drawing a structure, formatting) can be done; the graded thinking stays yours. |
 | [project](skills/project/SKILL.md) | Learn while you build something of your own, in the mix you choose: build and learn, teach me to do it, or just tell me how. Stays out of the way of ordinary coding and work. |
 | [code](skills/code/SKILL.md) | Learn code you have to own: an inherited repository, a pull request to review, a library, an error you want to understand. Maps it in one picture, traces a real behavior with a prediction first, runs the code for the verdict, and leaves you the one change that carries the idea. Stays off when you only want the code changed. |
@@ -56,10 +56,13 @@ The Claude apps, Codex and other assistants: see [Install](#install).
 | [game](skills/game/SKILL.md) | Turns an exam's scope into a typed study game: a gate for what must be memorized, surprise recall, a mock in the exam's format and a delayed recheck. Never for graded work. |
 | [memory-hooks](skills/memory-hooks/SKILL.md) | Writes research-backed mnemonics for material that will not stick. |
 | [study-plan](skills/study-plan/SKILL.md) | Plans study blocks, review and sleep around an exam or study deadline. Creates reminders only with a real, authorized calendar tool. |
-| [find-media](skills/find-media/SKILL.md) | Finds learning diagrams, photos, models and videos with licenses noted, not stock art for a website. |
+| [find-media](skills/find-media/SKILL.md) | Finds learning diagrams, photos, models and videos, with licenses noted. Gives a real, checked link rather than telling you to go search. |
+| [video](skills/video/SKILL.md) | Turns a video, lecture, playlist or transcript into something you can do: recall before any summary, questions and cards pointed at timestamps. |
+| [progress](skills/progress/SKILL.md) | The moments around the learning: wrapping up a session, coming back after a gap, not being able to start, "how am I doing?" and "am I ready?", answered from what you did unaided and never with a predicted score. |
+| [teacher](skills/teacher/SKILL.md) | For teachers and trainers: unit and lesson plans built backward from the outcome, rubrics with observable levels, quizzes and differentiation. |
 | [verify](skills/verify/SKILL.md) | Checks learning material and answer keys for accuracy and currency before use; software code review stays elsewhere. |
 
-When a concept has shape (a molecule in 3D, a conformation, a mechanism, a curve), Myelinate renders it and gives you the controls instead of describing it in a paragraph, linked to the notation your course uses. Visuals appear inline, right in the conversation, wherever the assistant can draw there (claude.ai's inline visuals, for example); you get a file, a separate page or a printable when you ask for one. A concept map, mechanism stepper or faded worked example can make you fill the missing link or predict the next step before reveal. On the first session, it asks a few questions about how you learn (pace, chunk size, what's hard) and saves that profile to your assistant's memory or a file you keep, then reads it at the start of later sessions. Sharing a learning condition is optional and never required.
+When a concept has shape (a molecule in 3D, a conformation, a mechanism, a curve), Myelinate renders it and gives you the controls instead of describing it in a paragraph, linked to the notation your course uses. Visuals appear inline, right in the conversation, wherever your assistant can draw there (claude.ai's inline visuals, for example): practice questions, flashcards, step-through figures, graphs with sliders and videos with pause questions. Everywhere else you get a page you can open, and you can ask for a file or a printable any time. A concept map, mechanism stepper or faded worked example can make you fill the missing link or predict the next step before reveal. On the first session, it asks a few questions about how you learn (pace, chunk size, what's hard) and saves that profile to your assistant's memory or a file you keep, then reads it at the start of later sessions. Sharing a learning condition is optional and never required.
 
 ## Start with one good question
 
@@ -94,7 +97,7 @@ The tutor asks about the goal, course context, and optional access preferences. 
 
 ## Install
 
-Myelinate is one plugin for Claude Code, the Claude apps (claude.ai, desktop) and Codex. Every skill ships in its own folder with the references and templates it uses, so it works the same wherever it's installed.
+Myelinate is one plugin for Claude Code, the Claude apps (claude.ai, desktop), ChatGPT and Codex, Grok, Cursor and Gemini CLI. Every skill ships in its own folder with the references and templates it uses, so it works the same wherever it's installed.
 
 ### Claude Code
 
@@ -105,9 +108,9 @@ Myelinate is one plugin for Claude Code, the Claude apps (claude.ai, desktop) an
 
 Each skill then loads by itself when it fits; force one with `/myelinate:myelinate` (the router), `/myelinate:tutor`, `/myelinate:code`, and so on. Claude Code also gets:
 
-- **Loads when you're learning.** A one-line session hint tells Claude to load the matching Myelinate skill for a learning question, even a quick one, and not for work you want done. Set `MYELINATE_ROUTE_HINT=0` to turn it off.
-- `/myelinate:quiz <topic>` and `/myelinate:review` (what's due today, retrieval first).
-- **Spaced review across sessions.** If you ask Myelinate to keep your progress, it saves a private record at `~/.myelinate/learner.json`, and each new session starts knowing which reviews are due. Without a record, nothing changes.
+- **Loads when you're learning.** A short session note tells Claude to load the matching Myelinate skill for a learning question, even a quick one, and not for work you want done. Create the file `~/.myelinate/no-hint` to turn it off.
+- `/myelinate:quiz <topic>`, `/myelinate:review` (what's due today, retrieval first), `/myelinate:wrap` (end a session with one recall and the next step), `/myelinate:progress` (how it's really going) and `/myelinate:video <link or topic>`.
+- **Spaced review across sessions.** If you ask Myelinate to keep your progress, it saves a private record at `~/.myelinate/learner.json`, and each new session can see which reviews are due. Without a record, nothing changes.
 - **An answer-key agent** (`key-worker`) that solves a problem without seeing your answer, so the verdict can't drift toward what you said.
 - **The Myelinate output style** (pick it in `/config`): Claude does the engineering and hands you one decision at a time.
 
@@ -127,22 +130,50 @@ mkdir -p ~/.agents/skills
 for d in myelinate/skills/*/; do ln -s "$PWD/$d" ~/.agents/skills/"$(basename "$d")"; done
 ```
 
+### ChatGPT
+
+Search for Myelinate in the ChatGPT plugin directory once it's listed. Until then, paste the link (Quick start).
+
+### Grok Build
+
+```sh
+grok plugin marketplace add baney75/myelinate
+grok plugin install myelinate@baney75 --trust
+```
+
+### Cursor
+
+Search for Myelinate in the Cursor marketplace once it's listed. Until then, add the repository as a local plugin.
+
+### Gemini CLI
+
+```sh
+gemini extensions install https://github.com/baney75/myelinate
+```
+
+### Any tool that reads Agent Skills
+
+```sh
+npx skills add baney75/myelinate
+```
+
 ### Any other assistant
 
-Paste the link (Quick start), or provide [SKILL.md](SKILL.md) as instructions. The router works alone; when it can browse, it fetches the sub-skills and references it needs from GitHub at the pinned version.
+Paste the link (Quick start), or provide [SKILL.md](SKILL.md) as instructions. The router works alone. If the assistant can open the repository, the sub-skills sit beside it under `skills/`.
 
-**Stopping it.** Tell Claude, or save to its memory, where you don't want Myelinate ("don't tutor me on my coding projects", "just answer my Spanish questions"). It respects that scope; a slash command still works when you want it. Ordinary coding, building and work requests don't trigger it in the first place.
+**Stopping it.** Tell your assistant where you don't want Myelinate ("don't tutor me on my coding projects", "just answer my Spanish questions"). It respects that scope; a slash command still works when you want it. Ordinary coding, building and work requests don't trigger it in the first place.
 
-No API keys, package installation, or external service is required. Your assistant's ordinary access, tools, and usage limits still apply.
+No account, API key or package installation is required. Your assistant's ordinary access, tools and usage limits still apply.
 
 ## What it runs, reads and sends
 
 Myelinate is instructions, templates and a few small local scripts. It has no server, account, API key, tracking or telemetry, and it sends nothing anywhere on its own. Full policy: [PRIVACY.md](PRIVACY.md); terms: [TERMS.md](TERMS.md).
 
-- **Session hooks (Claude Code only).** Two Python scripts run locally at session start. `hooks/route_hint.py` prints one line that tells Claude to load the matching learning skill for a learning question; set `MYELINATE_ROUTE_HINT=0` to turn it off. `hooks/due_reviews.py` reads `~/.myelinate/learner.json`, only if you asked Myelinate to keep that record, and prints which reviews are due. Neither touches the network.
-- **Your learner record and profile** are written only when you ask and stay on your machine (or in your assistant's memory). The record holds topics, courses and review dates. Myelinate tells the assistant to keep health and condition labels out of it, but it is plain text the assistant writes, so check it if that matters to you.
+- **Session hook (Claude Code and Grok Build).** `hooks/session-start.sh` runs locally at session start. It prints a line telling the assistant when to load a learning skill and, if you keep a learner record, notes that the file exists. It reads no file and touches no network. Create `~/.myelinate/no-hint` to turn it off.
+- **Your learner record and profile** are written only when you ask, and stay on your machine. The record holds topics, courses and review dates. Myelinate tells the assistant to keep health and condition labels out of it, but it's plain text the assistant writes, so check it if that matters to you.
 - **Printing.** `print` may run `scripts/make_pdf.py`, which renders an HTML page to PDF with your local headless Chromium; a web font or image the page links to is loaded while rendering.
-- **Fetching.** If an install is missing one of its files, the assistant may fetch it from `raw.githubusercontent.com/baney75/myelinate`. Source checks, media searches and `verify` use your assistant's own web search when you ask for them.
+- **Video pages.** A page Myelinate makes with a YouTube player loads it from `youtube-nocookie.com` only when you press play, and shows a thumbnail from `i.ytimg.com`. YouTube's own terms and privacy policy apply to those.
+- **Your assistant's own tools.** Source checks, video searches, YouTube's public oEmbed check and `verify` use your assistant's web search and fetch when the task calls for them. If you have `yt-dlp` and a shell, `video` can use it for captions.
 
 ## See the approach
 

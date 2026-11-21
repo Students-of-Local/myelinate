@@ -6,6 +6,27 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+## [3.0.0] - 2026-11-07
+
+Built to learn anything, measured against the best learning plugins, and made ready for the Claude, ChatGPT and Grok directories.
+
+### Added
+- **Inline patterns for every host that can draw.** `templates/inline-widgets.html` holds tested practice, flashcard, step-through, slider-graph and video views for a host's own render tool, or to open as a page. The practice view holds no key. They work at phone width, in light and dark.
+- **Learn anything.** Router rule 17 and `references/learn-anything.md`: skills done with the body, hands or senses get the whole small version, a drill and its dose, how to judge it alone, the gate to the next stage, and a result to report back. Safety comes first and plainly when it's real.
+- **`video`**: learn from a video, lecture, playlist or transcript. Recall before any summary, timestamps on everything.
+- **`progress`**: wrapping up, coming back after a gap, not being able to start, "how am I doing?", "am I ready?". `/myelinate:wrap`, `/myelinate:progress`, `/myelinate:video`.
+- **`teacher`**: unit and lesson plans built backward from the outcome, rubrics with observable levels.
+- `evals/head-to-head/rivals.py`: a blind head-to-head against six rival plugins and plain Claude, each on its home turf.
+
+### Changed
+- **"Give me the link" gets a link.** `find-media` searches for the URL itself, checks each video through YouTube's oEmbed, and gives a one-click YouTube search as the floor. It never tells a learner to go search, and never says it verified something it didn't check in this conversation. A real learner hit both of those failures.
+- **Their material is the source.** Questions, cards and verdicts name the passage they came from, and anything added is marked *Outside your material:*. Flashcards default to a table plus an Anki-ready block with a source column.
+
+### Fixed (directory policy)
+- **Nothing is saved unless the learner asks.** `§1` no longer reads or writes host memory on its own initiative (Anthropic Software Directory Policy 1G).
+- **No instructions from elsewhere.** Skills no longer fetch files from GitHub when a file is missing (policy 2F). Raw URLs live in `llms.txt` only.
+- **Plain shell hook.** `hooks/session-start.sh` replaces two Python hooks, which would have held every version for a reviewer. `MYELINATE_HOME` and `MYELINATE_ROUTE_HINT` are gone: create `~/.myelinate/no-hint` to silence the note.
+
 ## [2.9.0] - 2026-11-02
 
 ### Added

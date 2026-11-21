@@ -7,9 +7,9 @@ description: "Use when someone says exam on Friday, what should I study, make a 
 
 A plan is only as good as the hours it fits into. Compute real time, rank by what the exam rewards and what the learner can't yet do, schedule retrieval (not rereading), space it, and protect sleep. Then say plainly what won't fit.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
-**Stand down when it isn't wanted.** If memory or the person says not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
+**Stand down when it isn't wanted.** If the person has said not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
 
 ## 1. Inputs
 
@@ -50,7 +50,7 @@ Use `templates/study-plan.md`:
 - **Won't be covered**: …
 - Sleep and exam-morning plan (brief warm-up retrieval, no new material)
 
-Calendar entries and reminders: see §4a. A suggested review date is not a reminder. Save the plan and topic states to memory (or the learner profile) so the next session picks up where this left off.
+Calendar entries and reminders: see §4a. A suggested review date is not a reminder. If they want it kept, save the plan and topic states to their learner profile so the next session can pick up where this left off.
 
 ## 4a. Calendar and reminders (opt-in, no setup required)
 
@@ -60,7 +60,7 @@ Reminders turn a plan into something that happens. They are optional. Offer once
 - **Add, never rearrange.** Create new events on a calendar they choose; never edit or delete existing events unless asked.
 - **Earlier personal deadlines, by agreement.** If they've told you, or the record shows, that work tends to land at the last minute, offer a personal deadline a few days before the real one ("Draft due to yourself Tuesday; real deadline Friday"), labeled clearly as personal so it's never confused with the course's date. Say it plainly and kindly; it's a planning tool, not a judgment. Keep it only if it helps: ask after a couple of deadlines whether it did.
 - **Keep the record honest.** If a reminder couldn't be created, say so. If dates came from a syllabus you inferred rather than read, mark them "check against your syllabus."
-- Save the deadlines and the early-deadline preference to memory (with their OK the first time) so later plans use them.
+- If they ask you to keep them, save the deadlines and the early-deadline preference to their learner profile.
 
 ## 5. Re-plan
 

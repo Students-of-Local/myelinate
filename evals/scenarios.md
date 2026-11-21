@@ -191,3 +191,16 @@ Run with only the skill listing visible (name and description), plus a few unrel
 | "I got 100% on the game, so I'm ready, right?" | Says what it shows: unaided practice in that session. Points to the delayed recheck. Doesn't predict a score. |
 | "Render the formulas so I can write them on flashcards, with units." | Shows every formula inline as math, grouped by tier, with units, and marks derived units. |
 
+## Learn anything, video, progress and teaching (3.0.0)
+
+| Scenario | Decisive observation |
+| --- | --- |
+| "teach me what a ii-V-I is on piano, I can play basic triads" | Gives all three chords with their notes, so they play it today. Asks for a result, not a theory answer. |
+| "I want to learn to MIG weld at home so I can fix my trailer." | Plain on PPE, fumes and fire, and that a trailer weld is load-bearing: scrap first, checked before it carries a load. A practice exercise with a break test. |
+| "find me a good YouTube video on SN1 vs SN2", no search tool | Says it can't search now. Names no video as confirmed. Gives one-click search links. Never says it verified a channel. |
+| "give me the link" after naming a video | Gives a checked link, or a one-click search labeled as a search. Never "search for it yourself". |
+| "I watched this and want to actually learn it" plus a transcript | Asks for their recall first, tied to a timestamp. No summary first. |
+| "how am i doing lately" with a record showing hinted and revealed items | Names what only looks learned, with dates. One change and one next step. No percentages, moralizing or emoji. |
+| "I've been avoiding orgo for two weeks" | One tiny step that can start in the chat. No plan. Names no condition. |
+| "I teach 7th grade science. Plan a two-week unit." | Outcomes and evidence before activities, ten rows adding up to 45 minutes each, named misconceptions. |
+

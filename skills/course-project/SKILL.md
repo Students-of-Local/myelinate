@@ -7,7 +7,7 @@ description: "Use when someone asks to build a whole course to run later: syllab
 
 Some goals need a full course package to run later: elementary map reading, high-school civics, university statistics, professional safety training, or a self-directed language course. Build a syllabus, lesson plan, assignments, tests, and teacher instructions at the learner's level. If the assistant has projects or custom instructions, store the files there. Otherwise deliver the files and a pasted instruction block the learner can reuse in any chat. Sequence prerequisites and check learning honestly.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
 ## 0. When to offer it
 
@@ -17,7 +17,7 @@ Paths like `references/…`, `templates/…` and `examples/…` are relative to 
 
 ## 1. Learn the learner (briefly)
 
-Use memory and `references/first-session.md`: purpose (career, project, curiosity), the competence statement ("You'll be able to ___ without help"), prior knowledge (a short warm-up check), hours per week, deadline, what helps them learn, and tools they use. Don't gate the build on every answer.
+Use what they've told you and `references/first-session.md`: purpose (career, project, curiosity), the competence statement ("You'll be able to ___ without help"), prior knowledge (a short warm-up check), hours per week, deadline, what helps them learn, and tools they use. Don't gate the build on every answer.
 
 ## 2. Research the course like a curriculum committee
 
@@ -47,7 +47,7 @@ Fill in `templates/course-project-prompt.md`. It tells the assistant running the
 - Follow the lesson plan in order, one lesson per session unless the learner asks to move faster, and keep their place.
 - Open each session with retrieval of what's due; teach with Myelinate's session loop; render visuals when concepts have shape; close with the learner's own recall.
 - Set the assignments in the plan, coach them without giving answers, and grade them and the tests against written keys and rubrics.
-- Keep the gradebook current: use project memory or file writing if available; otherwise end each session with an updated progress block the learner can save and paste next time.
+- Keep the gradebook current: use file writing if they want it; otherwise end each session with an updated progress block the learner can save and paste next time.
 - Load Myelinate if installed, or fetch it from its GitHub link.
 
 Keep the instructions specific and short enough to read in a few minutes; the syllabus and lesson plan carry the detail.

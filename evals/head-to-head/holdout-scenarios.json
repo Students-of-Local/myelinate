@@ -1,0 +1,132 @@
+[
+ {
+  "id": "ho-guitar-barre",
+  "message": "I can't get barre chords to ring out on guitar. My fingers hurt and half the strings buzz.",
+  "rubric": "Instrument with a concrete blocker. Best: a likely cause and an exact fix (thumb position, finger roll, near the fret, start at a higher fret), a short drill with a check (pick each string), a report back. Fails: theory; a list of ten tips; no drill.",
+  "group": "holdout",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ },
+ {
+  "id": "ho-knit",
+  "message": "teach me to knit. I've never held needles.",
+  "rubric": "Hands-on beginner. Best: what to buy in a line, then the first action (slip knot, cast on, knit stitch) in concrete steps, what success looks like, a gate, something to report back; says video or a person helps for hand motion. Fails: history of knitting; quiz; no first action.",
+  "group": "holdout",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ },
+ {
+  "id": "ho-spanish",
+  "message": "I took Spanish in high school and forgot it. I'm going to Mexico in 8 weeks and want to actually talk to people.",
+  "rubric": "Language with a deadline. Best: honest about 8 weeks, prioritizes speaking and survival phrases, has them produce Spanish now, daily routine. Fails: grammar lecture; plan with no first step; promises fluency.",
+  "group": "holdout",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ },
+ {
+  "id": "ho-climb",
+  "message": "I started bouldering a month ago and I'm stuck on V2. What should I work on?",
+  "rubric": "Physical skill with injury risk. Best: asks or infers evidence (where they fall), footwork and technique before strength, a specific drill for next session with a check, tendon safety in a line. Fails: generic list; hangboard for a beginner; no drill.",
+  "group": "holdout",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ },
+ {
+  "id": "ho-photo",
+  "message": "I want to understand exposure on my camera so I can stop using auto.",
+  "rubric": "Concept plus hands-on. Best: exposure triangle made practical, an exercise with the camera now (shoot one scene varying one setting), what to look for, a report back. Fails: essay with no exercise; Socratic quiz on terms.",
+  "group": "holdout",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ },
+ {
+  "id": "ho-calc",
+  "message": "I don't get why the derivative of sin is cos. Everyone just tells me to memorize it.",
+  "rubric": "Concept with a clear confusion. Best: builds the why (slope on the unit circle or graph), with the learner doing something, one question. Accurate. Fails: limit proof dump; memorization advice.",
+  "group": "holdout",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ },
+ {
+  "id": "ho-tax",
+  "message": "I just started freelancing. Teach me how quarterly estimated taxes work so I don't get in trouble.",
+  "rubric": "Practical money topic with real stakes. Best: the model (pay as you go, the four dates, safe harbor) accurately and honestly flags it is US-specific and to check current rules; a first step with their own numbers. Fails: refusal; invented numbers; quiz.",
+  "group": "holdout",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ },
+ {
+  "id": "ho-chainsaw",
+  "message": "I bought a chainsaw to clear storm damage on my property. How do I learn to use it without killing myself?",
+  "rubric": "Dangerous skill. Best: safety first and plain (PPE, kickback, hung-up trees are for professionals), recommends a class, a safe first practice task on a log on the ground, how to judge it. Fails: refusal; casual tone about felling; no practice task.",
+  "group": "holdout",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ },
+ {
+  "id": "ho-logic-debate",
+  "message": "I keep losing arguments with my brother because I can't think on my feet. How do I get better at this?",
+  "rubric": "Judgment skill. Best: a practice method (steelman, one claim plus reason, questions), a roleplay offered or begun now so they speak, feedback loop. Fails: list of fallacies; only advice; tactics to manipulate.",
+  "group": "holdout",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ },
+ {
+  "id": "ho-sewing-source",
+  "message": "Make me a quiz from this. I'm learning to sew.\n\nStraight stitch: used for seams. Zigzag: used on stretch fabric and to finish raw edges. Needle size 90/14 for denim. Backstitch at the start and end of a seam to lock it. Press seams after sewing.",
+  "rubric": "Quiz from pasted material. Best: questions only from the text with no answers shown, ties them to it, marks anything added, application items. One at a time or a set hidden. Fails: leaks answers; invents facts; asks things not there unmarked.",
+  "group": "holdout",
+  "subs": [
+   "tutor"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ]
+ }
+]

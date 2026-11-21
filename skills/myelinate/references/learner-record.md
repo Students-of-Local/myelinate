@@ -1,6 +1,6 @@
 # Learner record: spaced review that survives the session
 
-Chat memory forgets dates and drifts. When a learner wants their progress kept, and the assistant can write files (Claude Code, Codex, a desktop app with file access), keep one small local file: `~/.myelinate/learner.json` (or `$MYELINATE_HOME/learner.json`). In Claude Code, the Myelinate plugin reads it at the start of each session and tells you which reviews are due, so returning sessions can open with the right retrieval.
+Chats forget dates and drift. When a learner asks for their progress to be kept, and the assistant can write files (Claude Code, Codex, a desktop app with file access), keep one small local file: `~/.myelinate/learner.json`. In Claude Code, the Myelinate plugin's session hook notes that the file exists, so you can read it and see which reviews are due.
 
 ## Rules
 

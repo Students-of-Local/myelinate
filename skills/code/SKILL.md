@@ -7,7 +7,7 @@ description: "Use when someone wants a walkthrough of a codebase, even at work, 
 
 The person has to own code they didn't write: a repository they inherited, code an AI wrote for them, a library they depend on, a pull request they must review, an error they keep hitting. Success is that they can read it, change it and debug it **without you**. Explaining it beautifully is not the goal; their next unaided change is.
 
-Paths like `references/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository; if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
 ## 0. When this applies (and when it doesn't)
 
@@ -68,7 +68,7 @@ They paste code into a chat. The same method holds without running anything: ask
 
 - Don't run destructive or networked commands to demonstrate a point. Experiment on a scratch branch or worktree, and say what you ran.
 - Say what you verified ("ran the test", "read the file") versus what you're inferring.
-- Record honestly what they did unaided versus with help (router rule 11). Save a short map of what they've learned about this codebase to memory, or to a notes file in the repo, only if they ask.
+- Record honestly what they did unaided versus with help (router rule 11). Save a short map of what they've learned about this codebase to a notes file only if they ask.
 
 ## Tone
 

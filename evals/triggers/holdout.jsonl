@@ -16,3 +16,7 @@
 {"id": "h16", "prompt": "Debug why my Docker container exits immediately.", "accept": ["none", "debugging"], "kind": "negative"}
 {"id": "h17", "prompt": "Find a stock photo of a sunset for our website banner.", "accept": ["none", "frontend-design"], "kind": "negative"}
 {"id": "h18", "prompt": "Write the README for my CLI tool.", "accept": ["none", "writing-editor"], "kind": "negative"}
+{"id": "h90", "prompt": "This 3Blue1Brown video went over my head, here's the transcript, help me get it", "accept": ["video"], "kind": "positive"}
+{"id": "h91", "prompt": "I fell off for a month and I'm back, where do I even pick up", "accept": ["progress", "tutor", "myelinate"], "kind": "positive"}
+{"id": "h92", "prompt": "I'm a professor and need a lesson plan on supply and demand for a 50 minute class", "accept": ["teacher"], "kind": "positive"}
+{"id": "h93", "prompt": "I want to teach myself the violin", "accept": ["teach", "myelinate"], "kind": "positive"}

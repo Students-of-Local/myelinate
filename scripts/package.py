@@ -21,11 +21,11 @@ SHARED = ('references', 'templates', 'examples', 'scripts', 'assets')
 EXTERNAL = {'scripts/learning-lab.mjs', 'scripts/icons.mjs'}
 ZIP = ROOT / 'dist' / 'myelinate-plugin.zip'
 # Files and folders that make up the installed plugin.
-PLUGIN_FILES = ['.claude-plugin/plugin.json', '.codex-plugin/plugin.json', 'LICENSE', 'NOTICE.md', 'README.md', 'assets/icon.png']
+PLUGIN_FILES = ['.claude-plugin/plugin.json', '.codex-plugin/plugin.json', 'LICENSE', 'NOTICE.md', 'README.md', 'PRIVACY.md', 'assets/icon.png']
 PLUGIN_DIRS = ['skills', 'output-styles', 'commands', 'agents', 'hooks']
-# OpenAI's plugin directory takes skills, with the manifest at the top of the zip; it takes no hooks yet.
+# OpenAI's plugin directory takes skills, with the manifest at the top of the zip. It takes no hooks.
 CODEX_ZIP = ROOT / 'dist' / 'myelinate-codex.zip'
-CODEX_FILES = ['.codex-plugin/plugin.json', 'LICENSE', 'README.md']
+CODEX_FILES = ['.codex-plugin/plugin.json', 'LICENSE', 'README.md', 'PRIVACY.md', 'TERMS.md']
 
 SHARED_RE = re.compile(r"(?<![/\w.<>…-])((?:%s)/[\w.-]+\.[a-z0-9]+)" % '|'.join(SHARED))
 SIBLING_RE = re.compile(r"(?<![/\w.<>…-])\.\./([a-z-]+)/SKILL\.md")
@@ -104,13 +104,22 @@ def owned_paths():
     return {str(p.relative_to(ROOT)) for p in paths if p.name != '.DS_Store'}
 
 
-def build_zip(files, path=ZIP, prefix='myelinate/'):
+LOCAL_TOOLS = re.compile(rb'<!-- local-tools -->.*?<!-- /local-tools -->\n?', re.S)
+
+
+def build_zip(files, path=ZIP, prefix='myelinate/', transform=None):
     path.parent.mkdir(exist_ok=True)
     with zipfile.ZipFile(path, 'w', zipfile.ZIP_DEFLATED) as z:
         for rel in sorted(files):
             info = zipfile.ZipInfo(f'{prefix}{rel}', date_time=(2026, 1, 1, 0, 0, 0))
             info.compress_type = zipfile.ZIP_DEFLATED
-            z.writestr(info, (ROOT / rel).read_bytes())
+            data = (ROOT / rel).read_bytes()
+            z.writestr(info, transform(rel, data) if transform else data)
+
+
+def codex_transform(rel, data):
+    """OpenAI's directory bars fetching from third-party sites with local tools, so those steps stay out of its zip."""
+    return LOCAL_TOOLS.sub(b'', data) if rel.endswith('.md') else data
 
 
 def plugin_files():
@@ -141,7 +150,7 @@ def build():
         if d.is_dir() and not any(d.iterdir()):
             d.rmdir()
     build_zip(plugin_files())
-    build_zip(codex_files(), CODEX_ZIP, '')
+    build_zip(codex_files(), CODEX_ZIP, '', codex_transform)
     print(f'built {len(all_generated())} generated files, {ZIP.relative_to(ROOT)} and {CODEX_ZIP.relative_to(ROOT)}')
 
 
@@ -163,11 +172,11 @@ def verify():
         if rel not in names or zipped[rel] != (ROOT / rel).read_bytes():
             errors.append(f'{ZIP.relative_to(ROOT)}: {rel} missing or stale; run python3 scripts/package.py build')
     if not CODEX_ZIP.is_file():
-        build_zip(codex_files(), CODEX_ZIP, '')
+        build_zip(codex_files(), CODEX_ZIP, '', codex_transform)
     with zipfile.ZipFile(CODEX_ZIP) as z:
         codex = {n: z.read(n) for n in z.namelist()}
     for rel in codex_files():
-        if codex.get(rel) != (ROOT / rel).read_bytes():
+        if codex.get(rel) != codex_transform(rel, (ROOT / rel).read_bytes()):
             errors.append(f'{CODEX_ZIP.relative_to(ROOT)}: {rel} missing or stale; run python3 scripts/package.py build')
     for rel in sorted(set(codex) - set(codex_files())):
         errors.append(f'{CODEX_ZIP.relative_to(ROOT)}: {rel} is not part of the plugin; run python3 scripts/package.py build')
