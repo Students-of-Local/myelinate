@@ -8,6 +8,7 @@ Responder: Sonnet through `claude -p` with no tools. Judge: Opus, blind, order r
 Results: one JSON per pair in OUTDIR, and OUTDIR/summary.json with the means and wins.
 """
 import concurrent.futures as cf
+import hashlib
 import json
 import random
 import subprocess
@@ -114,11 +115,22 @@ def main():
                 cache[key].set_exception(e)
         return cache[key].result()
 
+    def inputs_key(s, opp):
+        # Everything that decides a pair's result. A saved pair is reused only when this matches,
+        # so a changed skill, scenario, rubric, rival text or judge prompt reruns the pair.
+        theirs = "vanilla" if opp == "vanilla" else rival_text(opp, s, rivals)
+        blob = json.dumps([s, myelinate_text(s, root), theirs, JUDGE, BASE, ENV_DEFAULT], sort_keys=True)
+        return hashlib.sha256(blob.encode()).hexdigest()
+
     def one(job):
         s, opp, k = job
         path = outdir / f"{s['id']}--{opp}-{k}.json"
+        key = inputs_key(s, opp)
         if path.exists():
-            return json.loads(path.read_text())
+            saved = json.loads(path.read_text())
+            if saved.get("inputs_sha256") == key:
+                return saved
+            print(f"STALE {path.name}: inputs changed since it was judged; rerunning", flush=True)
         mine, theirs = reply("myelinate", s, k), reply(opp, s, k)
         first_mine = random.random() < 0.5
         a, b = (mine, theirs) if first_mine else (theirs, mine)
@@ -127,7 +139,8 @@ def main():
         w = v["winner"]
         winner = "tie" if w == "tie" else ("myelinate" if (w == "A") == first_mine else opp)
         res = {"id": s["id"], "group": s.get("group"), "opponent": opp, "rep": k, "myelinate": sm, "rival": st,
-               "winner": winner, "reason": v.get("reason"), "reply_myelinate": mine, "reply_rival": theirs}
+               "winner": winner, "reason": v.get("reason"), "reply_myelinate": mine, "reply_rival": theirs,
+               "inputs_sha256": key}
         path.write_text(json.dumps(res, indent=1))
         print(f"{s['id']:<24} vs {opp:<16} M={sm} R={st} {winner:<16} {v.get('reason')}", flush=True)
         return res

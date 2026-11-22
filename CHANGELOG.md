@@ -6,6 +6,20 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+## [3.0.1] - 2026-11-22
+
+Follow-ups from the 3.0.0 review (issue #31).
+
+### Fixed
+- **A graph with a tiny range no longer freezes the page.** The slider-graph view in `templates/inline-widgets.html` stepped its gridlines in a loop that could run for hundreds of millions of turns on a range like 0 to 1e-19 (photon energies in joules). Ticks now come from one bounded helper, at most 50 per axis. `tests/inline_journey.py` adds that case.
+- **`debrief` tells "never learned" from "learned and lost".** A miss on an item the learner record shows as once unassisted-correct is now **Knew it, lost it**, a spacing problem, not a teaching one.
+- **`rivals.py` reruns a pair when its inputs change.** Saved pairs carry a hash of the scenario, both skill texts, the judge and the model, and a changed rubric or skill reruns only the pairs it touches. Before, a resumed run reused stale verdicts.
+- **`evals/triggers/run.py` no longer crashes** printing a summary for an `--only` subset with no negatives.
+
+### Changed
+- **`game` says what it isn't more plainly:** "Not making a game (Unity, Godot, code)." On "Help me build a platformer game in Unity for my portfolio", false fires fell from 4 of 5 passes to 0 of 5.
+- **Trigger floors raised** to 98.7% hit and 11.2% false fire on the main set and 98.2% and 5.6% on the holdout, after the full eval measured 99.4% and 9.5%, and 100% and 0%.
+
 ## [3.0.0] - 2026-11-21
 
 Built to learn anything, measured against the best learning plugins, and made ready for the Claude, ChatGPT and Grok directories.

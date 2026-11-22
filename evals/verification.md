@@ -2,6 +2,15 @@
 
 Checked **2026-10-02**, with synthetic learner prompts and locally generated examples. These checks assess instructions and software behavior; they do not measure real student learning.
 
+## 3.0.1: review follow-ups (2026-11-22)
+
+Codex trigger eval (`evals/triggers`, gpt-5.6-luna, low, 3 passes) on the 3.0.1 descriptions, 2026-11-22: 99.4% hit and 9.5% false fire on `prompts.jsonl` (majority of 3: 100% and 9.5%), and 100% hit and 0.0% false fire on the holdout. The floors in `thresholds.json` were raised to these scores minus one item.
+
+- **The one description change.** `game` now says "Not making a game (Unity, Godot, code)." A same-day A/B against 3.0.0's descriptions, 25 prompts at 5 passes, cut false fires on p40 ("Help me build a platformer game in Unity for my portfolio") from 4 of 5 to 0 of 5. The same A/B tried new `assignment`, `video` and `tutor` wording and rejected all three: `assignment` lost p08 on 5 of 5 passes, `video` fired on n40 5 of 5 against 1 of 5, and `tutor` did not move n43.
+- **Still open.** n43 fires `tutor` on every pass, n40 fires `video` on 2 of 3, and p08 slips to `writing-editor` on 1 of 3.
+- **Limit.** Main's descriptions were not rerun on the full set the same day, so part of the gain over 3.0.0's 90.4% may be a quieter eval model. The A/B is the controlled comparison.
+- **Code fixes, each with a check that fails without it.** The graph view's tick loop (a 0 to 1e-19 range ran past 1e8 iterations; now 6 ticks, and `tests/inline_journey.py` checks 4 to 30 gridlines); `rivals.py` stale-pair reuse (`test_rivals.py` judged nothing new on a changed rubric before the fix); `run.py` no-negatives summary crash.
+
 ## 3.0.0: debrief, rules 18 and 19, online homework (2026-11-21)
 
 Head-to-head with `evals/head-to-head/rivals.py --scenarios debrief-scenarios.json --repeats 2` (Sonnet responder through `claude -p` with no tools, blind Opus judge, order randomized). Rivals: plain Claude (`vanilla`) and the `main` branch at `682f3c9`, loading the router plus the skills main would use for each case (`tutor`, `study-plan`, `assignment` or `flashcards`).

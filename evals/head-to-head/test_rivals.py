@@ -15,10 +15,14 @@ SCEN = [{"id": "s1", "against": ["vanilla"], "prompt": "p", "rubric": "r"},
         {"id": "s2", "against": ["vanilla"], "prompt": "p", "rubric": "r"}]
 
 
-def run(fail_ids):
-    tmp = Path(tempfile.mkdtemp())
-    (tmp / "scen.json").write_text(json.dumps(SCEN))
+JUDGED = []
+
+
+def run(fail_ids, tmp=None, scen=SCEN):
+    tmp = tmp or Path(tempfile.mkdtemp())
+    (tmp / "scen.json").write_text(json.dumps(scen))
     (tmp / "rivals.json").write_text("{}")
+    (tmp / "myelinate.md").write_text("router stub")
     rivals.HERE = tmp
 
     def respond(arm, s, root, rv):
@@ -27,26 +31,39 @@ def run(fail_ids):
         return f"{arm} reply"
 
     rivals.respond = respond
-    rivals.judge = lambda s, a, b: {"score_A": 7, "score_B": 5, "winner": "A", "reason": "stub"}
+    def judge(s, a, b):
+        JUDGED.append(s["id"])
+        return {"score_A": 7, "score_B": 5, "winner": "A", "reason": "stub"}
+
+    rivals.judge = judge
     sys.argv = ["rivals.py", str(tmp / "out"), str(tmp), str(tmp / "rivals.json"), "--scenarios", "scen.json", "--jobs", "1"]
     try:
         rivals.main()
         code = 0
     except SystemExit as e:
         code = e.code if isinstance(e.code, int) else 1
-    return code, json.loads((tmp / "out" / "summary.json").read_text())
+    return code, json.loads((tmp / "out" / "summary.json").read_text()), tmp
 
 
 failures = []
-code, summary = run(set())
+code, summary, tmp = run(set())
 if code != 0 or not summary["complete"] or summary["failed"] != 0:
     failures.append(f"complete run: exit {code}, summary {summary}")
-code, summary = run({"s2"})
+code, summary, tmp = run({"s2"})
 if code == 0 or summary["complete"] or summary["failed"] != 1:
     failures.append(f"one failed comparison: exit {code}, summary {summary}")
-code, summary = run({"s1", "s2"})
+code, summary, tmp = run({"s1", "s2"})
 if code == 0 or summary["complete"]:
     failures.append(f"every comparison failed: exit {code}, summary {summary}")
+JUDGED.clear()
+code, summary, tmp = run(set())
+run(set(), tmp)
+if JUDGED != ["s1", "s2"]:
+    failures.append(f"unchanged rerun should reuse saved pairs, judged {JUDGED}")
+JUDGED.clear()
+run(set(), tmp, [dict(SCEN[0], rubric="a new rubric"), SCEN[1]])
+if JUDGED != ["s1"]:
+    failures.append(f"a changed rubric should rerun only that pair, judged {JUDGED}")
 if failures:
     sys.exit("FAIL: " + "; ".join(failures))
-print("PASS: rivals.py exits nonzero and marks summary.json incomplete when any comparison fails")
+print("PASS: rivals.py exits nonzero on an incomplete run and reruns a saved pair whose inputs changed")

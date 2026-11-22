@@ -29,6 +29,8 @@ CASES = {
     'graph': {'view': 'graph', 'title': 'Sine wave', 'expression': 'a*sin(b*x)', 'x_range': [0, 6.28], 'y_range': [-3, 3], 'x_label': 'x', 'y_label': 'y', 'parameters': [
         {'name': 'a', 'label': 'amplitude', 'min': 0, 'max': 3, 'value': 1, 'step': 0.1}, {'name': 'b', 'label': 'frequency', 'min': 1, 'max': 5, 'value': 1, 'step': 1}],
         'predict': 'What happens when amplitude doubles?', 'question': 'What stayed the same?'},
+    'graph_tiny': {'view': 'graph', 'title': 'Photon energy', 'expression': 'h*x', 'x_range': [0, 1e-19], 'x_label': 'E (J)', 'y_label': 'y', 'parameters': [
+        {'name': 'h', 'label': 'scale', 'min': 1, 'max': 3, 'value': 1, 'step': 1}]},
     'video': {'view': 'video', 'status': 'ok', 'id': 'dQw4w9WgXcQ', 'title': 'SN1 vs SN2', 'channel': "Chad's Prep", 'thumbnail': 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', 'watch_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'start': 30, 'watch_for': 'What decides between the two paths?', 'pause_points': [{'at': 60, 'ask': 'Predict the rate law.'}, {'at': 200, 'ask': 'Which substrate favors SN1?'}], 'recall_prompt': 'What decides SN1 or SN2?'},
     'video_blocked': {'view': 'video', 'status': 'blocked', 'id': 'privatevid1', 'watch_url': 'https://www.youtube.com/watch?v=privatevid1', 'note': 'Its owner turned off embedding.'},
     'rtl': {'view': 'flashcards', 'title': 'חוק אוהם', 'cards': [{'front': 'מהו המתח לפי חוק אוהם?', 'back': 'V = IR'}]},
@@ -137,6 +139,12 @@ with sync_playwright() as p:
     ok(page.locator(curve).get_attribute('d') != path0, 'moving a slider redraws the curve')
     ok(page.locator('svg.plot path[stroke-dasharray]').count() == 1, 'the starting curve stays as a dashed ghost')
     ok('a = 2' in page.locator('svg.plot').get_attribute('aria-label'), 'the graph label reports slider values')
+    ctx.close()
+
+    ctx, page, errs, _ = open_case(b, 'graph_tiny')
+    page.wait_for_selector('svg.plot', timeout=5000)
+    gridlines = page.locator('svg.plot line').count()
+    ok(4 <= gridlines <= 30 and not errs, f'a 0 to 1e-19 range draws a handful of gridlines ({gridlines}), not millions')
     ctx.close()
 
     ctx, page, errs, reqs = open_case(b, 'video')
