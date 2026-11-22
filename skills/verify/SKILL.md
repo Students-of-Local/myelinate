@@ -7,7 +7,7 @@ description: "Use when someone asks to check a lesson, answer key, or learning m
 
 Teaching something wrong is worse than not teaching it: a confidently learned error is hard to remove and costs points on the exam or worse in a clinic. This skill is a deliberate attempt to **break** the material before the learner does. A check that could not have failed is not verification.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
 ## 1. When to run it
 

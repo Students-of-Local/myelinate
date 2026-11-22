@@ -5,8 +5,8 @@
  "harness": "codex exec, isolated HOME, skills in ~/.agents/skills",
  "prompt_set": "holdout.jsonl",
  "partial": false,
- "descriptions_sha256": "afe37e068da8b9ce09dfddbcd09de70dd0f5887688bc1a2208443d5b3987cd64",
- "inputs_sha256": "8c7ef3574da283c414967fef77b6b42a23d468a2770898109acbd98945fca6c1",
+ "descriptions_sha256": "0d371582e7438399d994f53133b9297fa6857ee0eb5a6c767ce7de514e56ca7c",
+ "inputs_sha256": "9331866b09b5f172697f1b4fc67f04a13190f67af711a989bc4179834c769fc1",
  "skills": [
   "assess",
   "assignment",
@@ -20,13 +20,16 @@
   "myelinate",
   "notes",
   "print",
+  "progress",
   "project",
   "study-plan",
   "teach",
+  "teacher",
   "tutor",
-  "verify"
+  "verify",
+  "video"
  ],
- "positives": 12,
+ "positives": 16,
  "negatives": 6,
  "hit_rate": 1.0,
  "false_fire_rate": 0.0556,
@@ -35,21 +38,20 @@
  "majority_false_fire_rate": 0.0,
  "per_pass": [
   {
-   "hit": 12,
-   "false_fire": 0
-  },
-  {
-   "hit": 12,
-   "false_fire": 0
-  },
-  {
-   "hit": 12,
+   "hit": 16,
    "false_fire": 1
+  },
+  {
+   "hit": 16,
+   "false_fire": 0
+  },
+  {
+   "hit": 16,
+   "false_fire": 0
   }
  ],
  "unstable": [
-  "h17",
-  "h18"
+  "h13"
  ],
  "rows": [
   {
@@ -223,11 +225,11 @@
     "none"
    ],
    "choices": [
-    "none",
+    "tutor",
     "none",
     "none"
    ],
-   "ok": 3
+   "ok": 2
   },
   {
    "id": "h14",
@@ -279,9 +281,9 @@
    "choices": [
     "none",
     "none",
-    "find-media"
+    "none"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "h18",
@@ -291,9 +293,64 @@
     "writing-editor"
    ],
    "choices": [
-    "writing-editor",
+    "none",
     "none",
     "none"
+   ],
+   "ok": 3
+  },
+  {
+   "id": "h90",
+   "kind": "positive",
+   "accept": [
+    "video"
+   ],
+   "choices": [
+    "video",
+    "video",
+    "video"
+   ],
+   "ok": 3
+  },
+  {
+   "id": "h91",
+   "kind": "positive",
+   "accept": [
+    "progress",
+    "tutor",
+    "myelinate"
+   ],
+   "choices": [
+    "progress",
+    "progress",
+    "progress"
+   ],
+   "ok": 3
+  },
+  {
+   "id": "h92",
+   "kind": "positive",
+   "accept": [
+    "teacher"
+   ],
+   "choices": [
+    "teacher",
+    "teacher",
+    "teacher"
+   ],
+   "ok": 3
+  },
+  {
+   "id": "h93",
+   "kind": "positive",
+   "accept": [
+    "teach",
+    "myelinate"
+   ],
+   "choices": [
+    "teach",
+    "teach",
+    "teach"
    ],
    "ok": 3
   }

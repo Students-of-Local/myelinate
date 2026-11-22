@@ -61,6 +61,15 @@ For quizzing, mask labels on a real image (`find-media` §4) rather than drawing
 
 Rank surfaces in this order and take the first one the host offers. The learner sees the figure where they are already reading, between your sentence and your question, and doesn't have to open, download or switch to anything.
 
+Which surface you have depends on the host. Check what tools you actually have, in this order:
+
+| You have | Use it for | Notes |
+| --- | --- | --- |
+| `show_widget` (claude.ai) or another inline HTML tool (`html_render` and the like) | Practice, cards, step-through figures, slider graphs, a video with pause questions, or anything custom | Adapt the view you need from `templates/inline-widgets.html`, or write your own |
+| An artifact or canvas panel | Something they'll keep or return to | Beside the conversation, not in it |
+| A shell or file tools only | A self-contained HTML file they open, with a one-line command or path | The file is the surface |
+| Plain text only | Tables, Mermaid, ASCII, a stepped explanation in words | Say what they'd see, and describe it well |
+
 1. **Inline interactive widget**, shown in the conversation by the host's inline render tool (for example `show_widget` on claude.ai, or an inline HTML render tool in a desktop or IDE host): the default for anything the learner should manipulate or predict from.
 2. **Inline static figure** (inline SVG, a rendered image in the reply): one relationship that needs no controls.
 3. **No inline renderer:** a visual that needs a control or a hidden answer goes in a self-contained HTML file; a static figure is drawn in the reply (Markdown table, Mermaid, ASCII, a code block that draws the figure).

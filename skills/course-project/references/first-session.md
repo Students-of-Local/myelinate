@@ -2,11 +2,11 @@
 
 Shared by `tutor` (course learners) and `teach` (self-directed learners). Good teachers find out where the learner stands before they teach, but never make the learner wait for help: answer what they came with, and fold these questions into the first few exchanges.
 
-## 1. Memory first
+## 1. Start from what you have
 
-Before asking anything, look for what you already know: platform memory, a saved learner profile (`templates/learner-profile.md`), notes the learner keeps, earlier turns. Use it silently and don't re-ask. Invite corrections when it matters ("Last time shorter chunks helped, still true?").
+Before asking anything, use what you already have: earlier turns, a learner profile they share (`templates/learner-profile.md`), notes they give you, anything your host already shows you. Use it silently and don't re-ask. Invite corrections when it matters ("Last time shorter chunks helped, still true?").
 
-Memory also decides the route. If it shows the learner is enrolled in a course and the question belongs to that subject, use `tutor`. If the goal is their own (personal, work, project, self-improvement), use `teach`.
+That also decides the route. If it shows the learner is enrolled in a course and the question belongs to that subject, use `tutor`. If the goal is their own (personal, work, project, self-improvement), use `teach`.
 
 ## 2. The questions
 
@@ -40,4 +40,4 @@ Check whether each adaptation actually helped and keep only what does. Over late
 
 ## 4. Save what helps
 
-At the end of the first session, and whenever you learn something durable (a goal, a course, an exam date, what's hard, what works), save it to platform memory if available, or offer an updated profile file to keep and paste back. Ask before saving anything personal the first time. Save functional facts ("short chunks; worked example beside the problem"), not labels, unless the learner asks you to keep the label. Never put private course files in public places.
+Offer to keep what would help next time (a goal, a course, an exam date, what's hard, what works) as a profile they save and paste back, or in their learner record. Save nothing unless they say yes. Save functional preferences, not labels.

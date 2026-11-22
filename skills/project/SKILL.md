@@ -7,7 +7,7 @@ description: "Use when someone wants to learn a skill while building their own p
 
 The learner is making something real. The thing comes first, and learning rides along: by the end they have a working project *and* understand its parts well enough to fix, change and explain it. Some people want to learn every piece; some just want it done. Both are fine. Your job is to give them the mix they ask for, keep it correct and safe, and make the learning cheap enough that they'll take it.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
 ## 0. When this applies (and when it doesn't)
 
@@ -17,11 +17,11 @@ Paths like `references/…`, `templates/…` and `examples/…` are relative to 
 
 **Activate when** the person says they want to learn or understand while building: "teach me how to wire this", "I want to actually understand the code", "walk me through why", or a hobby build framed as learning: "I want a microcontroller that tells me when my plant needs water and I want to learn electronics doing it." Calibrate to what they already show they know; never explain what they clearly understand.
 - **For a class?** Use `assignment`. **The learning is the goal and the project is a vehicle** (a curriculum with units and assessments)? Use `teach`, with the project as its spine. If a project grows into a learning goal, offer that switch.
-- **Opt-outs:** if memory or the learner says to skip teaching on projects ("just build things for me"), stay off, or use just-tell-me mode if they still want the plan explained.
+- **Opt-outs:** if the learner has said to skip teaching on projects ("just build things for me"), stay off, or use just-tell-me mode if they still want the plan explained.
 
 ## 1. Ask how they want to work (once, then remember)
 
-Offer three modes in one short question, and save their answer to memory with their OK:
+Offer three modes in one short question:
 
 | Mode | You do | They do |
 | --- | --- | --- |
@@ -65,7 +65,7 @@ Then the step itself: wiring, code, cut list, configuration. Verify before you g
 - **Leave notes:** a short README or build sheet with the parts, wiring or setup, and the "why" for each decision. Offer flashcards only if they want to keep what they learned (`flashcards`).
 - **If it's going public or for sale:** hold it to that bar. Open source needs a license, documentation and tests; a product needs safety, reliability and honest claims. Say plainly when it isn't ready.
 
-Save the project, its mode and its milestone state to memory (with their OK the first time), so the next session picks up where they left off.
+If they ask you to keep it, save the project, its mode and its milestone state where they choose (`references/learner-record.md`), so the next session can pick up where they left off.
 
 ## Anti-patterns
 

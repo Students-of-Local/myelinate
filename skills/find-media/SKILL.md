@@ -7,7 +7,7 @@ description: "Use when a learner wants an existing video, licensed figure, model
 
 Media earns its place when it shows something words cannot: spatial layout, a process unfolding, a structure in 3D, a real specimen, a quantity changing. It wastes time or harms learning when it is decoration, when it is wrong, or when watching replaces doing. This skill finds existing outside media for learning, checks its legal use and accuracy, and makes the learner use it actively. Stock or decorative images for websites or marketing, and diagrams for work deliverables, belong outside Myelinate. Requests to draw or show a new teaching diagram or concept map belong to `tutor` for a class or `teach` for self-directed learning, using `references/visual-teaching.md`.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
 Evidence tags: **Strong**, **Moderate**, **Weak**, **Craft** (as in **memory-hooks**). Source table with URLs and licenses: [media-sources.md](references/media-sources.md).
 
@@ -89,13 +89,19 @@ If the learner asks you to draw or show a new diagram, concept map, graph or ste
 
 Video is best for watching an expert reason or a process move. It is weakest as a substitute for practice. Brame (2016, *CBE Life Sci Educ* 15:es6) summarizes: keep it short, signal key points, segment, and add interactivity (guiding questions, pause points). In MOOC logs, engagement dropped sharply beyond about six minutes (Guo, Kim & Rubin 2014, *Proc. ACM Learning@Scale*: observational, engagement not learning).
 
-### Search and verify
-1. Search for the **specific concept at the course's level**, e.g., "Chad's Prep E2 elimination", "Ninja Nerd cardiac action potential".
-2. **Confirm the video exists:** fetch or search the page; record exact title, channel, URL, upload date, length.
-3. **Check accuracy** by watching or reading the transcript/description for the part you will assign, against the course source. If you cannot inspect it, say so: "Not reviewed by me; check against your notes."
-4. **Check fit:** level, notation, and convention (e.g., Na⁺/K⁺ stoichiometry, IUPAC names, sign conventions); date (pre-2015 MCAT content may be misaligned with the current outline); length; captions; paywall.
-5. **Prefer a specific video over "watch channel X."** Give a timestamp range when you have verified one ("6:10 to 11:30: the inhibitor graphs"). Never guess timestamps.
-6. **Recommend 1 to 3, not ten.** Say why each one.
+### Search, verify, give the link
+
+"Give me the link" gets a link, every time. "I couldn't pull the URL, search for the title" is the failure this section exists to prevent: you did the search, and the learner is the one left searching.
+
+1. **Search for the URL, not just the title.** Use the specific concept at the course's level, and aim at the video page: `"SN1 SN2 E1 E2" site:youtube.com`, or the exact title and channel plus `youtube.com/watch`. A page about the video (a course index, a blog, a study site) often links to it; read that page if search doesn't show the URL.
+2. **Check each candidate.** If you can fetch pages, fetch `https://www.youtube.com/oembed?format=json&url=<the watch URL>`: a 200 returns the true title and channel, and anything else means don't trust it. Confirm the title and channel match what you meant to recommend. Never give a video ID you didn't read from a page. This proves the video exists and who posted it, and nothing else.
+3. **If you have the title but no URL after trying,** give a one-click search for exactly that title, labeled as a search: `[Search YouTube for this video](https://www.youtube.com/results?search_query=SN2+SN1+E1+E2+Reaction+Mechanisms+Made+Easy+Organic+Chemistry+Tutor)`. That link can't be wrong, and it saves them the typing. Never tell them to go search.
+4. **Check accuracy** against the transcript or description for the part you'll assign, and against the course source (`../video/SKILL.md` has how to get a transcript). If you can't inspect it, say: "Not reviewed by me; check against your notes."
+5. **Check fit:** level, notation and convention (Na⁺/K⁺ stoichiometry, IUPAC names, sign conventions); date (pre-2015 MCAT content may not match the current outline); length; captions; paywall.
+6. **Lead with one pick.** Give the best video and say why, then one or two alternatives at most. A timestamp range only if you read it in a transcript ("6:10 to 11:30: the inhibitor graphs").
+7. **Show it where you can.** If your host renders HTML inline, adapt the video view in `templates/inline-widgets.html`: the player, what to watch for, pause questions and a recall box. Otherwise give the link and the active-viewing steps below.
+
+**With no search tool this turn:** say so in one line, then still help. Say which channels are worth trying from the list below, as starting points you haven't checked today, and give a one-click search for each. Never name a specific video from memory as if you'd confirmed it. Never say you verified a channel: that list was checked when it was written, not by you now.
 
 ### Place it correctly
 - **Pre-training:** a short video for names and parts *before* a hard session.
@@ -108,9 +114,9 @@ Video is best for watching an expert reason or a process move. It is weakest as 
 3. After: close it, write or say the key steps from memory, then check.
 4. Do one new problem without the video.
 
-### Starter channels (verified 2026-10-06: channel exists, recent upload date checked via channel feed)
+### Starter channels
 
-**Staleness rule:** this list ages. If today is more than ~90 days after the verification date, re-check a channel (exists, still active, still accurate) before recommending it, and always verify the specific video this session.
+A maintainer last checked this list on 2026-10-06 (channel exists, recent upload seen). It's a list of places to look, not something you verified. If you can, check the specific video this session. Don't tell a learner you checked a channel unless you did.
 
 Channels are starting points; vet the specific video. Free YouTube; many have paid companion sites.
 
@@ -166,6 +172,8 @@ In voice mode, describe the figure in words and offer to send it in text.
 ## 7. Anti-patterns
 
 - Naming a video, figure or license you have not verified.
+- Telling a learner to go search for a video you just found, instead of giving a link.
+- Saying you verified or checked something in this conversation when you didn't.
 - "Watch this channel" with no specific video, or a list of ten.
 - Assigning a video in place of retrieval or practice; ending a session with a video.
 - Hotlinking images that will break; copying proprietary atlas images into public artifacts.

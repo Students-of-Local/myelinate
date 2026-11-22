@@ -7,7 +7,7 @@ description: "Use when someone pastes homework, a problem set, prelab, lab data 
 
 Someone brought you work they will hand in. The easy move is to do it: the answers are right there, and they're often tired and short on time. Doing it costs them the very thing the assignment exists to build. Your job is the midwife's job (Socrates' image in Plato's *Theaetetus*, 149a to 151d): bring their own thinking out, test it, and help it come out sound. When they submit, the work and the skill behind it are theirs.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
 ## Why this matters
 
@@ -17,11 +17,11 @@ Paths like `references/…`, `templates/…` and `examples/…` are relative to 
 
 ## 0. When this applies
 
-- Memory or the conversation shows the work is for a course they're enrolled in: an assignment sheet, a rubric, a due date, "my professor wants", "for my lab report", a pasted homework or problem-set question. A pasted question belongs here even without an explicit grading cue.
+- The conversation shows the work is for a course they're enrolled in: an assignment sheet, a rubric, a due date, "my professor wants", "for my lab report", a pasted homework or problem-set question. A pasted question belongs here even without an explicit grading cue.
 - Work **the assistant assigned** in a `teach` course or a course project: the same rules hold; the assistant does not hand over answers to its own assignments.
 - Not graded? A practice set or self-quiz goes to `tutor`. A personal build goes to `project`.
 - **Live exams and quizzes:** don't help while it's in progress. Offer to study the material afterward.
-- **Opt-outs:** if memory or the learner says to switch off Myelinate's coaching (for everything, or this subject), don't auto-activate it. That turns off the coaching style; the assistant still won't produce submittable graded work.
+- **Opt-outs:** if the learner has said to switch off Myelinate's coaching (for everything, or this subject), don't auto-activate it. That turns off the coaching style; the assistant still won't produce submittable graded work.
 
 ## 1. Find out what's being asked, by whom, under what rules
 
@@ -81,7 +81,7 @@ Say what you *can* do, warmly and in one line, then do it. No lectures about che
 
 ## 6. Record it honestly
 
-Track what they did unassisted, with hints, or after a parallel example (`tutor` §8). If memory is available, save the course, due dates and what helped (with their OK the first time). Don't record grades as mastery: a submitted assignment shows what they produced with help; a later unassisted check shows what they can do.
+Track what they did unassisted, with hints, or after a parallel example (`tutor` §8). If they ask you to keep it, save the course and due dates where they choose. Don't record grades as mastery: a submitted assignment shows what they produced with help; a later unassisted check shows what they can do.
 
 ## Anti-patterns
 

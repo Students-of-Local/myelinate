@@ -7,9 +7,9 @@ description: "Use when someone shares study notes or says study from my notes, c
 
 A learner's notes are the closest thing you have to watching them think. They show what they noticed, what they connected, what they misunderstood, and whether they're processing the material or just copying it. A teacher who reads them teaches the student in front of them, not a generic one.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
-**Stand down when it isn't wanted.** If memory or the person says not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
+**Stand down when it isn't wanted.** If the person has said not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
 
 ## 0. Getting the notes (no setup required)
 
@@ -18,7 +18,7 @@ Use whatever is already available, in this order:
 2. **Connected sources:** if a connector is on (Google Drive, Microsoft OneDrive or SharePoint, Notion, a notes vault on their computer), search it for the course or topic and read the relevant notes. Ask before reading broadly; read only what the request needs.
 3. **Suggest a connection once, only if it would help and they asked for course help:** "If you keep notes in Google Drive or OneDrive, connecting it lets me read them before we study. Your school may restrict OneDrive access; your call." Never push, never make it a prerequisite.
 
-Private by default: notes stay out of searches, public artifacts and shared links, and are never saved to memory beyond a short functional summary (what helps, what's shaky), with their OK.
+Private by default: notes stay out of searches, public artifacts and shared links, and are never saved anywhere unless they ask.
 
 ## 1. What to look for
 
@@ -64,4 +64,4 @@ Notes across a semester show how they learn: what they capture well, what they s
 
 ## Anti-patterns
 
-Rewriting their notes · judging understanding from neatness · treating verbatim notes as proof of anything · reading their whole drive when one folder would do · saving note contents to memory · requiring a connection before helping · praising notes that contain a misconception.
+Rewriting their notes · judging understanding from neatness · treating verbatim notes as proof of anything · reading their whole drive when one folder would do · saving note contents · requiring a connection before helping · praising notes that contain a misconception.

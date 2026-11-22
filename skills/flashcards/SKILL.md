@@ -7,9 +7,9 @@ description: "Use when someone says make flashcards, a study deck, or Anki or Qu
 
 Cards exist for **durable recall of what the learner already understands**: fast, reliable access to facts, terms, relationships and steps so working memory is free for reasoning. A deck cannot create understanding, and a bad deck creates review debt and false confidence. Few, sharp cards beat many vague ones.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
-**Stand down when it isn't wanted.** If memory or the person says not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
+**Stand down when it isn't wanted.** If the person has said not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
 
 Evidence: retrieval practice and distributed practice are the two "high utility" study techniques (Dunlosky et al. 2013); repeated retrieval beats restudy at a week (Roediger & Karpicke 2006); successive relearning (3 correct recalls per item in the first session, then 1 correct recall in each of 3+ spaced sessions) raises college exam scores (Rawson & Dunlosky 2011; Rawson, Dunlosky & Sciartelli 2013). Card-writing rules below follow Matuschak ("How to write good prompts") and Wozniak ("20 rules of formulating knowledge").
 
@@ -20,6 +20,7 @@ Evidence: retrieval practice and distributed practice are the two "high utility"
 3. **Every back is checked** against the course source or a reliable reference before delivery.
 4. **Course wording and notation** exactly as the course uses them; note where the textbook differs.
 5. **Don't touch existing decks**: add new ones; never overwrite or merge without asking.
+6. **Cards from their material point at it.** Each card names its passage in a source column or a small line on the back. Anything not in the material is marked *Outside your material:* or left out. If the material leaves something undefined, list that under the deck instead of inventing it. State the number of cards, and count them first. Add no units, conditions or derivations the material doesn't give; an application card is fine if the situation is marked as yours and the rule is theirs. In a learner's language other than English, keep every label in that language.
 
 ## 1. What makes a good prompt
 
@@ -62,7 +63,7 @@ A concept deserves several angles; this is what turns cards into understanding s
 
 ## 4. Export formats
 
-Ask which tool they use if unknown. Default: Quizlet-ready block + readable table. Sets over ~20 cards: also deliver a file (`.txt`/`.tsv`/`.md`) and state the count.
+Ask which tool they use if unknown, but make the deck first. Default: a readable table plus an Anki-ready tab-separated block (question, answer, source), which also imports into Quizlet. If your host renders HTML inline, offer to run the cards right here with the flashcard view in `templates/inline-widgets.html`. Sets over ~20 cards: also deliver a file (`.txt`/`.tsv`/`.md`) and state the count.
 
 **Study deck page** (they ask for a deck file or page, an exam deck they'll come back to, or no SRS app): copy `templates/flashcards-deck.html` and replace only the JSON in `<script type="application/json" id="deck">`: title, course, source, and the cards (`id`, `front`, `back`, optional `hint`, `tag`, `type`). Give every card a short stable `id` and keep it when you edit the deck: saved review dates follow the id. Build the JSON with a serializer (`json.dumps`, `JSON.stringify`) and write `<` as `\u003c`; by hand, every TeX backslash is doubled (`"\\(\\frac{a}{b}\\)"`), since JSON reads a single `\f`, `\n`, `\t`, `\b` or `\r` as a control character. The deck refuses a card only for `\f` or `\b`; a tab, carriage return or line break that looks like a swallowed backslash (`\theta`, `\rho`, `\nabla`) loads and appears in `deckAudit()` under `possibleLostBackslash`. The engine does the rest offline: commit before reveal, again/hard/good/easy with misses requeued, three correct recalls in the first session, a saved review ladder, a tag filter, a print-ready browse list, and Quizlet and Anki exports. Don't rewrite the engine or hand-build a deck page. If you can run a headless browser, call `deckAudit()` on the page before delivering: fix every `mathErrors` and `skipped` entry, and check each `rawTeX` (likely missing delimiters) and `possibleLostBackslash` entry against what you meant.
 

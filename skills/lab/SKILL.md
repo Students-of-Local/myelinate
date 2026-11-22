@@ -7,7 +7,7 @@ description: "Use when someone asks for an interactive learning lab or simulatio
 
 A lab is a page that makes the learner **think with the idea**: predict, manipulate, explain, apply, and then proves what they can do without help. The learner changes a variable, drags parts or explores a model and sees the result. A plain diagram or concept map to understand a topic belongs to `tutor` or `teach` with `references/visual-teaching.md`. A beautiful page that the learner reads and clicks through is not a lab; it's a brochure. Every element must either (a) make the learner generate something, (b) give feedback on what they generated, or (c) carry a variable of the concept.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
 The reference implementation is `examples/oxygen-lab.html` (template: `templates/lab-standalone.html`). Open it before building your first lab; copy its engine, not its content.
 

@@ -1,0 +1,506 @@
+[
+ {
+  "id": "motor-juggle",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "teach me to juggle three balls",
+  "rubric": "Motor skill. Best: a concrete first drill now (one ball arc, then two), what success looks like, how to self-check without a coach (film, count catches), how long to practice and when to progress, and asks for a result from the drill. Fails: an essay; a Socratic quiz about juggling; no drill; generic learning advice."
+ },
+ {
+  "id": "motor-swim-adult",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "I'm 34 and never learned to swim. I want to learn. How do I actually do this?",
+  "rubric": "Physical skill with real risk. Best: safety line is plain (shallow water, not alone, lessons or a lifeguard present) without lecturing, a first-session goal (floating, breath), how to get feedback, and a progression. Asks one useful question (access to pool, fear?). Fails: medicalizing; refusal; a huge plan; omits safety; pretends text can replace feedback."
+ },
+ {
+  "id": "language-japanese",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "I want to be able to hold a basic conversation in Japanese in six months. I have 20 minutes a day.",
+  "rubric": "Language. Best: honest about what six months at 20 min/day buys, comprehensible input plus speaking and spaced vocabulary, kana first, a concrete first week or first lesson, and gets them producing something now. Fails: a grammar lecture; pure study-plan table with no first step; promises fluency."
+ },
+ {
+  "id": "instrument-piano",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "teach me what a ii-V-I is on piano, I can play basic triads",
+  "rubric": "Instrument. Best: builds from triads, shows concrete notes in C (Dm7 G7 Cmaj7), hands-on instruction to play and listen, voice leading, one thing to try and report. Fails: music-theory essay; no fingers on keys; wrong notes."
+ },
+ {
+  "id": "trade-welding",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "I want to learn to MIG weld at home so I can fix my trailer.",
+  "rubric": "Trade with real safety and structural stakes. Best: straight about PPE, fumes, fire, and that a trailer is a load-bearing road item so practice on scrap first and get structural repairs checked; first practice exercise with what a good bead looks like and how to judge it. Fails: refusal; generic plan; no practice exercise; ignores that a trailer weld can fail on the road."
+ },
+ {
+  "id": "practical-sourdough",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "My sourdough keeps coming out dense and gummy. I want to actually understand bread, not just follow recipes.",
+  "rubric": "Practical craft with stated learning intent. Best: diagnoses with one specific question about their process or a poke-test observation, gives the mental model (fermentation, gluten, underproofing), an experiment to run next bake and what to look for. Fails: list of 12 tips; no experiment; asks three questions."
+ },
+ {
+  "id": "abstract-galois",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "Galois theory, from scratch",
+  "rubric": "Terse concept name. Best: gauges background briefly at the right level (or offers a shape of help) with a real foothold such as why quintics matter and symmetry of roots. Fails: giant essay; condescending; three questions with no substance."
+ },
+ {
+  "id": "humanities-aquinas",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "I want to learn to read Aquinas. Where do I start and how do I read the Summa without getting lost?",
+  "rubric": "Humanities reading skill. Best: teaches how an article is structured (videtur, sed contra, respondeo, replies), points to a real starting question, has them read one short article and do something with it; primary text first; accurate. Fails: reading list only; summary of Aquinas's views replaces reading; inaccuracies."
+ },
+ {
+  "id": "game-chess",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "I'm about 900 on chess.com and stuck. Help me actually get better.",
+  "rubric": "Competitive skill with deliberate practice. Best: asks for or uses evidence (recent games, how they lose), names the likely highest-yield practice (tactics, blunder check, reviewing own games), gives a specific routine and a position or habit to try now. Fails: generic advice list; openings focus; no feedback loop."
+ },
+ {
+  "id": "soft-negotiate",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "teach me how to negotiate my salary. I have an offer on Friday.",
+  "rubric": "Real deadline plus learning. Best: gets useful prep now, teaches the anchor/BATNA idea tied to their case, offers a roleplay where they speak. Short. Fails: long generic essay; quizzes them instead of helping with a Friday deadline; no practice."
+ },
+ {
+  "id": "bare-topic-weird",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "how do beekeepers keep a hive alive through winter? I'm thinking of starting next year",
+  "rubric": "Curious learner on a hobby. Best: real answer plus a mental model (cluster, stores, moisture, mites), honest about regional variation, one forward-looking question or suggestion for a first step. Fails: Socratic refusal to answer; wall of text."
+ },
+ {
+  "id": "learn-how-to-learn",
+  "group": "anything",
+  "subs": [
+   "teach"
+  ],
+  "against": [
+   "learn",
+   "vanilla"
+  ],
+  "message": "I forget everything I read. Teach me how to actually learn things. I want this to work for anything.",
+  "rubric": "Meta-learning. Best: honest about evidence (retrieval, spacing), corrects passive rereading without lecture, has them do a retrieval exercise right now on something they recently read, and leaves a simple repeatable loop. Fails: list of techniques with nothing to do now; learning styles; overpromising."
+ },
+ {
+  "id": "grounded-quiz",
+  "group": "study-desk",
+  "subs": [
+   "tutor"
+  ],
+  "against": [
+   "study-desk",
+   "learn"
+  ],
+  "rival_files": {
+   "study-desk": [
+    "skills/study-quiz/SKILL.md"
+   ]
+  },
+  "message": "Quiz me on these notes.\n\nLecture 7: Enzyme kinetics (my notes)\n7.1 Michaelis-Menten. v0 = Vmax[S] / (Km + [S]). Km is the [S] at which v0 = Vmax/2. Vmax is reached when all enzyme is bound.\n7.2 kcat = Vmax / [E]total. kcat/Km is the specificity constant.\n7.3 Lineweaver-Burk plots 1/v0 against 1/[S]. y-intercept 1/Vmax, x-intercept -1/Km.\n7.4 Competitive inhibitors raise apparent Km; Vmax unchanged. Noncompetitive inhibitors lower Vmax; Km unchanged.\n7.5 Prof said: know how to read inhibition from a LB plot. Allosteric enzymes do not follow MM (sigmoidal).",
+  "rubric": "Questions must come only from the pasted notes, hold no answer, and show where each comes from or be clearly tied to the notes; anything added from outside is marked; one at a time or a set are both acceptable if answer is hidden. Fails: asks about things not in the notes without saying so; leaks answers; invents what the professor wants."
+ },
+ {
+  "id": "grounded-cards",
+  "group": "study-desk",
+  "subs": [
+   "flashcards"
+  ],
+  "against": [
+   "study-desk",
+   "learn"
+  ],
+  "rival_files": {
+   "study-desk": [
+    "skills/study-cards/SKILL.md"
+   ]
+  },
+  "message": "make flashcards from this\n\nLecture 7: Enzyme kinetics (my notes)\n7.1 Michaelis-Menten. v0 = Vmax[S] / (Km + [S]). Km is the [S] at which v0 = Vmax/2. Vmax is reached when all enzyme is bound.\n7.2 kcat = Vmax / [E]total. kcat/Km is the specificity constant.\n7.3 Lineweaver-Burk plots 1/v0 against 1/[S]. y-intercept 1/Vmax, x-intercept -1/Km.\n7.4 Competitive inhibitors raise apparent Km; Vmax unchanged. Noncompetitive inhibitors lower Vmax; Km unchanged.\n7.5 Prof said: know how to read inhibition from a LB plot. Allosteric enzymes do not follow MM (sigmoidal).",
+  "rubric": "Cards made now with no questions first. Each traces to its passage; nothing invented; application and contrast cards not just definitions; formulas readable; importable (Anki) or a clear offer. Note what notes leave undefined instead of filling in silently."
+ },
+ {
+  "id": "grounded-grade",
+  "group": "study-desk",
+  "subs": [
+   "tutor"
+  ],
+  "against": [
+   "study-desk",
+   "learn"
+  ],
+  "rival_files": {
+   "study-desk": [
+    "skills/study-grade/SKILL.md"
+   ]
+  },
+  "message": "Check my answer. Q: What does a competitive inhibitor do to a Lineweaver-Burk plot? My answer: It raises Km and lowers Vmax so the lines cross on the x axis.\n\nLecture 7: Enzyme kinetics (my notes)\n7.1 Michaelis-Menten. v0 = Vmax[S] / (Km + [S]). Km is the [S] at which v0 = Vmax/2. Vmax is reached when all enzyme is bound.\n7.2 kcat = Vmax / [E]total. kcat/Km is the specificity constant.\n7.3 Lineweaver-Burk plots 1/v0 against 1/[S]. y-intercept 1/Vmax, x-intercept -1/Km.\n7.4 Competitive inhibitors raise apparent Km; Vmax unchanged. Noncompetitive inhibitors lower Vmax; Km unchanged.\n7.5 Prof said: know how to read inhibition from a LB plot. Allosteric enzymes do not follow MM (sigmoidal).",
+  "rubric": "Honest verdict: partly right. Km up is right; Vmax claim is wrong per 7.4; the lines cross on the y-axis. Points to the passage. Does not soften. A concise next step. Fails: calling it right; vague; no reference to notes."
+ },
+ {
+  "id": "ready-predict",
+  "group": "study-desk",
+  "subs": [
+   "progress"
+  ],
+  "against": [
+   "study-desk",
+   "learn",
+   "adhd"
+  ],
+  "rival_files": {
+   "study-desk": [
+    "skills/study-quiz/SKILL.md"
+   ]
+  },
+  "message": "Exam tomorrow on this. Am I ready? I've read it a few times and it feels fine.\n\nLecture 7: Enzyme kinetics (my notes)\n7.1 Michaelis-Menten. v0 = Vmax[S] / (Km + [S]). Km is the [S] at which v0 = Vmax/2. Vmax is reached when all enzyme is bound.\n7.2 kcat = Vmax / [E]total. kcat/Km is the specificity constant.\n7.3 Lineweaver-Burk plots 1/v0 against 1/[S]. y-intercept 1/Vmax, x-intercept -1/Km.\n7.4 Competitive inhibitors raise apparent Km; Vmax unchanged. Noncompetitive inhibitors lower Vmax; Km unchanged.\n7.5 Prof said: know how to read inhibition from a LB plot. Allosteric enzymes do not follow MM (sigmoidal).",
+  "rubric": "Best: no score prediction, explains that feeling familiar isn't evidence, tests them right now with an actual unaided question from the notes. Fails: reassurance; predicting; a long plan; lecture."
+ },
+ {
+  "id": "grounded-hebrew",
+  "group": "study-desk",
+  "subs": [
+   "flashcards"
+  ],
+  "against": [
+   "study-desk"
+  ],
+  "rival_files": {
+   "study-desk": [
+    "skills/study-cards/SKILL.md"
+   ]
+  },
+  "message": "תכין לי כרטיסיות מהסיכום הזה:\n\nפרק 3: חוק אוהם. המתח V שווה לזרם I כפול ההתנגדות R, כלומר V = IR. בחיבור טורי ההתנגדויות מתחברות: R = R1 + R2. בחיבור מקבילי: 1/R = 1/R1 + 1/R2. הספק: P = VI.",
+  "rubric": "Reply and cards in Hebrew, formulas readable left-to-right and not reordered, nothing invented beyond the notes, application items. Fails: reply in English; broken RTL formula; invented facts."
+ },
+ {
+  "id": "cant-start",
+  "group": "adhd",
+  "subs": [
+   "progress"
+  ],
+  "against": [
+   "adhd",
+   "learn"
+  ],
+  "rival_files": {},
+  "message": "I've been avoiding orgo for two weeks. I open the book and just freeze. Exam is in 12 days. I don't know where to even begin.",
+  "rubric": "Best: warm without shame, shrinks to one tiny concrete first step that can begin right now (one problem, five minutes), no overwhelming plan, doesn't diagnose or name a condition, and doesn't assume one. Fails: a big study plan; lecture on procrastination; three questions; shaming; naming ADHD."
+ },
+ {
+  "id": "adhd-disclosed",
+  "group": "adhd",
+  "subs": [
+   "progress"
+  ],
+  "against": [
+   "adhd",
+   "learn"
+  ],
+  "memory": "Learner said they have ADHD and that long messages lose them.",
+  "message": "ok im back. been like 3 weeks since we did cell respiration. sorry. i fell off",
+  "rubric": "Returning learner after a gap. Best: no shame, no lecture, a one-line welcome and a low-stakes retrieval attempt immediately on cell respiration in a tiny question; forgetting is normal; very short. Fails: long message; over-apologizing back; re-teaching everything; quiz with several questions."
+ },
+ {
+  "id": "wrap-session",
+  "group": "adhd",
+  "subs": [
+   "progress"
+  ],
+  "against": [
+   "adhd",
+   "learn"
+  ],
+  "transcript": "Tutor: So what happens to electrons at Complex I?\nLearner: NADH hands them off and it pumps protons, I got that now. The ATP synthase part still feels fuzzy.\nTutor: Right on Complex I. We can pick up ATP synthase next.",
+  "message": "ok I'm done for today",
+  "rubric": "Best session close: learner's own one-line recall or teach-back (one prompt, no long interview), names honestly what is solid versus fuzzy (ATP synthase), says when to come back and what will be asked. Short. Fails: tutor's summary replaces recall; no next review; a long quiz; praise."
+ },
+ {
+  "id": "how-am-i-doing",
+  "group": "adhd",
+  "subs": [
+   "progress"
+  ],
+  "against": [
+   "adhd",
+   "learn"
+  ],
+  "memory": "Learner record: Topics: glycolysis (retrieved after delay 10-20, 10-27), TCA cycle (hinted 10-20, revealed 10-28), ETC (incorrect 10-29, hinted 11-02), enzyme kinetics (not reviewed since 10-05). Last 5 sessions all ran late at night; two skipped warm-ups.",
+  "message": "how am i doing lately",
+  "rubric": "Best: reads actual record; names specific honest patterns (TCA hinted/revealed isn't mastery; enzyme kinetics overdue; warm-ups skipped), concrete adopt/drop/next, no flattery, no score prediction, no moralizing about late nights. Fails: vague encouragement; invented percentages; ignores the record."
+ },
+ {
+  "id": "reread-plan",
+  "group": "adhd",
+  "subs": [
+   "progress"
+  ],
+  "against": [
+   "adhd",
+   "learn"
+  ],
+  "message": "My plan for the midterm is to reread all my notes and highlight the key parts, then reread the highlights. Good plan?",
+  "rubric": "Best: honest that rereading and highlighting are low-yield relative to self-testing, a short concrete swap using their notes, one sentence of why, no lecture. Fails: says good plan; long evidence lecture."
+ },
+ {
+  "id": "video-learn-from",
+  "group": "video",
+  "subs": [
+   "video"
+  ],
+  "against": [
+   "yt",
+   "learn"
+  ],
+  "rival_files": {
+   "yt": [
+    "skills/youtube-transcriber/SKILL.md"
+   ]
+  },
+  "message": "I watched this and want to actually learn it, not just have watched it. Transcript:\n\n[0:00] so today we're looking at why the derivative of e to the x is itself [0:12] start by thinking of e to the t as your position on a number line [0:31] if your velocity always equals your position, what does the motion look like [0:58] at position 1 you move at speed 1, at position 2 at speed 2 [1:24] that self-reinforcing growth is what the constant e pins down [2:05] now 2 to the t has derivative about 0.693 times 2 to the t [2:40] and 3 to the t about 1.0986 times 3 to the t [3:15] those constants are natural logs of the base, e is the base where the constant is exactly 1 [4:02] so any exponential can be written e to the ct and the chain rule gives the constant",
+  "rubric": "Best: uses the transcript with timestamps, gets them recalling before summarizing, asks one real question tied to a timestamp and offers cards or a quiz from it. Accurate on calculus. Fails: just summarizes; dumps cards unasked with no recall; ignores timestamps."
+ },
+ {
+  "id": "video-recommend",
+  "group": "video",
+  "subs": [
+   "find-media"
+  ],
+  "against": [
+   "yt",
+   "learn",
+   "vanilla"
+  ],
+  "rival_files": {
+   "yt": [
+    "skills/youtube-transcriber/SKILL.md"
+   ]
+  },
+  "message": "find me a good YouTube video on SN1 vs SN2 for my orgo class",
+  "rubric": "No search tool this turn, so best: honest it cannot verify a specific video now; does not invent URLs, titles or timestamps; names credible channels as starting points flagged unverified, says how to pick and to watch actively. Fails: fabricated links; a list of ten; says it searched."
+ },
+ {
+  "id": "video-playlist",
+  "group": "video",
+  "subs": [
+   "video"
+  ],
+  "against": [
+   "yt"
+  ],
+  "rival_files": {
+   "yt": [
+    "skills/youtube-transcriber/SKILL.md"
+   ]
+  },
+  "message": "Here's a 12 video playlist from my professor (youtube.com/playlist?list=PLabc123). Can you turn it into something I can study from? I have no browser extension.",
+  "rubric": "Best: honest about what it can't reach, gives a practical route (paste transcripts from YouTube's own panel, one video at a time, start with one), proposes concrete study product and asks for the first transcript. Fails: claims it read the playlist; invents content; refuses without a route."
+ },
+ {
+  "id": "dev-pair",
+  "group": "dev",
+  "subs": [
+   "code"
+  ],
+  "against": [
+   "learn-dev",
+   "learning-style"
+  ],
+  "rival_files": {
+   "learn-dev": [
+    "skills/learn/SKILL.md"
+   ],
+   "learning-style": [
+    "hook-context.txt"
+   ]
+  },
+  "message": "I'm learning backend. Help me add rate limiting to my Express API, I want to understand it as we go, not just get code.",
+  "rubric": "Learning while building. Best: one prediction or design decision for them (where it goes, per-IP or per-user, token bucket vs window), sets them to write the piece that carries the idea, explains tradeoff briefly, keeps moving. Fails: dumps whole solution; long lecture; refuses to help."
+ },
+ {
+  "id": "dev-inherited",
+  "group": "dev",
+  "subs": [
+   "code"
+  ],
+  "against": [
+   "learn-dev",
+   "learning-style"
+  ],
+  "rival_files": {
+   "learn-dev": [
+    "skills/learn/SKILL.md"
+   ],
+   "learning-style": [
+    "hook-context.txt"
+   ]
+  },
+  "message": "I inherited this repo and I have to own it next month. Teach me how to get my head around it. It's a Django app with celery workers.",
+  "rubric": "Owning code. Best: a concrete method (trace one real request through to a worker), asks for the entry or a behavior to trace, has them predict before running. Fails: generic Django lecture; list of tips; no trace."
+ },
+ {
+  "id": "dev-just-do",
+  "group": "dev",
+  "subs": [
+   "code"
+  ],
+  "against": [
+   "learn-dev",
+   "learning-style"
+  ],
+  "rival_files": {
+   "learn-dev": [
+    "skills/learn/SKILL.md"
+   ],
+   "learning-style": [
+    "hook-context.txt"
+   ]
+  },
+  "message": "fix this now, prod is down: TypeError: Cannot read properties of undefined (reading 'id') at getUser (users.js:42) from `const u = req.session.user.id`",
+  "rubric": "Real emergency, no learning intent. Best: immediate fix (session may be missing; guard and return 401) and at most one line of why. Fails: asks them to predict; TODO for them; teaching before fix."
+ },
+ {
+  "id": "teacher-unit",
+  "group": "edu",
+  "subs": [
+   "teacher"
+  ],
+  "against": [
+   "edu",
+   "learn"
+  ],
+  "rival_files": {
+   "edu": [
+    "skills/curriculum-assessment/backwards-design-unit-planner/SKILL.md"
+   ]
+  },
+  "message": "I teach 7th grade science. Help me plan a two-week unit on photosynthesis. Kids have 45 minute periods.",
+  "rubric": "Teacher user. Best: backward design: outcome and evidence first, then a sequence fit to ten 45-minute periods, with named misconceptions (plants get food from soil) and checks for understanding; usable. Fails: tutoring the teacher; generic; no assessment evidence; ignores period length."
+ },
+ {
+  "id": "teacher-rubric",
+  "group": "edu",
+  "subs": [
+   "teacher"
+  ],
+  "against": [
+   "edu",
+   "learn"
+  ],
+  "rival_files": {
+   "edu": [
+    "skills/curriculum-assessment/criterion-referenced-rubric-generator/SKILL.md"
+   ]
+  },
+  "message": "Make me a rubric for a 10th grade argumentative essay on whether the US should have dropped the atomic bomb.",
+  "rubric": "Best: makes it now; criteria describe observable quality, levels distinguishable, tied to evidence and reasoning rather than the student's position, usable on one page. Fails: asks many questions first; vague adjectives (good/better/best); grades position."
+ },
+ {
+  "id": "teacher-question",
+  "group": "edu",
+  "subs": [
+   "tutor"
+  ],
+  "against": [
+   "edu"
+  ],
+  "rival_files": {
+   "edu": [
+    "skills/student-learning/stuck-and-error-diagnosis-coach/SKILL.md"
+   ]
+  },
+  "message": "I keep getting these wrong. 3/4 + 1/2 = 4/6, right? I don't get why my teacher marked it wrong.",
+  "rubric": "Student error diagnosis. Best: verdict not yet, names adding numerators and denominators as the error without doing the whole computation, a concrete check (is 4/6 smaller than 3/4?), hands the next step back. Fails: full solution; vague."
+ },
+ {
+  "id": "calibration",
+  "group": "edu",
+  "subs": [
+   "tutor"
+  ],
+  "against": [
+   "edu",
+   "learn"
+  ],
+  "rival_files": {
+   "edu": [
+    "skills/student-learning/confidence-calibration-check/SKILL.md"
+   ]
+  },
+  "transcript": "Tutor: Which has the higher boiling point, CH3OH or CH3CH3, and why?\nLearner: CH3CH3, because it's bigger. I'm like 95% sure.",
+  "message": "right?",
+  "rubric": "Best: verdict not yet; highlights 95% confidence versus a wrong answer without shaming; points at hydrogen bonding through a question or hint. Fails: gives full answer immediately with lecture; softens; ignores confidence."
+ }
+]

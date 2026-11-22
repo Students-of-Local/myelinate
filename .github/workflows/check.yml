@@ -43,6 +43,7 @@ jobs:
           python3 tests/game_journey.py
           python3 tests/visual_journey.py
           python3 tests/lab_journey.py
+          python3 tests/inline_journey.py
 
   trigger-eval:
     if: github.event_name == 'workflow_dispatch' && inputs.trigger_eval

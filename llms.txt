@@ -1,8 +1,8 @@
 # Myelinate
 
-> An open-source (MIT) skill suite that helps any assistant teach, including when this file is pasted in chat: course tutoring from your syllabus and uploads in chat or voice, assignment coaching that teaches instead of doing the work, learning while building, tests and grading, full course packages for projects or plain chat, level-matched teaching for personal, work and project goals, rendered diagrams and interactive 3D models, interactive learning labs, printable practice tests, flashcards, memory hooks, study plans, diagrams and videos, and adversarial accuracy review. It remembers how you learn and stays honest instead of agreeable.
+> An open-source (MIT) skill suite that helps any assistant teach, including when this file is pasted in chat: course tutoring from your syllabus and uploads in chat or voice, assignment coaching that teaches instead of doing the work, learning while building, tests and grading, full course packages for projects or plain chat, level-matched teaching for personal, work and project goals, rendered diagrams and interactive 3D models, interactive learning labs, printable practice tests, flashcards, memory hooks, study plans, diagrams and videos, and adversarial accuracy review. It stays honest instead of agreeable.
 
-If a person shared this link with you, read SKILL.md and follow it to teach them. It is self-sufficient; load sub-skills by path as it directs.
+If a person shared this link with you and asked you to teach them with it, read SKILL.md. It is self-sufficient; the sub-skills below are there if you can open them.
 
 ## Start here
 - [SKILL.md (router and core rules)](https://raw.githubusercontent.com/baney75/myelinate/main/SKILL.md)
@@ -23,9 +23,13 @@ If a person shared this link with you, read SKILL.md and follow it to teach them
 - [memory-hooks: research-backed mnemonics](https://raw.githubusercontent.com/baney75/myelinate/main/skills/memory-hooks/SKILL.md)
 - [study-plan: exam clock, spaced relearning, sleep](https://raw.githubusercontent.com/baney75/myelinate/main/skills/study-plan/SKILL.md)
 - [find-media: diagrams, photos, videos, licensing](https://raw.githubusercontent.com/baney75/myelinate/main/skills/find-media/SKILL.md)
+- [video: learning from a video, lecture, playlist or transcript](https://raw.githubusercontent.com/baney75/myelinate/main/skills/video/SKILL.md)
+- [progress: wrapping up, coming back, can't start, how am I doing](https://raw.githubusercontent.com/baney75/myelinate/main/skills/progress/SKILL.md)
+- [teacher: unit plans, rubrics and quizzes for teachers](https://raw.githubusercontent.com/baney75/myelinate/main/skills/teacher/SKILL.md)
 - [verify: adversarial accuracy and currency review](https://raw.githubusercontent.com/baney75/myelinate/main/skills/verify/SKILL.md)
 
 ## References
+- [Learn anything: what practice looks like for skills, crafts, languages and instruments](https://raw.githubusercontent.com/baney75/myelinate/main/references/learn-anything.md)
 - [Personalization: learning how each person learns, over time](https://raw.githubusercontent.com/baney75/myelinate/main/references/personalization.md)
 - [First session: learner intake shared by tutor and teach](https://raw.githubusercontent.com/baney75/myelinate/main/references/first-session.md)
 - [Show it: rendered visuals, linked representations, 3D models](https://raw.githubusercontent.com/baney75/myelinate/main/references/visual-teaching.md)
