@@ -2,6 +2,38 @@
 
 Checked **2026-10-02**, with synthetic learner prompts and locally generated examples. These checks assess instructions and software behavior; they do not measure real student learning.
 
+## 3.0.0: debrief, rules 18 and 19, online homework (2026-11-21)
+
+Head-to-head with `evals/head-to-head/rivals.py --scenarios debrief-scenarios.json --repeats 2` (Sonnet responder through `claude -p` with no tools, blind Opus judge, order randomized). Rivals: plain Claude (`vanilla`) and the `main` branch at `682f3c9`, loading the router plus the skills main would use for each case (`tutor`, `study-plan`, `assignment` or `flashcards`).
+
+| Arm | Pairs | Wins | Losses | Mean (this / rival) |
+| --- | --- | --- | --- | --- |
+| vs plain Claude | 16 | 15 | 1 | 7.94 / 4.06 |
+| vs main | 16 | 14 | 2 | 8.00 / 6.25 |
+
+- All three losses were `no-sense-visualizer`: the new rule 19 held back a visual the learner asked for, or drew ASCII bars in its place. Rule 19 now says a requested interactive comes in the same reply as a working control. Rerun of that scenario alone, 3 repeats: 3 of 3 against plain Claude (8.67 / 5.67) and 2 of 3 against main (7.67 / 7.00); the remaining loss showed ΔG before the prediction.
+- An earlier round lost `debrief-corrections-integrity` to main twice (main named the exact step and worked a parallel problem). `debrief` §6 now does both itself; the full run above includes that change and won the case.
+- The online-homework and "makes no sense" scenarios come from a real learner's claude.ai chat, paraphrased; nothing personal is stored here.
+
+### Triggers
+
+Codex trigger eval (`evals/triggers`, gpt-5.6-luna, low, 3 passes) on the final descriptions, 2026-11-21: 90.4% hit and 17.5% false fire on `prompts.jsonl` (majority of 3: 96.2% and 19.1%), and 87.7% hit and 0.0% false fire on the holdout in two separate runs (majority: 100% and 0%). These supersede the 2026-11-06 figures quoted under v2.9.0 below.
+
+The eval model got noisier this month, and the floors were re-baselined with this record as the written reason:
+
+- **Control.** Main's unchanged descriptions, rerun the same day on main's own prompts, scored 83.8% hit and 14.6% false fire. Main's committed result from 2026-11-07 was 99.15% and 2.08%. Harness, prompts and the skill listing did not change; a probe confirmed the model sees every description verbatim.
+- **Effort.** Medium effort did not help: 79.5% hit and 52.4% false fire on the 33 weakest prompts.
+- **Same prompts, same day.** On the 55 prompts main and this branch share, the branch matched or beat main: positives 99 vs 98 of 117 passes, negatives 42 vs 41 of 48.
+- **Description changes from this eval.** `video` now says "Not work summaries, trims or captions", `tutor` routes online quizzes to `assignment` and says "Not grade math", `assignment` names the online homework screen (attempts, Submit Answer), and `debrief` covers an exam that "went badly" and names decks and rereading. Hits rose from 80.1% to 90.4% on the full set. An A/B against the earlier `tutor` and `debrief` wording, 5 passes on 17 prompts, tied on hits; the new wording fired `video` on n40 3 of 5 times against 5 of 5.
+- **Still failing.** n43 (grade arithmetic) goes to `tutor` 3 of 3; n40 (a video transcript summarized for work) goes to `video` 2 of 3; p40 (a Unity platformer for a portfolio) goes to `game` 3 of 3. Each is a real false fire at this noise level, left open rather than relabeled.
+- `evals/triggers/test_check.py`'s below-floor case now misses the fewest positives that cross the committed floor, so it keeps testing at the floor whatever its value.
+
+### Not established
+
+- No learner outcome was measured. One responder model, one judge, two to three repeats per pair.
+- The `main` rival lacks `progress`, so main's arms load `study-plan` instead.
+- No live test in the Claude apps.
+
 ## Teaching behavior
 
 A fresh read-only reviewer produced actual simulated tutor replies to three cases:

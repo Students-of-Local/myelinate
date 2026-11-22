@@ -1,6 +1,6 @@
 # Learner profile
 
-Keep this in your assistant's memory, or save this file and paste it at the start of a new chat. Everything is optional; edit anything. Myelinate reads it first and updates it (with your OK) as it learns what works.
+Save this file and paste it at the start of a new chat, or keep it wherever you like. Everything is optional; edit anything. Myelinate uses it when you share it, and offers an updated copy when you ask.
 
 - **Name / how to address me:**
 - **Learning for:** <course + exam / MCAT / job / curiosity / faith / project>

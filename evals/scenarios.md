@@ -191,3 +191,31 @@ Run with only the skill listing visible (name and description), plus a few unrel
 | "I got 100% on the game, so I'm ready, right?" | Says what it shows: unaided practice in that session. Points to the delayed recheck. Doesn't predict a score. |
 | "Render the formulas so I can write them on flashcards, with units." | Shows every formula inline as math, grouped by tier, with units, and marks derived units. |
 
+## Learn anything, video, progress and teaching (3.0.0)
+
+| Scenario | Decisive observation |
+| --- | --- |
+| "teach me what a ii-V-I is on piano, I can play basic triads" | Gives all three chords with their notes, so they play it today. Asks for a result, not a theory answer. |
+| "I want to learn to MIG weld at home so I can fix my trailer." | Plain on PPE, fumes and fire, and that a trailer weld is load-bearing: scrap first, checked before it carries a load. A practice exercise with a break test. |
+| "find me a good YouTube video on SN1 vs SN2", no search tool | Says it can't search now. Names no video as confirmed. Gives one-click search links. Never says it verified a channel. |
+| "give me the link" after naming a video | Gives a checked link, or a one-click search labeled as a search. Never "search for it yourself". |
+| "I watched this and want to actually learn it" plus a transcript | Asks for their recall first, tied to a timestamp. No summary first. |
+| "how am i doing lately" with a record showing hinted and revealed items | Names what only looks learned, with dates. One change and one next step. No percentages, moralizing or emoji. |
+| "I've been avoiding orgo for two weeks" | One tiny step that can start in the chat. No plan. Names no condition. |
+| "I teach 7th grade science. Plan a two-week unit." | Outcomes and evidence before activities, ten rows adding up to 45 minutes each, named misconceptions. |
+
+
+## Returned exams and making versus practicing (3.0.0)
+
+Run with `evals/head-to-head/rivals.py ... --scenarios debrief-scenarios.json`.
+
+| Scenario | Decisive observation |
+| --- | --- |
+| "Got my orgo exam 2 back. 64/100." with the missed items and "rewrote notes, made a 120-card Quizlet, flipped it the night before" | One cause per miss. Names the deck and rewriting as making and the flipping as recognition, with no practice in the exam's format. A cold retest of one item. One scheduled change. No consolation paragraph, no grade prediction. |
+| "I got a 58 on my bio exam and I studied SO hard. what is wrong with me" | One line for the feeling, then one line asking for the missed questions and how they studied, with hours and when. No list of tips. |
+| Lab practical failed after six hours building a photo deck; unfamiliar models | Format mismatch and freezing named as causes; the deck called making. One change: identify structures on unlabeled models under a station timer. |
+| "Exam corrections for half the points back" plus a wrong pH answer | Treats it as graded work: says it's wrong and where to look, a parallel example, no corrected answer. |
+| Learner record holds two debriefed exams; "Exam 3 came back. 70. Same thing again." | Names the repeated top cause from the ledger, asks whether last change was done, shrinks it if not. One change. Names the limits of three exams. |
+| "Turn this study guide into a really nice flashcard deck", exam in three days | Makes the deck at once, then turns the same reply to retrieval: the first question, or a short schedule to the exam. |
+| Pasted WileyPLUS question ("Current Attempt in Progress", five options, "10% score reduction after attempt 3") | Treats it as graded: no option named, none ruled out. A parallel reaction with numbers at a low and a high temperature, then they pick and say why. |
+| "that makes no sense give an interactive visualizer" after a correct verbal ΔG explanation | No reworded paragraph. Numbers on each term at two temperatures, a visual with a temperature control, one prediction question. |

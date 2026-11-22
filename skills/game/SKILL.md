@@ -7,9 +7,9 @@ description: "Use for a study game, a fun way to drill for an exam, or typed pra
 
 A typed retrieval game for an exam or a defined scope. It stays fun by keeping the learner producing answers quickly, with a visible payoff for each one. The fun serves retrieval: every point comes from an unaided answer, and nothing rewards time on the page.
 
-Paths like `references/…` and `templates/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing, the router's "Missing files" note says where to fetch it, and the rules below still apply.
+Paths like `references/…` and `templates/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
-**Stand down when it isn't wanted.** If memory or the person says not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
+**Stand down when it isn't wanted.** If the person has said not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
 
 Evidence and limits: the method is retrieval, spacing, interleaving and successive relearning (`references/evidence.md`). No study has tested this game. Never say it raises grades or that a learner is ready; report what they did.
 
@@ -27,7 +27,7 @@ Evidence and limits: the method is retrieval, spacing, interleaving and successi
 1. Get the study guide, the exam format and the practice sets. Read each one fully, from the file itself.
 2. **Formatting can carry the rule.** Red or blue text, highlights and boxes often mark "memorize" and "provided". Text extraction drops them, so look at a rendered page or read the file's run colors, and quote the legend.
 3. **List from the primary source, never from a summary** of it, such as an older deck or chat. If you only have a summary, say so and offer to check the source.
-4. **Save a study packet** as soon as you've read the source: the scope, the formula tiers, the exam format and every practice question as text, in a file or the learner record. Screenshots can drop out of context, and re-reading a course site costs far more than the save.
+4. **Write a study packet** as soon as you've read the source: the scope, the formula tiers, the exam format and every practice question as text, in the conversation; if they want it kept, in a file or the learner record (nothing is saved unless they ask). Screenshots can drop out of context, and re-reading a course site costs far more than the save.
 5. Count before you state a total. Write the list, count it, then write the sentence.
 
 ## 2. Formula tiers

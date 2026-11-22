@@ -32,12 +32,12 @@ required = ['myelinate.md', 'SKILL.md', 'agents/openai.yaml', 'references/eviden
             'templates/course-project-prompt.md', 'templates/gradebook.md', '.claude-plugin/plugin.json',
             '.claude-plugin/marketplace.json', '.codex-plugin/plugin.json', '.agents/plugins/marketplace.json',
             'output-styles/myelinate.md', 'commands/quiz.md', 'commands/review.md', 'agents/key-worker.md',
-            'hooks/hooks.json', 'hooks/due_reviews.py', 'hooks/route_hint.py', 'references/learner-record.md', 'skills/myelinate/SKILL.md', 'llms.txt', 'scripts/make_pdf.py',
+            'hooks/hooks.json', 'hooks/session-start.sh', '.cursor-plugin/plugin.json', 'gemini-extension.json', 'references/learn-anything.md', 'templates/inline-widgets.html', 'commands/wrap.md', 'commands/progress.md', 'commands/video.md', 'tests/inline_journey.py', 'references/learner-record.md', 'skills/myelinate/SKILL.md', 'llms.txt', 'scripts/make_pdf.py',
             'scripts/package.py', 'examples/practice-test-oxygen.html',
             'templates/flashcards-deck.html', 'tests/flashcards_journey.py',
             'templates/exam-game.html', 'tests/game_journey.py']
 SUBSKILLS = ['teach', 'tutor', 'assignment', 'project', 'code', 'assess', 'course-project', 'notes', 'lab', 'print',
-             'flashcards', 'game', 'memory-hooks', 'study-plan', 'find-media', 'verify']
+             'flashcards', 'game', 'memory-hooks', 'study-plan', 'find-media', 'video', 'progress', 'teacher', 'verify', 'debrief']
 required += [f'skills/{name}/SKILL.md' for name in SUBSKILLS]
 for name in required:
     if not (ROOT / name).is_file():
@@ -160,35 +160,50 @@ for path in sorted(ROOT.rglob('*')):
         if not dest.is_relative_to(ROOT) or not dest.exists():
             errors.append(f'{path.relative_to(ROOT)}: broken/escaping local link: {target}')
         count += 1
-# The SessionStart hook must stay silent without a record and list due reviews with one.
-import codecs, json, os, subprocess, tempfile
-with tempfile.TemporaryDirectory() as home:
-    env = {**os.environ, 'MYELINATE_HOME': home, 'MYELINATE_TODAY': '2026-10-14'}
-    hook = [sys.executable, str(ROOT / 'hooks' / 'due_reviews.py')]
-    if subprocess.run(hook, env=env, capture_output=True, text=True).stdout.strip():
-        errors.append('hooks/due_reviews.py: prints output with no learner record')
-    Path(home, 'learner.json').write_text(json.dumps({'version': 1, 'topics': [
-        {'topic': 'Limiting reactants', 'course': 'CHEM 111', 'next_review': '2026-10-13'},
-        {'topic': 'Hess law', 'next_review': '2026-10-20'}]}))
-    out = subprocess.run(hook, env=env, capture_output=True, text=True).stdout
-    if 'Limiting reactants (CHEM 111)' not in out or 'Hess' in out or '1 review' not in out:
-        errors.append(f'hooks/due_reviews.py: wrong due list: {out!r}')
-    Path(home, 'learner.json').write_text('{not json')
-    if subprocess.run(hook, env=env, capture_output=True, text=True).returncode != 0:
-        errors.append('hooks/due_reviews.py: a broken record must not fail the session')
-# Auto-invocation: Claude answers quick learning questions without loading a skill unless the session names the
-# moment (Sonnet loaded one on 0 of 12 learning prompts on 2026-11-01 without the hint). The routing hint must stay registered.
-hint_cmds = [h['command'] for e in json.loads((ROOT / 'hooks' / 'hooks.json').read_text())['hooks'].get('SessionStart', [])
+# Anthropic's directory holds a version whose hook runs anything but plain shell, and its policy bars pulling
+# instructions from outside (2F) and saving conversation content on the software's own initiative (1G). See
+# claude.com/docs/plugins/pre-submission-checklist and evals/verification.md.
+import codecs, json, os, subprocess
+hook_cmds = [h['command'] for e in json.loads((ROOT / 'hooks' / 'hooks.json').read_text())['hooks'].get('SessionStart', [])
              for h in e.get('hooks', [])]
-if not any('route_hint.py' in cmd for cmd in hint_cmds):
-    errors.append('hooks/hooks.json: SessionStart no longer runs hooks/route_hint.py')
-hint = subprocess.run([sys.executable, str(ROOT / 'hooks' / 'route_hint.py')], env={**os.environ, 'MYELINATE_ROUTE_HINT': '1'},
-                      capture_output=True, text=True).stdout
-if 'Skill tool' not in hint or 'myelinate:tutor' not in hint:
-    errors.append(f'hooks/route_hint.py: hint lost its routing instruction: {hint!r}')
-if subprocess.run([sys.executable, str(ROOT / 'hooks' / 'route_hint.py')], env={**os.environ, 'MYELINATE_ROUTE_HINT': '0'},
-                  capture_output=True, text=True).stdout.strip():
-    errors.append('hooks/route_hint.py: MYELINATE_ROUTE_HINT=0 must silence it')
+if hook_cmds != ['sh "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"']:
+    errors.append(f'hooks/hooks.json: hook must run only hooks/session-start.sh with sh: {hook_cmds!r}')
+hook_text = (ROOT / 'hooks' / 'session-start.sh').read_text()
+if re.search(r'\$[({A-Za-z_]|`|\bpython|\bcurl\b|\bwget\b', hook_text):
+    errors.append('hooks/session-start.sh: a variable, command substitution or other program holds the version for a reviewer')
+if 'call the Skill tool for the matching myelinate skill' not in hook_text or 'myelinate:tutor' not in hook_text:
+    errors.append('hooks/session-start.sh: lost the routing line')
+for skill in sorted((ROOT / 'skills').glob('*/SKILL.md')) + [source]:
+    text = skill.read_text()
+    rel = skill.relative_to(ROOT)
+    if 'raw.githubusercontent.com' in text or re.search(r'(?i)\b(fetch|download|pull|read|follow)\b[^.\n]{0,40}\b(it|myelinate|the skill|instructions|SKILL\.md|github\.com/baney75)\b[^.\n]{0,40}github|\b(fetch|read|follow)\b[^.\n]{0,20}github\.com/baney75/myelinate', text):
+        errors.append(f'{rel}: a skill may not tell the assistant to fetch instructions from outside the plugin')
+    if re.search(r'(?i)\b(save|saved|update|keep|keeps|store)\b[^.\n]{0,60}\b(to|in) (platform |your |project )?memory\b|platform memory', text):
+        errors.append(f'{rel}: a skill may not write to or read the host memory on its own initiative')
+for rel in ('skills/tutor/SKILL.md', 'skills/game/SKILL.md'):
+    if 'nothing is saved unless they ask' not in (ROOT / rel).read_text().lower():
+        errors.append(f'{rel}: a study packet must be saved only when they ask')
+if 'Nothing is saved unless they ask' not in body:
+    errors.append('myelinate.md: lost the rule that nothing is saved unless they ask')
+# Every store's manifest carries the router's version.
+router_version = re.search(r'^Version (\S+)', body, re.M).group(1)
+for manifest in ('.cursor-plugin/plugin.json', 'gemini-extension.json'):
+    if json.loads((ROOT / manifest).read_text()).get('version') != router_version:
+        errors.append(f'{manifest}: version differs from myelinate.md')
+# Myelinate is a plugin of skills, not a connector (Donovan, 2026-11-07).
+if (ROOT / '.mcp.json').exists() or (ROOT / 'server').exists():
+    errors.append('.mcp.json or server/: Myelinate is a plugin of skills, not a connector')
+for manifest in ('.claude-plugin/plugin.json', '.codex-plugin/plugin.json'):
+    if 'mcpServers' in json.loads((ROOT / manifest).read_text()):
+        errors.append(f'{manifest}: Myelinate is a plugin of skills, not a connector')
+# What the rival head-to-head found: these must not come back.
+for rel, needles in (('myelinate.md', ('the whole small version', 'Outside your material:', 'Never say you checked, verified, searched or watched')),
+                     ('skills/find-media/SKILL.md', ('"Give me the link" gets a link, every time', 'youtube.com/results?search_query=', 'oembed', 'Never say you verified a channel')),
+                     ('skills/video/SKILL.md', ('Recall comes before anything you write', 'Timestamps come from the transcript')),
+                     ('skills/progress/SKILL.md', ('What only looks learned', 'Never predict a grade')),
+                     ('skills/teacher/SKILL.md', ('Outcome and evidence come before activities', 'Every level describes what'))):
+    text = (ROOT / rel).read_text()
+    errors += [f'{rel}: lost {n!r}' for n in needles if n not in text]
 # Inline first: visuals go in the conversation unless the learner asks for a file or page.
 for rel in ('myelinate.md', 'skills/tutor/SKILL.md', 'references/visual-teaching.md', 'skills/lab/SKILL.md'):
     if 'nline first' not in (ROOT / rel).read_text():

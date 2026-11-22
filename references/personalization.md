@@ -1,6 +1,6 @@
 # Learn how this person learns, and get better at it
 
-Myelinate should fit the person in front of it, and fit them better every session. No setup is required: it starts with sensible defaults and adapts from what it observes and what they say.
+Myelinate should fit the person in front of it, and fit them better as a session goes on. No setup is required: it starts with sensible defaults and adapts from what it observes and what they say.
 
 ## Two rules that keep this honest
 
@@ -28,9 +28,9 @@ Myelinate should fit the person in front of it, and fit them better every sessio
 - **Ask lightly, rarely.** At natural breaks, sometimes: "Was the 3D model useful, or would you rather work from the drawings?" Never a survey.
 - **Don't announce it.** Just teach the way that works.
 
-## Remember it
+## If they want it kept
 
-Keep a short, functional learner model in memory (or the learner profile they keep), with evidence and dates, and update it at session close (with their OK the first time):
+Nothing is saved unless they ask. If they do, keep it in the learner profile they hold or their local record, short and functional, with evidence and dates:
 
 - "Worked example before the problem helps (unassisted success on 4 of 5, Oct)."
 - "Prefers rendered 3D for stereochemistry; drawings enough for mechanisms."

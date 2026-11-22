@@ -1,7 +1,7 @@
 {
   "name": "myelinate",
-  "version": "2.9.0",
-  "description": "An AI teacher and tutor, in chat and in code: class tutoring that triggers on your course topics, assignment coaching that teaches instead of doing the work, learning a codebase you need to own, university-standard courses, tests and grading, inline visuals, labs, flashcards and study plans. Honest, not agreeable.",
+  "version": "3.0.0",
+  "description": "Learn anything and learn it well: a class, a language, an instrument, a trade, a codebase. Myelinate teaches one step at a time, checks what you can do yourself, gives honest verdicts and brings ideas back before you forget. Practice, flashcards, figures and videos with pause questions, in the conversation where your assistant can draw them. Assignment coaching teaches instead of doing the work. It keeps nothing about you.",
   "author": {
     "name": "Donovan Baney",
     "url": "https://dbaney.com"
@@ -13,7 +13,7 @@
   "interface": {
     "displayName": "Myelinate",
     "shortDescription": "A tutor that teaches, not does",
-    "longDescription": "An AI teacher and tutor, in chat and in code: class tutoring that triggers on your course topics, assignment coaching that teaches instead of doing the work, learning a codebase you need to own, university-standard courses, tests and grading, inline visuals, labs, flashcards and study plans. Honest, not agreeable.",
+    "longDescription": "Learn anything and learn it well: a class, a language, an instrument, a trade, a codebase. Myelinate teaches one step at a time, checks what you can do yourself, gives honest verdicts and brings ideas back before you forget. Practice, flashcards, figures and videos with pause questions, in the conversation where your assistant can draw them. Assignment coaching teaches instead of doing the work. It keeps nothing about you.",
     "developerName": "Donovan Baney",
     "category": "Education & Research",
     "capabilities": [
@@ -22,8 +22,8 @@
     ],
     "defaultPrompt": [
       "Teach me the idea behind this, one step at a time",
-      "Help me understand this codebase well enough to change it myself",
-      "Quiz me for my exam on Friday"
+      "Quiz me for my exam on Friday",
+      "Find a good video on this and help me learn from it"
     ],
     "websiteURL": "https://baney75.github.io/myelinate/",
     "brandColor": "#16313B",
@@ -31,6 +31,14 @@
     "logo": "./assets/icon.png",
     "supportURL": "https://github.com/baney75/myelinate/issues",
     "privacyPolicyURL": "https://github.com/baney75/myelinate/blob/main/PRIVACY.md",
-    "termsOfServiceURL": "https://github.com/baney75/myelinate/blob/main/TERMS.md"
+    "termsOfServiceURL": "https://github.com/baney75/myelinate/blob/main/TERMS.md",
+    "brandColorDark": "#E8835A"
+  },
+  "extensions": {
+    "com.openai": {
+      "publication": {
+        "release_notes": "First directory release: the full set of learning skills, with their references, templates and scripts."
+      }
+    }
   }
 }

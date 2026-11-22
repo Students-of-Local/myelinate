@@ -18,4 +18,8 @@ Use the most specific learning request. A named skill request wins. The router r
 - **memory-hooks**: "give me a mnemonic" or "help me remember this sequence." A request to understand the mechanism belongs to tutor or teach.
 - **study-plan**: "exam on Friday, what should I study?" or study blocks and review reminders. General calendar scheduling belongs outside Myelinate.
 - **find-media**: "find me a video," "is there a good diagram I can use to learn this?" or an existing licensed learning figure, model or simulation from outside sources. Drawing a new teaching figure belongs to tutor or teach; stock or decorative images for websites or marketing, work diagrams and general asset sourcing belong outside Myelinate.
+- **video**: "help me learn from this video," a pasted transcript, a lecture link or a playlist. Finding a video belongs to find-media; a summary for work stays outside Myelinate.
+- **debrief**: a graded exam, quiz or practical came back: a score, the missed questions, "why did I bomb this," "which way of studying failed me." Sorts misses by cause and ties them to methods. A practice test before the exam belongs to assess or tutor.
+- **progress**: "how am I doing," "what's due," "I'm done for today," coming back after a gap, not being able to start, or "am I ready?" A dated schedule belongs to study-plan.
+- **teacher**: a teacher, professor or trainer preparing for their own students: unit or lesson plans, rubrics, quizzes, differentiation. A course the assistant will run belongs to course-project; the same person learning a subject for themselves belongs to teach.
 - **verify**: "check this lesson for accuracy" or adversarial review of learning material before release. Software code review and tests belong outside Myelinate.

@@ -1,0 +1,26 @@
+{
+  "name": "myelinate",
+  "description": "Learn anything and learn it well: class tutoring, self-directed lessons, skills and languages, assignment coaching, learning from video, tests and study plans, with practice, flashcards and figures shown inline where your assistant can draw them.",
+  "version": "3.0.0",
+  "author": {
+    "name": "Donovan Baney"
+  },
+  "homepage": "https://baney75.github.io/myelinate/",
+  "repository": "https://github.com/baney75/myelinate",
+  "license": "MIT",
+  "keywords": [
+    "education",
+    "tutoring",
+    "learning",
+    "study",
+    "flashcards",
+    "spaced-repetition"
+  ],
+  "logo": "assets/icon.png",
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "agents": "./agents/",
+  "hooks": {
+    "hooks": {}
+  }
+}

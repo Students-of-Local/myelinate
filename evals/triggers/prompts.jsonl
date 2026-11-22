@@ -53,3 +53,21 @@
 {"id": "p39", "prompt": "Build a study game for my bio exam tomorrow where I have to type the answers.", "accept": ["game"], "kind": "positive"}
 {"id": "p40", "prompt": "Help me build a platformer game in Unity for my portfolio.", "accept": ["none"], "kind": "negative"}
 {"id": "p41", "prompt": "Add a leaderboard to my multiplayer game's backend.", "accept": ["none"], "kind": "negative"}
+{"id": "p56", "prompt": "I just watched a 40 minute lecture on the Krebs cycle and want to actually learn it. Here's the transcript.", "accept": ["video"], "kind": "positive"}
+{"id": "p57", "prompt": "Turn this lecture playlist from my professor into something I can study from", "accept": ["video"], "kind": "positive"}
+{"id": "p58", "prompt": "how am i doing lately on my orgo topics", "accept": ["progress"], "kind": "positive"}
+{"id": "p59", "prompt": "ok I'm done for today", "accept": ["progress", "tutor", "myelinate"], "kind": "positive"}
+{"id": "p60", "prompt": "I've been avoiding this class for two weeks and I can't get started", "accept": ["progress", "tutor", "myelinate"], "kind": "positive"}
+{"id": "p61", "prompt": "I teach 7th grade science. Help me plan a two week unit on photosynthesis.", "accept": ["teacher"], "kind": "positive"}
+{"id": "p62", "prompt": "Make me a rubric for a 10th grade argumentative essay", "accept": ["teacher", "assess"], "kind": "positive"}
+{"id": "p63", "prompt": "teach me to juggle three balls", "accept": ["teach", "myelinate"], "kind": "positive"}
+{"id": "p64", "prompt": "I want to learn to MIG weld at home", "accept": ["teach", "myelinate"], "kind": "positive"}
+{"id": "n40", "prompt": "Summarize this video transcript into bullet points for my team's status report.", "accept": ["none"], "kind": "negative"}
+{"id": "n41", "prompt": "Trim this video to the first 30 seconds and add captions.", "accept": ["none"], "kind": "negative"}
+{"id": "n42", "prompt": "What's the status of my pull request?", "accept": ["none"], "kind": "negative"}
+{"id": "p68", "prompt": "Got my orgo exam back. 64. Can you help me figure out what went wrong?", "accept": ["debrief"], "kind": "positive"}
+{"id": "p69", "prompt": "Here are the questions I missed on my bio quiz. I studied with Quizlet for like 5 hours, so why did I still miss these?", "accept": ["debrief"], "kind": "positive"}
+{"id": "p70", "prompt": "I bombed the anatomy lab practical even though I made a whole study deck for it.", "accept": ["debrief"], "kind": "positive"}
+{"id": "n43", "prompt": "My average is 84 and the final is worth 25%. What do I need on the final to keep a B?", "accept": ["none"], "kind": "negative"}
+{"id": "n44", "prompt": "Write an email to my professor asking when the exam grades will be posted.", "accept": ["none"], "kind": "negative"}
+{"id": "p71", "prompt": "Current Attempt in Progress. For this question, the \"entropy term\" refers to \"-TΔS.\" Addition reactions are generally favorable at low temperatures because ____. Attempts: unlimited. Submit Answer", "accept": ["assignment"], "kind": "positive"}

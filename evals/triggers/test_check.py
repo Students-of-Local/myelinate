@@ -60,6 +60,20 @@ def miss_positives(r, count):
     rescore(r)
 
 
+def just_below_hit_floor(r):
+    # Miss the fewest whole positives that put the hit rate under the committed floor,
+    # so the case tracks the floor in thresholds.json instead of a fixed count.
+    floor = THRESHOLDS['results']['latest.json']['min_hit_rate']
+    positives = sum(row['kind'] == 'positive' for row in r['rows'])
+    for count in range(1, positives + 1):
+        trial = copy.deepcopy(r)
+        miss_positives(trial, count)
+        if trial['hit_rate'] < floor:
+            miss_positives(r, count)
+            return
+    raise AssertionError('cannot get below the hit floor')
+
+
 CASES = {
     'empty rows': lambda r: (r.update(rows=[]), rescore(r)),
     'zero passes': lambda r: r.update(passes=0),
@@ -77,7 +91,7 @@ CASES = {
     'different model': lambda r: r.update(model='another-model'),
     'different effort': lambda r: r.update(effort='high'),
     'wrong prompt set': lambda r: r.update(prompt_set='holdout.jsonl'),
-    'below hit floor': lambda r: miss_positives(r, 3),
+    'below hit floor': just_below_hit_floor,
     'model errors': lambda r: (r['rows'][0].update(choices=['ERROR'] * PROTOCOL['passes']), rescore(r)),
 }
 

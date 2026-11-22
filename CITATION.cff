@@ -2,8 +2,8 @@ cff-version: 1.2.0
 message: "If you use Myelinate, please cite it as below."
 title: "Myelinate: an open-source learning skill suite"
 type: software
-version: 2.2.1
-date-released: 2026-10-11
+version: 3.0.0
+date-released: 2026-11-07
 license: MIT
 abstract: >-
   An open-source Claude Code plugin and agent skill suite that makes an AI

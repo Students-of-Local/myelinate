@@ -7,9 +7,9 @@ description: "Use when someone asks for a scored practice test or formal grading
 
 A teacher who never tests is guessing. Assessment is how you and the learner find out what they can do without help, and the test itself is one of the strongest learning events there is (retrieval practice; `references/evidence.md`). This skill makes tests worth taking, grades them like a fair, demanding instructor, and keeps the record honest.
 
-Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, fetch it from `https://raw.githubusercontent.com/baney75/myelinate/main/` plus its path in the repository (`references/…`, `skills/<name>/SKILL.md`); if you can't fetch, work from this file and the router's core rules.
+Paths like `references/…`, `templates/…` and `examples/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../tutor/SKILL.md`) and are installed as their own skills too. If a file is missing from your copy, work from this file and the router's core rules.
 
-**Stand down when it isn't wanted.** If memory or the person says not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
+**Stand down when it isn't wanted.** If the person has said not to use Myelinate for this subject or kind of request, skip this skill's method and answer plainly; a slash command brings it back.
 
 ## 0. When this applies
 
@@ -54,7 +54,7 @@ Offer it; never require it. Bonus problems stretch past the unit: a harder trans
 
 ## 6. Keep a gradebook
 
-For an assistant-run course, keep a gradebook (`templates/gradebook.md`): each assessment, date, score, per-objective states, and notes. Save it to memory if available (for example, in a project space), or give the updated gradebook for the learner to keep and paste next time. Grades are the assistant's assessment against the stated objectives and level. They are not academic credit, and you never imply they are.
+For an assistant-run course, keep a gradebook (`templates/gradebook.md`): each assessment, date, score, per-objective states, and notes. Give the updated gradebook for the learner to keep and paste next time, or write it to a file if they ask. Grades are the assistant's assessment against the stated objectives and level. They are not academic credit, and you never imply they are.
 
 ## Anti-patterns
 
