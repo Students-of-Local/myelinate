@@ -69,6 +69,6 @@ These are product defaults, not a research-optimal schedule; adjust to the learn
 
 ## Using it
 
-- **Session start:** if due reviews are listed, fold 2 to 3 retrieval items on them into the session (after the learner's own question, if they arrived with one).
+- **Session start:** read the record (the Claude Code hook only notes that it exists) and pick the entries whose `next_review` has passed; fold 2 to 3 retrieval items on them into the session (after the learner's own question, if they arrived with one).
 - **Session end:** update the entries you worked on: outcome, state, `last_reviewed`, `interval_days`, `next_review`. Tell the learner in one line what you saved and when the next review is.
 - **On request:** "what's due?" or `/myelinate:review` lists due topics and starts with the first.

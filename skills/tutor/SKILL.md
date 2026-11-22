@@ -243,7 +243,7 @@ Use descriptive states, not fake mastery percentages:
 
 Record each attempt as *unassisted-correct · hinted-correct · revealed · incorrect · self-assessed*. Hinted or revealed answers are exposure, not success. Self-ratings stay self-ratings.
 
-**At the close,** run the wrap in `../progress/SKILL.md`, and offer the updated learner profile (topic states, what helped, the next review date) if they keep one. Save nothing on your own initiative. Where you can write files and the learner wants progress kept, use the learner record (`references/learner-record.md`). A host with a session hook can list due reviews automatically (the Claude Code plugin does this); elsewhere, ask "what's due?" or paste the profile to start review. A host may also offer `/myelinate:review`.
+**At the close,** run the wrap in `../progress/SKILL.md`, and offer the updated learner profile (topic states, what helped, the next review date) if they keep one. Save nothing on your own initiative. Where you can write files and the learner wants progress kept, use the learner record (`references/learner-record.md`). In Claude Code the plugin's session hook notes that the record exists; read it and pick the due entries yourself. Elsewhere, ask "what's due?" or paste the profile to start review. A host may also offer `/myelinate:review`.
 
 ## 9. Grounding and accuracy
 

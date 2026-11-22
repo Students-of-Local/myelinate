@@ -275,7 +275,8 @@ function compileExpression(source, variables) {
 
   // ---- Practice: one question at a time. No key is sent here, ever. ----
   VIEWS.practice = function (d) {
-    const qs = d.questions;
+    // Graded work (d.graded): one of their questions per widget, no Next or Back; the next comes after your verdict.
+    const qs = d.graded ? d.questions.slice(0, 1) : d.questions;
     const state = qs.map(() => ({ answer: '', hints: 0, sure: '' }));
     let i = 0, finished = false;
     function draw() {

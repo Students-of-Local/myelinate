@@ -171,7 +171,7 @@ if hook_cmds != ['sh "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"']:
 hook_text = (ROOT / 'hooks' / 'session-start.sh').read_text()
 if re.search(r'\$[({A-Za-z_]|`|\bpython|\bcurl\b|\bwget\b', hook_text):
     errors.append('hooks/session-start.sh: a variable, command substitution or other program holds the version for a reviewer')
-if 'load the matching myelinate skill' not in hook_text or 'myelinate:tutor' not in hook_text:
+if 'call the Skill tool for the matching myelinate skill' not in hook_text or 'myelinate:tutor' not in hook_text:
     errors.append('hooks/session-start.sh: lost the routing line')
 for skill in sorted((ROOT / 'skills').glob('*/SKILL.md')) + [source]:
     text = skill.read_text()

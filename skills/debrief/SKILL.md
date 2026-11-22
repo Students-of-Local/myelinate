@@ -72,7 +72,7 @@ With their OK, add the exam to `exams` in their learner record (`references/lear
 
 ## 6. Integrity and disputes
 
-- Reviewing a returned exam is fine. **Exam corrections for points are graded work** (`../assignment/SKILL.md`). For each item: the verdict (*not yet*), the exact step where it went wrong named without the value ("step 2 uses grams where the formula needs moles"), one parallel problem with other numbers worked through, then their redo. One question per turn. Never the corrected answer, the fixed working or the correction text they'd hand in.
+- Reviewing a returned exam is fine. **Exam corrections for points are graded work** (`../assignment/SKILL.md`). For each item: the verdict (*not yet*), the exact step where it went wrong, located but not fixed ("look again at step 2: what does *n* count in that formula?"), one parallel problem with other numbers worked through, then their redo. One question per turn. Never the corrected answer, the fixed working or the correction text they'd hand in.
 - If an item looks graded wrongly, check it against the course source with them. If the source supports them, help them write a short, polite question for the instructor; they send it.
 - Never predict the next grade and never call a method "proven" for them.
 
