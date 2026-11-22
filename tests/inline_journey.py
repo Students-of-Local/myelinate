@@ -32,7 +32,7 @@ CASES = {
     'graph_tiny': {'view': 'graph', 'title': 'Photon energy', 'expression': 'h*x', 'x_range': [0, 1e-19], 'x_label': 'E (J)', 'y_label': 'y', 'parameters': [
         {'name': 'h', 'label': 'scale', 'min': 1, 'max': 3, 'value': 1, 'step': 1}]},
     'video': {'view': 'video', 'status': 'ok', 'id': 'dQw4w9WgXcQ', 'title': 'SN1 vs SN2', 'channel': "Chad's Prep", 'thumbnail': 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', 'watch_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'start': 30, 'watch_for': 'What decides between the two paths?', 'pause_points': [{'at': 60, 'ask': 'Predict the rate law.'}, {'at': 200, 'ask': 'Which substrate favors SN1?'}], 'recall_prompt': 'What decides SN1 or SN2?'},
-    'video_segments': {'view': 'video', 'status': 'ok', 'id': 'dQw4w9WgXcQ', 'title': 'E2 geometry', 'channel': "Chad's Prep", 'watch_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'watch_for': 'Which hydrogen leaves, and why that one?', 'segments': [{'start': 250, 'end': 570, 'label': 'Anti-periplanar H'}, {'start': 600, 'end': 660, 'label': 'A worked example'}], 'recall_prompt': 'Why must the H be anti-periplanar?'},
+    'video_segments': {'view': 'video', 'status': 'ok', 'id': 'dQw4w9WgXcQ', 'title': 'E2 geometry', 'channel': "Chad's Prep", 'watch_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'watch_for': 'Which hydrogen leaves, and why that one?', 'segments': [{'start': 250, 'end': 570, 'label': 'Anti-periplanar H'}, {'start': 600, 'end': 660, 'label': 'A worked example'}], 'pause_points': [{'at': 610, 'ask': 'Which H leaves?'}], 'recall_prompt': 'Why must the H be anti-periplanar?'},
     'video_end': {'view': 'video', 'status': 'ok', 'id': 'dQw4w9WgXcQ', 'title': 'SN1 in a minute', 'watch_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'start': 30, 'end': 90},
     'video_blocked': {'view': 'video', 'status': 'blocked', 'id': 'privatevid1', 'watch_url': 'https://www.youtube.com/watch?v=privatevid1', 'note': 'Its owner turned off embedding.'},
     'rtl': {'view': 'flashcards', 'title': 'חוק אוהם', 'cards': [{'front': 'מהו המתח לפי חוק אוהם?', 'back': 'V = IR'}]},
@@ -210,6 +210,18 @@ with sync_playwright() as p:
     page.get_by_role('button', name='Play E2 geometry').click()
     src = page.locator('iframe').get_attribute('src')
     ok('start=250' in src and 'end=570' in src and 'on' in (page.locator('button.seg').first.get_attribute('class') or ''), 'Play starts the first segment and marks it')
+    ctx.close()
+
+    # Played with its first report already at the end (video_end below) or jumped into from a pause point,
+    # a range still stops at its end.
+    ctx, page, errs, reqs = open_case(b, 'video_segments')
+    page.route(re.compile(r'^https://www\.youtube-nocookie\.com/'), lambda route: route.fulfill(content_type='text/html', body=stub_player))
+    page.locator('button.pause:not(.seg)').first.click()
+    src = page.locator('iframe').get_attribute('src')
+    ok('start=610' in src and 'end=660' in src, 'a pause point inside a segment keeps that segment\'s end')
+    frame = player(page)
+    frame.evaluate(tell, 660)
+    page.get_by_text(over).wait_for(timeout=5000)
     ctx.close()
 
     ctx, page, errs, reqs = open_case(b, 'video_end')
