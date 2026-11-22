@@ -89,6 +89,8 @@ If the learner asks you to draw or show a new diagram, concept map, graph or ste
 
 Video is best for watching an expert reason or a process move. It is weakest as a substitute for practice. Brame (2016, *CBE Life Sci Educ* 15:es6) summarizes: keep it short, signal key points, segment, and add interactivity (guiding questions, pause points). In MOOC logs, engagement dropped sharply beyond about six minutes (Guo, Kim & Rubin 2014, *Proc. ACM Learning@Scale*: observational, engagement not learning).
 
+**The method is `references/video-finder.md`:** write the target, must-say terms and course claims from their material, search wide, find the segment, vet each course claim against the transcript, and give one segment with pause points, a recall prompt and a problem. The steps below are the minimum when that file is missing.
+
 ### Search, verify, give the link
 
 "Give me the link" gets a link, every time. "I couldn't pull the URL, search for the title" is the failure this section exists to prevent: you did the search, and the learner is the one left searching.
@@ -98,7 +100,7 @@ Video is best for watching an expert reason or a process move. It is weakest as 
 3. **If you have the title but no URL after trying,** give a one-click search for exactly that title, labeled as a search: `[Search YouTube for this video](https://www.youtube.com/results?search_query=SN2+SN1+E1+E2+Reaction+Mechanisms+Made+Easy+Organic+Chemistry+Tutor)`. That link can't be wrong, and it saves them the typing. Never tell them to go search.
 4. **Check accuracy** against the transcript or description for the part you'll assign, and against the course source (`../video/SKILL.md` has how to get a transcript). If you can't inspect it, say: "Not reviewed by me; check against your notes."
 5. **Check fit:** level, notation and convention (Na⁺/K⁺ stoichiometry, IUPAC names, sign conventions); date (pre-2015 MCAT content may not match the current outline); length; captions; paywall.
-6. **Lead with one pick.** Give the best video and say why, then one or two alternatives at most. A timestamp range only if you read it in a transcript ("6:10 to 11:30: the inhibitor graphs").
+6. **Lead with one pick.** Give the best segment of the best video and say why, then one or two alternatives at most. A timestamp range only if you read it in a transcript ("6:10 to 11:30: the inhibitor graphs").
 7. **Show it where you can.** If your host renders HTML inline, adapt the video view in `templates/inline-widgets.html`: the player, what to watch for, pause questions and a recall box. Otherwise give the link and the active-viewing steps below.
 
 **With no search tool this turn:** say so in one line, then still help. Say which channels are worth trying from the list below, as starting points you haven't checked today, and give a one-click search for each. Never name a specific video from memory as if you'd confirmed it. Never say you verified a channel: that list was checked when it was written, not by you now.

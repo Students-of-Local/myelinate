@@ -99,8 +99,9 @@
   {"view":"flashcards","title":"...","cards":[{"front":"...","back":"...","source":"..."}]}
   {"view":"steps","title":"...","question":"...","steps":[{"text":"...","svg":"<svg ...>...</svg>","alt":"...","predict":"What happens next?"}]}
   {"view":"graph","title":"...","expression":"a*sin(b*x)","x_range":[0,6.28],"y_range":[-3,3],"x_label":"x","y_label":"y","parameters":[{"name":"a","label":"amplitude","min":0,"max":3,"value":1,"step":0.1}],"predict":"...","question":"..."}
-  {"view":"video","status":"ok","id":"VIDEO_ID","title":"...","channel":"...","thumbnail":"https://i.ytimg.com/vi/VIDEO_ID/hqdefault.jpg","watch_url":"https://www.youtube.com/watch?v=VIDEO_ID","start":0,"watch_for":"...","pause_points":[{"at":60,"ask":"..."}],"recall_prompt":"..."}
+  {"view":"video","status":"ok","id":"VIDEO_ID","title":"...","channel":"...","thumbnail":"https://i.ytimg.com/vi/VIDEO_ID/hqdefault.jpg","watch_url":"https://www.youtube.com/watch?v=VIDEO_ID","start":0,"end":300,"segments":[{"start":250,"end":570,"label":"..."}],"watch_for":"...","pause_points":[{"at":60,"ask":"..."}],"recall_prompt":"..."}
   Video: use a real ID you checked. Use times only if you read them in a transcript. If embedding is off, set "status":"blocked" and "note".
+  "end" (optional, seconds) stops playback once there. "segments" (optional) are buttons, each playing one range and stopping once at its end; leave out "end" when you give segments.
   In JSON, every "<" must be written as \u003c (the svg above included).
 -->
 <script>
@@ -493,8 +494,16 @@ function compileExpression(source, variables) {
 
   // ---- Video: nothing loads from YouTube's player until they press play. ----
   VIEWS.video = function (d) {
-    const clock = s => { const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = String(s % 60).padStart(2, '0'); return h ? h + ':' + String(m).padStart(2, '0') + ':' + r : m + ':' + r; };
+    const clock = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = String(s % 60).padStart(2, '0'); return h ? h + ':' + String(m).padStart(2, '0') + ':' + r : m + ':' + r; };
+    const seconds = v => { const n = Number(v); return v !== null && v !== '' && isFinite(n) && n >= 0 ? n : null; };
+    const minutes = s => s < 60 ? 'under 1 min' : 'about ' + Math.round(s / 60) + ' min';
     const pauses = d.pause_points || [];
+    // Segments and a plain "end": play from the start, stop once at the end, then point them at the question.
+    const segs = (Array.isArray(d.segments) ? d.segments : []).map(g => ({ start: seconds(g && g.start), end: seconds(g && g.end), label: g && g.label }))
+      .filter(g => g.start != null && g.end != null && g.end > g.start);
+    const segBtns = [];
+    const over = el('p', { class: 'note', role: 'status' });
+    let range = null, stopped = false;
     const canEmbed = d.status === 'ok';
     const watchAt = t => d.watch_url + (t ? '&t=' + t + 's' : '');
     const stage = canEmbed ? el('div', { class: 'video-frame' }) : null;
@@ -502,10 +511,10 @@ function compileExpression(source, variables) {
     let passed = -1, recall = '';
     const openBtn = at => el('a', { href: watchAt(at), target: '_blank', rel: 'noopener', onclick: e => { e.preventDefault(); openLink(watchAt(at)); }, text: 'Open on YouTube' + (at ? ' at ' + clock(at) : '') });
 
-    function loadPlayer(at) {
+    function loadPlayer(at, stop) {
       const q = new URLSearchParams({ rel: '0', playsinline: '1', enablejsapi: '1', autoplay: '1' });
-      if (at) q.set('start', String(at));
-      if (d.end) q.set('end', String(d.end));
+      if (at) q.set('start', String(Math.floor(at)));
+      if (stop) q.set('end', String(Math.ceil(stop)));
       if (location.origin && location.origin !== 'null') q.set('origin', location.origin);
       ytFrame = el('iframe', { src: 'https://www.youtube-nocookie.com/embed/' + d.id + '?' + q, title: d.title || 'Video', allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen', allowfullscreen: true, referrerpolicy: 'strict-origin-when-cross-origin' });
       ytFrame.addEventListener('load', () => { command('listening'); });
@@ -519,7 +528,14 @@ function compileExpression(source, variables) {
     }
     onYouTube = raw => {
       let m; try { m = JSON.parse(raw); } catch (e) { return; }
-      const t = m && m.info && m.info.currentTime;
+      const info = m && m.info;
+      if (!info) return;
+      const t = info.currentTime;
+      if (range && !stopped && ((typeof t === 'number' && t >= range.end - 0.5) || info.playerState === 0)) {
+        stopped = true;
+        command('pauseVideo');
+        over.textContent = 'Segment over. Answer the question below before moving on.';
+      }
       if (typeof t !== 'number') return;
       pauses.forEach((p, k) => {
         if (k > passed && t >= p.at && t < p.at + 3) { passed = k; command('pauseVideo'); mark(k); }
@@ -530,19 +546,34 @@ function compileExpression(source, variables) {
       const at = pauses[k].at;
       passed = k; mark(k);
       if (!stage) { openLink(watchAt(at)); return; }
-      if (ytFrame) { command('seekTo', [at, true]); command('pauseVideo'); } else loadPlayer(at);
+      if (ytFrame) { command('seekTo', [at, true]); command('pauseVideo'); } else loadPlayer(at, range ? range.end : seconds(d.end));
+    }
+    function play(start, end) {
+      range = end ? { start, end } : null;
+      stopped = false;
+      over.textContent = '';
+      if (!stage) { openLink(watchAt(Math.floor(start))); return; }
+      if (!ytFrame) { loadPlayer(start, end); return; }
+      const load = { videoId: d.id, startSeconds: start };
+      if (end) load.endSeconds = end;
+      command('loadVideoById', [load]);
     }
     if (stage) {
-      const startPlayer = el('button', { class: 'video-frame', 'aria-label': 'Play ' + (d.title || 'video'), onclick: () => loadPlayer(d.start || 0) },
+      const startPlayer = el('button', { class: 'video-frame', 'aria-label': 'Play ' + (d.title || 'video'), onclick: () => play(d.start || 0, seconds(d.end)) },
         el('img', { src: d.thumbnail, alt: '', onerror: e => e.target.remove() }), el('span', { class: 'play', text: 'Play here' }));
       stage.append(startPlayer);
     }
     pauses.forEach((p, k) => pauseBtns.push(el('button', { class: 'pause', onclick: () => jump(k) }, el('b', { text: clock(p.at) }), richEl('span', p.ask))));
+    segs.forEach((g, k) => segBtns.push(el('button', { class: 'pause seg', onclick: () => { segBtns.forEach((b, j) => b.classList.toggle('on', j === k)); play(g.start, g.end); } },
+      el('b', { text: clock(g.start) + ' to ' + clock(g.end) }), el('span', { dir: 'auto', text: (g.label ? g.label + ' ' : '') + '(' + minutes(g.end - g.start) + ')' }))));
+    const segTotal = segs.reduce((sum, g) => sum + g.end - g.start, 0);
     show(
       header(d.title || 'Video', ''),
       d.channel ? el('p', { class: 'source', dir: 'auto', text: d.channel }) : null,
       d.watch_for ? richEl('p', 'Before you press play: ' + d.watch_for) : null,
       stage,
+      over,
+      segs.length ? el('div', { class: 'stack', style: 'gap:6px' }, el('label', { text: segs.length > 1 ? 'Watch these parts in order, ' + minutes(segTotal) + ' in all' : 'Watch this part, ' + minutes(segTotal) }), segBtns) : null,
       canEmbed ? null : el('p', { class: 'note', text: d.note || 'This one has to be watched on YouTube.' }),
       el('p', { class: 'note' }, canEmbed ? 'Player blank? ' : '', openBtn(d.start || 0)),
       pauses.length ? el('div', { class: 'stack', style: 'gap:6px' }, el('label', { text: 'Stop and answer before moving on' }), pauseBtns) : null,

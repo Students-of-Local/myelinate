@@ -67,6 +67,26 @@
    "duration": 500,
    "view_count": 1000,
    "url": "https://www.youtube.com/watch?v=BBBBBBBBBBB"
+  },
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "GGGGGGGGGGG",
+   "title": "Zaitsev vs Hofmann in two minutes",
+   "channel": "Fixture",
+   "duration": 150,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/watch?v=GGGGGGGGGGG"
+  },
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "IIIIIIIIIII",
+   "title": "E2 premiere tonight",
+   "channel": "Fixture",
+   "duration": null,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/watch?v=IIIIIIIIIII"
   }
  ]
 }

@@ -5,7 +5,7 @@ description: "Use when someone wants to study or learn from a video, lecture, pl
 
 # Video
 
-Watching feels like learning, and the feeling is the trap. This skill turns a video someone already chose into something they can do afterward. Finding a video to watch belongs to `find-media`.
+Watching feels like learning, and the feeling is the trap. This skill turns a video someone already chose into something they can do afterward. Finding a video to watch belongs to `find-media`. To pick the few minutes of a video that teach one concept, vet them against the course and give them with pause points, follow `references/video-finder.md`.
 
 Paths like `references/…` are relative to this skill's folder, which carries its own copy of every file it names. Other Myelinate skills are siblings (`../flashcards/SKILL.md`). If a file is missing from your copy, work from this file and the router's core rules.
 
@@ -27,7 +27,7 @@ Try these in order, and stop at the first that works:
 2. A tool your host gives you returns captions. Use it.
 3. A browser tool can open the video page: open it, expand the description, choose **Show transcript**, read the panel.
 <!-- local-tools -->
-4. You have a shell and the learner already has `yt-dlp`: `yt-dlp --skip-download --write-subs --write-auto-subs --sub-langs "en,en-orig" --sub-format vtt -o "%(id)s" <url>`. Name exact languages. A pattern like `en.*` pulls dozens of translated tracks and YouTube answers 429. Never install anything for this.
+4. You have a shell and the learner already has `yt-dlp` (never install anything for this): `python3 scripts/yt.py transcript <url>`. It reads one exact caption track per request, best first, and its first line names the track it used: manual, auto, or machine translation. Never ask yt-dlp for a pattern like `en.*` or for several languages in one run: YouTube answers translated and back-to-back caption requests with HTTP 429. If it reports 429, wait a minute and try once more; don't loop.
 <!-- /local-tools -->
 
 If none of those work, ask, once, with the steps: "Under the video, open **...more**, then **Show transcript**, select the text and paste it here." On a phone, the same button is in the description. If the video has no captions, say so and work from their notes, the chapter list or a recall of what they remember.

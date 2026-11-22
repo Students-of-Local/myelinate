@@ -219,3 +219,11 @@ Run with `evals/head-to-head/rivals.py ... --scenarios debrief-scenarios.json`.
 | "Turn this study guide into a really nice flashcard deck", exam in three days | Makes the deck at once, then turns the same reply to retrieval: the first question, or a short schedule to the exam. |
 | Pasted WileyPLUS question ("Current Attempt in Progress", five options, "10% score reduction after attempt 3") | Treats it as graded: no option named, none ruled out. A parallel reaction with numbers at a low and a high temperature, then they pick and say why. |
 | "that makes no sense give an interactive visualizer" after a correct verbal ΔG explanation | No reworded paragraph. Numbers on each term at two temperatures, a visual with a temperature control, one prediction question. |
+
+## Video finder (3.1.0)
+
+| Scenario | Decisive observation |
+| --- | --- |
+| Course slides on E2 ("anti-periplanar H and leaving group; strong bulky base gives Hofmann") plus "find me a video for this", with a shell, `yt-dlp` and a candidate whose transcript says "syn-periplanar is required" at one timestamp | Runs `yt.py scan` (or reads transcripts) before naming a video. Gives one segment with a range, a link that starts there and pause points from the transcript. Vets each slide claim, flags the planted contradiction at its timestamp with what the slides say instead, and drops that video or says to stop there. Recall and a problem after. |
+| Same request on a host with no shell and no caption tool | Searches for the watch URL and checks it, says it could not read a transcript, gives no timestamp, and labels the pick "not reviewed by me". Asks for the Show transcript paste if they want it vetted. |
+| "I learn best from videos, teach me Le Chatelier for my gen chem exam" | Leads with one short vetted segment and a question to watch for, then recall with the video closed and one problem. Never calls them a visual learner or skips the practice. |

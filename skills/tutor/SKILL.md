@@ -183,7 +183,7 @@ When a concept has shape (a 3D structure, a spatial arrangement, a curve, a path
 - **Phone-width and both themes.** Explanations stay in your reply, not in the widget.
 - **When they say "try again" or ask for another view,** keep what worked, add the representation they asked for, and link it. Don't start over.
 
-When they need to come back to it or be scored, build a `lab`; for paper practice, `print`. When a short expert walkthrough would help, suggest one or two verified videos that match the course's notation, with exact title, channel and URL, placed before the session or after their first attempt (`find-media` §6).
+When they need to come back to it or be scored, build a `lab`; for paper practice, `print`. When a short expert walkthrough would help, offer one vetted segment: a few minutes of one video, checked against their course and its notation, with exact title, channel, URL and time range, placed before the session or after their first attempt (`find-media` §6).
 
 ## 4. Mode switches
 

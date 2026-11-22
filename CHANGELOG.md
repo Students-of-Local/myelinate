@@ -6,6 +6,16 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+## [3.1.0] - 2026-11-22
+
+Video learners get the few minutes that teach the concept, checked against their course.
+
+- **A video finder.** `references/video-finder.md` is the method `find-media` and `video` follow: write the target, must-say terms and course claims from the learner's own material, search wide, find the segment, vet each course claim against the transcript (matches, other notation, beyond the course, contradicts, can't tell), then give one segment with a question to watch for, pause points, a recall prompt and a problem.
+- **`scripts/yt.py`** drives a `yt-dlp` the learner already has (it never installs and never downloads video). `search`, `info`, `transcript`, `find` and `scan`. Captions come in two steps, one exact track per request, best first (manual, then the `-orig` auto track, then untranslated auto, then the video's own language, machine translation last), because YouTube answers translated and back-to-back caption requests with HTTP 429. `find` returns the segments where the course's terms are spoken, with links that start and stop there; `scan` ranks a search by coverage and caption quality and labels uncaptioned videos "cannot vet". Offline tests in `tests/yt_tool.py`. Left out of the Codex package: OpenAI's directory bars local tools that fetch from third-party sites.
+- **Segments in the video view.** `templates/inline-widgets.html` takes `end` and a `segments` list; a segment stops once at its end and asks the question before moving on. Nothing loads from YouTube's player before play.
+- **"I learn best from videos"** is taken as a preference: lead with one short vetted segment, then recall and a problem (`references/personalization.md`). `tutor`, `teach` and the router offer a vetted segment instead of "one or two verified videos".
+- **Fixed: `/myelinate:video`, `/myelinate:debrief` and `/myelinate:progress` hid their skills in Claude Code.** A command named like a skill wins the name, so the skill never loaded and an assistant improvised (in one run, a raw `yt-dlp --sub-langs "en.*"`). The three commands are gone; the skills are the slash commands now, and `scripts/check.py` fails on any command named like a skill.
+
 ## [3.0.1] - 2026-11-22
 
 Follow-ups from the 3.0.0 review (issue #31).

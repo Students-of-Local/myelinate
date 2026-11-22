@@ -32,13 +32,18 @@ required = ['myelinate.md', 'SKILL.md', 'agents/openai.yaml', 'references/eviden
             'templates/course-project-prompt.md', 'templates/gradebook.md', '.claude-plugin/plugin.json',
             '.claude-plugin/marketplace.json', '.codex-plugin/plugin.json', '.agents/plugins/marketplace.json',
             'output-styles/myelinate.md', 'commands/quiz.md', 'commands/review.md', 'agents/key-worker.md',
-            'hooks/hooks.json', 'hooks/session-start.sh', '.cursor-plugin/plugin.json', 'gemini-extension.json', 'references/learn-anything.md', 'templates/inline-widgets.html', 'commands/wrap.md', 'commands/progress.md', 'commands/video.md', 'tests/inline_journey.py', 'references/learner-record.md', 'skills/myelinate/SKILL.md', 'llms.txt', 'scripts/make_pdf.py',
+            'hooks/hooks.json', 'hooks/session-start.sh', '.cursor-plugin/plugin.json', 'gemini-extension.json', 'references/learn-anything.md', 'templates/inline-widgets.html', 'commands/wrap.md', 'tests/inline_journey.py', 'references/learner-record.md', 'skills/myelinate/SKILL.md', 'llms.txt', 'scripts/make_pdf.py',
             'scripts/package.py', 'examples/practice-test-oxygen.html',
             'templates/flashcards-deck.html', 'tests/flashcards_journey.py',
-            'templates/exam-game.html', 'tests/game_journey.py']
+            'templates/exam-game.html', 'tests/game_journey.py', 'scripts/yt.py', 'tests/yt_tool.py']
 SUBSKILLS = ['teach', 'tutor', 'assignment', 'project', 'code', 'assess', 'course-project', 'notes', 'lab', 'print',
              'flashcards', 'game', 'memory-hooks', 'study-plan', 'find-media', 'video', 'progress', 'teacher', 'verify', 'debrief']
 required += [f'skills/{name}/SKILL.md' for name in SUBSKILLS]
+# Claude Code resolves a plugin name to its command before its skill, so a command named like a
+# skill hides the skill: myelinate:video loaded commands/video.md and never the video skill.
+for cmd in sorted(Path('commands').glob('*.md')):
+    if cmd.stem in SUBSKILLS + ['myelinate']:
+        errors.append(f'{cmd}: shares the name of the {cmd.stem} skill and hides it; the skill is already a slash command')
 for name in required:
     if not (ROOT / name).is_file():
         errors.append(f'Missing required file: {name}')

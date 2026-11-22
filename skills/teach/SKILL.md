@@ -50,8 +50,8 @@ Design backward from the competence statement:
 
 1. **Map the field** for this purpose: the core ideas that carry most of the weight, prerequisites, common misconceptions, and what experts do that novices can't (`references/subject-playbooks.md`).
 2. **Pretest prerequisites with items, don't assume.** Patch gaps first with short focused lessons.
-3. **Sequence units:** prerequisites → central model → worked examples → applications → edge cases → open questions. Each unit gets a target, the key idea, activities (live lesson, `lab`, `print`, reading, verified video), and an unassisted check.
-4. **One primary path of resources,** not a pile. One main text (open texts like OpenStax or LibreTexts when they fit; mind the license), primary sources where valued, and one to three verified videos at the moments they help (`find-media`).
+3. **Sequence units:** prerequisites → central model → worked examples → applications → edge cases → open questions. Each unit gets a target, the key idea, activities (live lesson, `lab`, `print`, reading, a vetted video segment), and an unassisted check.
+4. **One primary path of resources,** not a pile. One main text (open texts like OpenStax or LibreTexts when they fit; mind the license), primary sources where valued, and one to three vetted video segments at the moments they help (`find-media`).
 5. **Schedule it** against their real hours and any deadline (`study-plan`), with spaced returns to earlier units.
 6. **Show them the plan** as a short course outline: purpose and success test, benchmark, units in order, schedule, resources, and the next action now. For a large course or on request, make it a polished page or doc. Then start unit one unless they asked only for the plan.
 
@@ -70,7 +70,7 @@ When the learner is building something (a product to sell, an open-source tool, 
 
 Run every lesson with `tutor`'s session loop: orient → teach the minimum → make them produce → respond with the silent check, the help ladder, the leak list and honest verdicts → vary → interleave recall → close with their retrieval (`../tutor/SKILL.md` §2 to §6). Two differences from course tutoring: scope comes from their purpose rather than a syllabus, and on practice and side questions there's no restriction on giving full solutions beyond making sure they learn. Work you assigned follows `assignment`; an adult can choose to turn an assigned item into practice and see the solution, recorded as *revealed*, not completed.
 
-**Show it.** When the concept has shape, render it and let them operate it, linked to the notation they'll use (`references/visual-teaching.md`). Offer a verified video when an expert walkthrough helps, placed before the session or after their first attempt.
+**Show it.** When the concept has shape, render it and let them operate it, linked to the notation they'll use (`references/visual-teaching.md`). Offer a vetted video segment when an expert walkthrough helps, placed before the session or after their first attempt.
 
 ## 5a. Be the teacher, fully
 
@@ -102,4 +102,4 @@ The live protocol (key-first verdicts, the leak list, the pressure table) is in 
 
 ## Anti-patterns
 
-Interrogating before helping · re-asking what they've already told you · a lighter standard because "it's just for them" · claiming credit-equivalence or accreditation · burying them in resource lists · letting the project skip foundations · shipping work they can't explain · unverified videos · agreeing with wrong answers · labeling the learner · describing a structure in prose when a rendered model would teach it.
+Interrogating before helping · re-asking what they've already told you · a lighter standard because "it's just for them" · claiming credit-equivalence or accreditation · burying them in resource lists · letting the project skip foundations · shipping work they can't explain · unvetted videos · agreeing with wrong answers · labeling the learner · describing a structure in prose when a rendered model would teach it.

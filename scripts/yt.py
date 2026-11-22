@@ -35,10 +35,15 @@ MISSING = ("yt-dlp is not installed; use a host transcript tool, the browser's S
            "or ask the learner to paste the transcript.")
 CACHE = Path(tempfile.gettempdir()) / 'myelinate-yt'
 INFO_FRESH = 5 * 3600  # caption URLs in an info JSON expire after some hours
-TRACK_PAUSE = 2.0
-VIDEO_PAUSE = 1.5
+TRACK_PAUSE = 2.0  # before the next caption track, after one failed
+VIDEO_PAUSE = 1.5  # before any other request, after an earlier one
+try:  # tests set MYELINATE_YT_PAUSE=0 to skip the waits; it scales them
+    PAUSE_SCALE = max(0.0, float(os.environ.get('MYELINATE_YT_PAUSE', '1')))
+except ValueError:
+    PAUSE_SCALE = 1.0
 ID_RE = re.compile(r'^[A-Za-z0-9_-]{11}$')
-DASHES = '-‐‑‒–—−/'
+DASHES = '-\u2010\u2011\u2012\u2013\u2014\u2212/'
+NET_CALLS = 0  # yt-dlp runs so far in this process
 
 
 class YTError(Exception):
@@ -77,7 +82,12 @@ def classify(stderr):
     return 'other', last
 
 
-def run(args, timeout=120):
+def run(args, timeout=120, gap=VIDEO_PAUSE):
+    """One yt-dlp run. After an earlier run in this process, wait gap seconds first."""
+    global NET_CALLS
+    if NET_CALLS and gap:
+        time.sleep(gap * PAUSE_SCALE)
+    NET_CALLS += 1
     try:
         p = subprocess.run(['yt-dlp'] + args, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
@@ -187,8 +197,8 @@ def candidates(info, lang='en'):
             add('auto', code, 'auto')
 
     native(lang)
-    own = info.get('language')
-    if own and own.split('-')[0] != lang.split('-')[0]:
+    own = source_language(info)  # the video's own language, from its info or its -orig track
+    if own != '?' and own.split('-')[0] != lang.split('-')[0]:
         native(own)
     if lang in auto and translated(auto[lang]):
         add('auto', lang, 'translated')
@@ -241,26 +251,37 @@ def clean(line):
     return re.sub(r'\s+', ' ', line).strip()
 
 
+def vtt_blocks(text):
+    """(start, end, lines) per cue. Lines are read by timing line, not split on blank lines, because
+    YouTube's rolling cues open with a line holding a single space. A blank line after text ends a cue,
+    so cue ids and NOTE blocks are skipped."""
+    blocks, reading = [], False
+    for raw in text.replace('\ufeff', '').splitlines():
+        m = TIME_RE.match(raw)
+        if m:
+            blocks.append((secs(m.group(1)), secs(m.group(2)), []))
+            reading = True
+        elif reading and raw.strip():
+            blocks[-1][2].append(raw)
+        elif reading and blocks[-1][2]:
+            reading = False
+    return blocks
+
+
 def parse_vtt(text):
     """Cues as [{start, end, text}], each spoken phrase once (YouTube rolling captions repeat the previous line)."""
-    blocks = re.split(r'\r?\n\s*\r?\n', text.replace('﻿', ''))
     cues = []
     recent = []  # [(line, cue index)] for the last lines emitted
-    for block in blocks:
-        lines = block.splitlines()
-        idx = next((i for i, ln in enumerate(lines) if TIME_RE.match(ln)), None)
-        if idx is None:
-            continue
-        m = TIME_RE.match(lines[idx])
-        start, end = secs(m.group(1)), secs(m.group(2))
+    for start, end, lines in vtt_blocks(text):
         new = []
-        for raw in lines[idx + 1:]:
+        for raw in lines:
             line = clean(raw)
             if not line:
                 continue
             hit = next(((ln, ci) for ln, ci in recent[-2:] if ln == line), None)
-            if hit:
-                cues[hit[1]]['end'] = max(cues[hit[1]]['end'], end)
+            if hit:  # the previous line shown again; it only stretches its cue if the two touch
+                if start <= cues[hit[1]]['end'] + 1:
+                    cues[hit[1]]['end'] = max(cues[hit[1]]['end'], end)
                 continue
             if recent and line.startswith(recent[-1][0] + ' ') and start <= cues[recent[-1][1]]['end'] + 1:
                 ci = recent[-1][1]  # one line growing word by word
@@ -310,11 +331,13 @@ def paragraphs(cues, chapters):
 
 # ---------- transcripts ----------
 
-def download_track(info_path, vid, src, track):
+def download_track(info_path, vid, src, track, gap):
+    """One exact track. --sub-langs items are regexes matched to the whole key, so escape it."""
     with tempfile.TemporaryDirectory(dir=vdir(vid)) as tmp:
         run(['--load-info-json', str(info_path), '--skip-download', '--no-warnings',
              '--write-subs' if src == 'manual' else '--write-auto-subs',
-             '--sub-langs', track, '--sub-format', 'vtt', '-o', os.path.join(tmp, 'sub')], timeout=90)
+             '--sub-langs', re.escape(track), '--sub-format', 'vtt', '-o', os.path.join(tmp, 'sub')],
+            timeout=90, gap=gap)
         files = sorted(Path(tmp).glob('*.vtt'))
         if not files:
             raise YTError('other', f'yt-dlp wrote no {track} caption file')
@@ -335,10 +358,8 @@ def get_transcript(ref, lang='en', log=None):
         raise YTError('nocaptions', 'no captions: cannot vet (this video has no caption track)')
     failures = []
     for n, (src, track, kind) in enumerate(choices):
-        if n:
-            time.sleep(TRACK_PAUSE)
-        try:
-            vtt = download_track(info_path, vid, src, track)
+        try:  # each track once, best first; a failure moves on after TRACK_PAUSE, never retries
+            vtt = download_track(info_path, vid, src, track, TRACK_PAUSE if n else VIDEO_PAUSE)
         except YTError as exc:
             failures.append((track, exc))
             if log:
@@ -347,6 +368,8 @@ def get_transcript(ref, lang='en', log=None):
         cues = parse_vtt(vtt)
         if not cues:
             failures.append((track, YTError('other', 'empty caption file')))
+            if log:
+                log(f'{src} {track}: empty caption file; trying the next track')
             continue
         chapters = chapters_of(info)
         result = {'id': vid, 'title': info.get('title'), 'track': track, 'source': src, 'kind': kind,
@@ -390,7 +413,7 @@ def term_matcher(term):
             j += 1
             if not (joined.startswith(w) or w.startswith(joined)):
                 return 0
-        return j if w.startswith(joined) and j - i != n else 0
+        return j if w.startswith(joined) else 0
     return at
 
 
@@ -415,28 +438,30 @@ def find_hits(cues, terms):
     return sorted(hits, key=lambda h: h['time'])
 
 
-def cluster(hits, window, max_len):
-    if not hits:
-        return []
-    groups, cur = [], [hits[0]]
-    for h in hits[1:]:
-        if h['time'] - cur[-1]['time'] <= window:
-            cur.append(h)
-        else:
-            groups.append(cur)
-            cur = [h]
-    groups.append(cur)
+def windows(hits, window):
+    """One window per hit: the hits from it to window seconds later, scored by distinct terms, then hits."""
     out = []
-    todo = groups
-    while todo:
-        g = todo.pop()
-        if g[-1]['time'] - g[0]['time'] <= max_len or len(g) < 2:
-            out.append(g)
-            continue
-        gaps = [(g[k + 1]['time'] - g[k]['time'], k) for k in range(len(g) - 1)]
-        _, k = max(gaps)
-        todo += [g[:k + 1], g[k + 1:]]
+    for h in hits:
+        inside = [x for x in hits if h['time'] <= x['time'] <= h['time'] + window]
+        out.append({'start': h['time'], 'end': max(x['end'] for x in inside),
+                    'distinct': len({x['term'] for x in inside}), 'total': len(inside)})
     return out
+
+
+def best_spans(hits, window, top, max_len):
+    """Take the best windows greedily. A window that overlaps a chosen span joins it (up to max_len
+    seconds); one that overlaps nothing starts a new span while fewer than top are chosen."""
+    chosen = []
+    for w in sorted(windows(hits, window), key=lambda w: (-w['distinct'], -w['total'], w['start'])):
+        over = [c for c in chosen if w['start'] <= c['end'] and w['end'] >= c['start']]
+        if over:
+            c = over[0]
+            s, e = min(c['start'], w['start']), max(c['end'], w['end'])
+            if e - s <= max_len:
+                c['start'], c['end'] = s, e
+        elif len(chosen) < top:
+            chosen.append({'start': w['start'], 'end': w['end']})
+    return chosen
 
 
 def snap_start(cues, t):
@@ -459,7 +484,8 @@ def snap_end(cues, t):
 def segment(vid, cues, terms, start, end, hits, from_chapter=False, title=None):
     inside = [h for h in hits if start <= h['time'] <= end]
     counts = {t: sum(1 for h in inside if h['term'] == t) for t in terms}
-    text = ' '.join(c['text'] for c in cues if c['start'] >= start and c['start'] < end)
+    first = min((h['time'] for h in inside), default=start)  # preview from the first hit, not the padding
+    text = ' '.join(c['text'] for c in cues if c['start'] >= first and c['start'] < end)
     s, e = int(start), int(end + 0.999)
     seg = {'start': round(start, 2), 'end': round(end, 2), 'length': round(end - start, 1),
            'clock': f'{clock(s)} to {clock(e)}', 'from_chapter': from_chapter,
@@ -477,13 +503,15 @@ def find_segments(tr, terms, window=60, top=3, pad=20):
     cues, vid = tr['cues'], tr['id']
     hits = find_hits(cues, terms)
     heard = {h['term'] for h in hits}
-    segs = []
-    for g in cluster(hits, window, max(5 * window, 300)):
-        start = snap_start(cues, max(0.0, g[0]['time'] - pad))
-        end = snap_end(cues, max(h['end'] for h in g) + pad)
-        segs.append(segment(vid, cues, terms, start, end, hits))
-    key = lambda s: (-s['distinct'], -s['total'], s['length'])
-    segs = sorted(segs, key=key)[:top]
+    spans, max_len = [], max(5 * window, 300)
+    for sp in sorted(best_spans(hits, window, top, max_len), key=lambda sp: sp['start']):
+        start = snap_start(cues, max(0.0, sp['start'] - pad))
+        end = snap_end(cues, sp['end'] + pad)
+        if spans and start <= spans[-1][1] and end - spans[-1][0] <= max_len + 2 * pad:  # padding joined two short spans
+            spans[-1] = (spans[-1][0], max(spans[-1][1], end))
+        else:
+            spans.append((start, end))
+    segs = [segment(vid, cues, terms, s, e, hits) for s, e in spans]
     for ch in tr.get('chapters') or []:
         title_words = norm_words(ch['title'])
         if any(term_matcher(t)(title_words, i) for t in terms for i in range(len(title_words))):
@@ -616,6 +644,16 @@ def cmd_find(a):
 KIND_RANK = {'manual': 0, 'auto': 1, 'translated': 2}
 
 
+def scan_rank(row):
+    """Coverage, then the best segment's distinct terms, caption kind, embeddable, shorter segment.
+    Videos that failed come after, and videos with no captions (cannot vet) come last."""
+    if row['status'] != 'ok':
+        return (2 if row.get('error_kind') == 'nocaptions' else 1, 0, 0, 0, 0, 0)
+    best = row['segments'][0] if row['segments'] else {'distinct': 0, 'length': 1e9}
+    return (0, -row['coverage'], -best['distinct'], KIND_RANK.get(row['kind'], 3),
+            0 if row.get('embeddable') else 1, best['length'])
+
+
 def cmd_scan(a):
     terms = parse_terms(a.terms)
     found = search(a.query, a.n)
@@ -625,9 +663,7 @@ def cmd_scan(a):
                else f'over {a.max_minutes} min' if r['duration'] and r['duration'] > a.max_minutes * 60 else None)
         (dropped if why else keep).append((r, why))
     rows, streak, stopped = [], 0, None
-    for k, (r, _) in enumerate(keep):
-        if k:
-            time.sleep(VIDEO_PAUSE)
+    for r, _ in keep:  # one video at a time; run() waits VIDEO_PAUSE before each request
         row = {'id': r['id'], 'title': r['title'], 'channel': r['channel'], 'url': r['url'],
                'duration': r['duration'], 'status': 'ok'}
         try:
@@ -644,21 +680,14 @@ def cmd_scan(a):
                         'not_heard': res['not_heard'], 'segments': res['segments'][:2]})
             streak = 0
         except YTError as exc:
-            row['status'] = 'no captions: cannot vet' if exc.kind == 'nocaptions' else str(exc)
+            row['status'] = 'no captions: cannot vet' if exc.kind == 'nocaptions' else f'cannot vet: {exc}'
             row['error_kind'] = exc.kind
             streak = streak + 1 if exc.kind == 'ratelimit' else 0
         rows.append(row)
         if streak >= 2:
             stopped = 'stopped early: YouTube rate limited two videos in a row (HTTP 429); wait a minute and scan fewer'
             break
-
-    def rank(row):
-        if row['status'] != 'ok':
-            return (1, 0, 0, 0, 0, 0)
-        best = row['segments'][0] if row['segments'] else {'distinct': 0, 'length': 1e9}
-        return (0, -row['coverage'], -best['distinct'], KIND_RANK.get(row['kind'], 3),
-                0 if row.get('embeddable') else 1, best['length'])
-    rows.sort(key=rank)
+    rows.sort(key=scan_rank)
     out = {'query': a.query, 'terms': terms, 'ranked': rows,
            'dropped': [{'id': r['id'], 'title': r['title'], 'why': why} for r, why in dropped], 'stopped': stopped}
     if a.json:
@@ -682,7 +711,7 @@ def cmd_scan(a):
 
 
 def main(argv=None):
-    p = argparse.ArgumentParser(prog='yt.py', description=__doc__.split('\n\n')[0],
+    p = argparse.ArgumentParser(prog='yt.py', description=(__doc__ or '').split('\n\n')[0],
                                 epilog='Exit codes: 0 ok, 1 unavailable or no captions, 3 yt-dlp missing, 4 network, 5 rate limited.')
     sub = p.add_subparsers(dest='cmd', required=True)
 
@@ -705,7 +734,7 @@ def main(argv=None):
     s.add_argument('video', help='URL or 11-character id')
     s.add_argument('--terms', required=True, help='comma-separated must-say terms')
     s.add_argument('--lang', default='en', help='caption language (default en)')
-    s.add_argument('--window', type=int, default=60, help='seconds that join nearby hits (default 60)')
+    s.add_argument('--window', type=int, default=60, help='seconds of each sliding window, scored by distinct terms (default 60)')
     s.add_argument('--top', type=int, default=3, help='segments to show, plus matching chapters (default 3)')
     s.add_argument('--pad', type=int, default=20, help='seconds added before and after (default 20)')
     s = add('scan', 'Search, then read each candidate and rank by the terms it says.')
