@@ -1,6 +1,6 @@
 ---
 name: debrief
-description: "Use when a graded exam, midterm, quiz or lab practical comes back: a score, missed questions, why it went badly, or which study methods aren't working."
+description: "Use when a graded exam, midterm, quiz or lab practical came back or went badly: the score, missed questions, why, or which study methods (decks, rereading) aren't working."
 ---
 
 # Debrief

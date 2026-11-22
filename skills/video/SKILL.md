@@ -1,6 +1,6 @@
 ---
 name: video
-description: "Use when someone wants to study or learn from a video, lecture, playlist or transcript they share. Finding one goes to find-media. Never for work summaries or editing."
+description: "Use when someone wants to study or learn from a video, lecture, playlist or transcript they share. Finding one goes to find-media. Not work summaries, trims or captions."
 ---
 
 # Video

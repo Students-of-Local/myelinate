@@ -5,7 +5,7 @@
  "harness": "codex exec, isolated HOME, skills in ~/.agents/skills",
  "prompt_set": "prompts.jsonl",
  "partial": false,
- "descriptions_sha256": "6cca1c15e98fda6ac5b93da1fde8edd1807ee231c4729cef71c7b16000332017",
+ "descriptions_sha256": "68735a9963353aedb4d2797baf514277f0dd0154c5d6f14ad8683370369c1b0d",
  "inputs_sha256": "3408c225496a2b6bc3f05305ee81f05924242d062ef504cdc61c65b289bfd900",
  "skills": [
   "assess",
@@ -32,63 +32,47 @@
  ],
  "positives": 52,
  "negatives": 21,
- "hit_rate": 0.7949,
- "false_fire_rate": 0.3016,
+ "hit_rate": 0.9038,
+ "false_fire_rate": 0.1746,
  "errors": 0,
- "majority_hit_rate": 0.9231,
- "majority_false_fire_rate": 0.3333,
+ "majority_hit_rate": 0.9615,
+ "majority_false_fire_rate": 0.1905,
  "per_pass": [
   {
-   "hit": 47,
+   "hit": 43,
    "false_fire": 6
   },
   {
-   "hit": 37,
-   "false_fire": 7
+   "hit": 49,
+   "false_fire": 2
   },
   {
-   "hit": 40,
-   "false_fire": 6
+   "hit": 49,
+   "false_fire": 3
   }
  ],
  "unstable": [
   "p01",
-  "p02",
   "p03",
-  "p05",
   "p07",
-  "p08",
   "p13",
-  "p14",
-  "p18",
-  "p20",
-  "p21",
+  "p19",
   "p22",
   "p23",
   "p24",
   "p25",
-  "p28",
-  "p35",
-  "p36",
-  "n04",
-  "n08",
-  "n11",
-  "n12",
+  "p29",
+  "n05",
   "n13",
-  "p40",
   "p41",
   "p56",
+  "p57",
   "p58",
   "p59",
   "p60",
-  "p62",
-  "p64",
-  "p68",
+  "n40",
   "p69",
-  "p70",
-  "n43",
-  "n44",
-  "p71"
+  "n44"
  ],
  "rows": [
   {
@@ -100,10 +84,10 @@
    ],
    "choices": [
     "myelinate",
-    "study-plan",
-    "study-plan"
+    "tutor",
+    "myelinate"
    ],
-   "ok": 1
+   "ok": 3
   },
   {
    "id": "p02",
@@ -115,8 +99,8 @@
    ],
    "choices": [
     "myelinate",
-    "teach",
-    "teach"
+    "myelinate",
+    "myelinate"
    ],
    "ok": 3
   },
@@ -128,9 +112,9 @@
     "teach"
    ],
    "choices": [
-    "myelinate",
     "teach",
-    "teach"
+    "teach",
+    "myelinate"
    ],
    "ok": 3
   },
@@ -157,10 +141,10 @@
    ],
    "choices": [
     "tutor",
-    "teach",
+    "tutor",
     "tutor"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p06",
@@ -199,9 +183,9 @@
    "choices": [
     "assignment",
     "assignment",
-    "writing-editor"
+    "assignment"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p09",
@@ -278,10 +262,10 @@
    ],
    "choices": [
     "project",
-    "swiftui-ui-patterns",
-    "swiftui-ui-patterns"
+    "project",
+    "project"
    ],
-   "ok": 1
+   "ok": 3
   },
   {
    "id": "p15",
@@ -330,10 +314,10 @@
    ],
    "choices": [
     "notes",
-    "none",
+    "notes",
     "notes"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p19",
@@ -344,9 +328,9 @@
    "choices": [
     "notes",
     "notes",
-    "notes"
+    "verify"
    ],
-   "ok": 3
+   "ok": 2
   },
   {
    "id": "p20",
@@ -357,9 +341,9 @@
    "choices": [
     "assess",
     "assess",
-    "assignment"
+    "assess"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p21",
@@ -369,10 +353,10 @@
    ],
    "choices": [
     "assess",
-    "assignment",
+    "assess",
     "assess"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p22",
@@ -381,8 +365,8 @@
     "lab"
    ],
    "choices": [
-    "lab",
     "frontend-design",
+    "lab",
     "lab"
    ],
    "ok": 2
@@ -394,8 +378,8 @@
     "lab"
    ],
    "choices": [
-    "lab",
     "frontend-design",
+    "lab",
     "lab"
    ],
    "ok": 2
@@ -407,8 +391,8 @@
     "print"
    ],
    "choices": [
-    "print",
     "teacher",
+    "print",
     "print"
    ],
    "ok": 2
@@ -420,9 +404,9 @@
     "print"
    ],
    "choices": [
+    "pdf",
     "print",
-    "print",
-    "pdf"
+    "print"
    ],
    "ok": 2
   },
@@ -460,10 +444,10 @@
    ],
    "choices": [
     "memory-hooks",
-    "teach",
+    "memory-hooks",
     "memory-hooks"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p29",
@@ -474,9 +458,9 @@
    "choices": [
     "memory-hooks",
     "memory-hooks",
-    "memory-hooks"
+    "teach"
    ],
-   "ok": 3
+   "ok": 2
   },
   {
    "id": "p30",
@@ -553,10 +537,10 @@
    ],
    "choices": [
     "myelinate",
-    "visualize",
+    "myelinate",
     "myelinate"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p36",
@@ -568,10 +552,10 @@
    ],
    "choices": [
     "myelinate",
-    "visualize",
+    "myelinate",
     "myelinate"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p37",
@@ -639,11 +623,11 @@
     "frontend-design"
    ],
    "choices": [
-    "code",
-    "code",
+    "frontend-design",
+    "frontend-design",
     "frontend-design"
    ],
-   "ok": 1
+   "ok": 3
   },
   {
    "id": "n05",
@@ -654,10 +638,10 @@
    ],
    "choices": [
     "code",
-    "code",
-    "code"
+    "debugging",
+    "none"
    ],
-   "ok": 0
+   "ok": 2
   },
   {
    "id": "n06",
@@ -697,7 +681,7 @@
    "choices": [
     "none",
     "none",
-    "visualize"
+    "none"
    ],
    "ok": 3
   },
@@ -737,10 +721,10 @@
    ],
    "choices": [
     "none",
-    "code",
-    "code"
+    "none",
+    "none"
    ],
-   "ok": 1
+   "ok": 3
   },
   {
    "id": "n12",
@@ -751,7 +735,7 @@
    ],
    "choices": [
     "none",
-    "google-slides",
+    "none",
     "none"
    ],
    "ok": 3
@@ -764,9 +748,9 @@
     "debugging"
    ],
    "choices": [
+    "code",
     "none",
-    "none",
-    "code"
+    "none"
    ],
    "ok": 2
   },
@@ -819,7 +803,7 @@
    "choices": [
     "game",
     "game",
-    "project"
+    "game"
    ],
    "ok": 0
   },
@@ -830,11 +814,11 @@
     "none"
    ],
    "choices": [
-    "code",
     "game",
-    "game"
+    "none",
+    "none"
    ],
-   "ok": 0
+   "ok": 2
   },
   {
    "id": "p56",
@@ -843,11 +827,11 @@
     "video"
    ],
    "choices": [
-    "tutor",
     "teach",
-    "teach"
+    "teach",
+    "video"
    ],
-   "ok": 0
+   "ok": 1
   },
   {
    "id": "p57",
@@ -856,11 +840,11 @@
     "video"
    ],
    "choices": [
-    "video",
+    "study-plan",
     "video",
     "video"
    ],
-   "ok": 3
+   "ok": 2
   },
   {
    "id": "p58",
@@ -869,9 +853,9 @@
     "progress"
    ],
    "choices": [
+    "none",
     "progress",
-    "progress",
-    "assess"
+    "progress"
    ],
    "ok": 2
   },
@@ -884,9 +868,9 @@
     "myelinate"
    ],
    "choices": [
+    "none",
     "progress",
-    "progress",
-    "none"
+    "progress"
    ],
    "ok": 2
   },
@@ -899,11 +883,11 @@
     "myelinate"
    ],
    "choices": [
-    "study-plan",
+    "tutor",
     "progress",
     "progress"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p61",
@@ -926,11 +910,11 @@
     "assess"
    ],
    "choices": [
-    "assignment",
+    "teacher",
     "teacher",
     "teacher"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p63",
@@ -956,9 +940,9 @@
    "choices": [
     "teach",
     "teach",
-    "none"
+    "teach"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "n40",
@@ -968,10 +952,10 @@
    ],
    "choices": [
     "video",
-    "video",
+    "none",
     "video"
    ],
-   "ok": 0
+   "ok": 1
   },
   {
    "id": "n41",
@@ -1007,10 +991,10 @@
    ],
    "choices": [
     "debrief",
-    "none",
+    "debrief",
     "debrief"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "p69",
@@ -1019,11 +1003,11 @@
     "debrief"
    ],
    "choices": [
-    "tutor",
-    "debrief",
+    "teach",
+    "teach",
     "debrief"
    ],
-   "ok": 2
+   "ok": 1
   },
   {
    "id": "p70",
@@ -1034,9 +1018,9 @@
    "choices": [
     "debrief",
     "debrief",
-    "none"
+    "debrief"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "n43",
@@ -1047,9 +1031,9 @@
    "choices": [
     "tutor",
     "tutor",
-    "none"
+    "tutor"
    ],
-   "ok": 1
+   "ok": 0
   },
   {
    "id": "n44",
@@ -1060,7 +1044,7 @@
    "choices": [
     "none",
     "writing-editor",
-    "writing-editor"
+    "none"
    ],
    "ok": 3
   },
@@ -1071,11 +1055,11 @@
     "assignment"
    ],
    "choices": [
-    "none",
-    "none",
-    "tutor"
+    "assignment",
+    "assignment",
+    "assignment"
    ],
-   "ok": 0
+   "ok": 3
   }
  ]
 }

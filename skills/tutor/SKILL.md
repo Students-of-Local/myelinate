@@ -1,6 +1,6 @@
 ---
 name: tutor
-description: "Use for class or exam material, practice answers to check or a class diagram, even quick. Homework and online quiz items go to assignment; returned exams to debrief."
+description: "Use for class or exam material, practice answers to check or a class diagram, even quick. Homework and online quizzes: assignment. Returned exams: debrief. Not grade math."
 ---
 
 # Tutor

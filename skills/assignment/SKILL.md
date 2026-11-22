@@ -1,6 +1,6 @@
 ---
 name: assignment
-description: "Use when someone pastes homework, an online homework or quiz item, a problem set, prelab, lab report, essay or code, or wants a draft reviewed before submission; coach only."
+description: "Use when someone pastes homework, an online homework screen (attempts, Submit Answer), a problem set, prelab, lab report, essay or code, or a draft to submit; coach only."
 ---
 
 # Assignment
