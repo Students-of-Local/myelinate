@@ -147,8 +147,13 @@ def main():
         d["mean_myelinate"] = round(d["mean_myelinate"] / d["pairs"], 2)
         d["mean_rival"] = round(d["mean_rival"] / d["pairs"], 2)
     losses = [{k: r[k] for k in ("id", "opponent", "myelinate", "rival", "reason")} for r in results if r["winner"] == r["opponent"]]
-    (outdir / "summary.json").write_text(json.dumps({"arms": summary, "losses": losses}, indent=1))
+    failed = len(pairs) - len(results)
+    complete = failed == 0 and bool(pairs)
+    (outdir / "summary.json").write_text(json.dumps(
+        {"complete": complete, "requested": len(pairs), "failed": failed, "arms": summary, "losses": losses}, indent=1))
     print(json.dumps(summary, indent=1))
+    if not complete:
+        sys.exit(f"INCOMPLETE: {failed} of {len(pairs)} comparisons failed; summary.json is partial and marked complete: false")
 
 
 def _safe(fn, job):

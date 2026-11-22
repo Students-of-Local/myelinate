@@ -26,6 +26,8 @@ jobs:
         run: |
           python3 evals/triggers/test_check.py
           python3 evals/triggers/check.py
+      - name: Head-to-head runner refuses incomplete runs
+        run: python3 evals/head-to-head/test_rivals.py
 
   journeys:
     runs-on: ubuntu-latest
