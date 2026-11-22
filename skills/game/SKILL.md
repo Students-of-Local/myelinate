@@ -27,7 +27,7 @@ Evidence and limits: the method is retrieval, spacing, interleaving and successi
 1. Get the study guide, the exam format and the practice sets. Read each one fully, from the file itself.
 2. **Formatting can carry the rule.** Red or blue text, highlights and boxes often mark "memorize" and "provided". Text extraction drops them, so look at a rendered page or read the file's run colors, and quote the legend.
 3. **List from the primary source, never from a summary** of it, such as an older deck or chat. If you only have a summary, say so and offer to check the source.
-4. **Save a study packet** as soon as you've read the source: the scope, the formula tiers, the exam format and every practice question as text, in a file or the learner record. Screenshots can drop out of context, and re-reading a course site costs far more than the save.
+4. **Write a study packet** as soon as you've read the source: the scope, the formula tiers, the exam format and every practice question as text, in the conversation; if they want it kept, in a file or the learner record (nothing is saved unless they ask). Screenshots can drop out of context, and re-reading a course site costs far more than the save.
 5. Count before you state a total. Write the list, count it, then write the sentence.
 
 ## 2. Formula tiers

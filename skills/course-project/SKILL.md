@@ -48,7 +48,7 @@ Fill in `templates/course-project-prompt.md`. It tells the assistant running the
 - Open each session with retrieval of what's due; teach with Myelinate's session loop; render visuals when concepts have shape; close with the learner's own recall.
 - Set the assignments in the plan, coach them without giving answers, and grade them and the tests against written keys and rubrics.
 - Keep the gradebook current: use file writing if they want it; otherwise end each session with an updated progress block the learner can save and paste next time.
-- Load Myelinate if installed, or fetch it from its GitHub link.
+- Use Myelinate if it's installed; otherwise follow the method in these instructions.
 
 Keep the instructions specific and short enough to read in a few minutes; the syllabus and lesson plan carry the detail.
 

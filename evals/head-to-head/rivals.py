@@ -30,7 +30,9 @@ def rival_text(name, scen, rivals):
     pick = scen.get("rival_files", {}).get(name)
     if pick:
         return "\n\n".join((root / p).read_text() for p in pick)
-    return root.read_text() if root.is_file() else ""
+    if root.is_file():
+        return root.read_text()
+    sys.exit(f"rival {name!r} is a folder and scenario {scen['id']!r} names no rival_files for it; refusing to compare against an empty skill")
 
 
 def myelinate_text(scen, root):
