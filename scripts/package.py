@@ -26,6 +26,12 @@ PLUGIN_DIRS = ['skills', 'output-styles', 'commands', 'agents', 'hooks']
 # OpenAI's plugin directory takes skills, with the manifest at the top of the zip. It takes no hooks.
 CODEX_ZIP = ROOT / 'dist' / 'myelinate-codex.zip'
 CODEX_FILES = ['.codex-plugin/plugin.json', 'LICENSE', 'README.md', 'PRIVACY.md', 'TERMS.md']
+# OpenAI's directory bars local tools that fetch from third-party sites: the YouTube finder stays out of its zip.
+CODEX_EXCLUDE = ('scripts/yt.py',)
+
+
+def codex_excluded(rel):
+    return any(rel == x or rel.endswith('/' + x) for x in CODEX_EXCLUDE)
 
 SHARED_RE = re.compile(r"(?<![/\w.<>…-])((?:%s)/[\w.-]+\.[a-z0-9]+)" % '|'.join(SHARED))
 SIBLING_RE = re.compile(r"(?<![/\w.<>…-])\.\./([a-z-]+)/SKILL\.md")
@@ -135,8 +141,9 @@ def codex_files():
     ui = json.loads((ROOT / '.codex-plugin/plugin.json').read_text()).get('interface', {})
     icons = sorted({ui[k].removeprefix('./') for k in ('composerIcon', 'logo') if ui.get(k)})
     files = [f for f in CODEX_FILES + icons if (ROOT / f).is_file()]
-    return files + [str(p.relative_to(ROOT)) for p in sorted((ROOT / 'skills').rglob('*'))
-                    if p.is_file() and p.name != '.DS_Store']
+    return [f for f in files if not codex_excluded(f)] + [
+        str(p.relative_to(ROOT)) for p in sorted((ROOT / 'skills').rglob('*'))
+        if p.is_file() and p.name != '.DS_Store' and not codex_excluded(str(p.relative_to(ROOT)))]
 
 
 def build():
@@ -180,6 +187,15 @@ def verify():
             errors.append(f'{CODEX_ZIP.relative_to(ROOT)}: {rel} missing or stale; run python3 scripts/package.py build')
     for rel in sorted(set(codex) - set(codex_files())):
         errors.append(f'{CODEX_ZIP.relative_to(ROOT)}: {rel} is not part of the plugin; run python3 scripts/package.py build')
+    for rel in sorted(n for n in codex if codex_excluded(n)):
+        errors.append(f'{CODEX_ZIP.relative_to(ROOT)}: {rel} is a local tool that fetches from a third-party site; '
+                      "OpenAI's directory bars it")
+    # With the local-tools blocks stripped, every path a Codex skill names must still be in its zip.
+    for rel in sorted(n for n in codex if n.startswith('skills/') and n.endswith('.md')):
+        base = '/'.join(rel.split('/')[:2])
+        for ref in shared_refs(codex[rel].decode()):
+            if f'{base}/{ref}' not in codex:
+                errors.append(f'{CODEX_ZIP.relative_to(ROOT)}: {rel} names {ref}, missing from the Codex zip')
     # Every path a skill or its copied files name must exist in the zip.
     counts = {}
     skills = sorted({PurePosixPath(n).parts[1] for n in names if n.startswith('skills/') and n.endswith('/SKILL.md')})

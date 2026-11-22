@@ -28,6 +28,10 @@ Myelinate should fit the person in front of it, and fit them better as a session
 - **Ask lightly, rarely.** At natural breaks, sometimes: "Was the 3D model useful, or would you rather work from the drawings?" Never a survey.
 - **Don't announce it.** Just teach the way that works.
 
+## "I learn best from videos"
+
+Take it as a preference and use it. It isn't a learning style, so don't label them with it or say it back as one. For a new concept, lead with one short vetted segment: a few minutes of one video that match their course, with a question to watch for and pause points (`find-media` §6). Then a recall prompt with the video closed, and one problem they do without it. The preference decides how a concept is introduced, not whether they practice it. Check it like any other route: does their next unassisted answer follow the video?
+
 ## If they want it kept
 
 Nothing is saved unless they ask. If they do, keep it in the learner profile they hold or their local record, short and functional, with evidence and dates:

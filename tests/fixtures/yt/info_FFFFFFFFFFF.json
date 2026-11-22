@@ -1,0 +1,40 @@
+{
+ "id": "FFFFFFFFFFF",
+ "title": "Elimination quick review",
+ "channel": "Fixture Manual",
+ "channel_follower_count": 12345,
+ "upload_date": "20240115",
+ "duration": 300,
+ "view_count": 5000,
+ "playable_in_embed": false,
+ "availability": "public",
+ "live_status": "not_live",
+ "language": "en",
+ "description": "Fixture video Elimination quick review.",
+ "webpage_url": "https://www.youtube.com/watch?v=FFFFFFFFFFF",
+ "chapters": null,
+ "subtitles": {
+  "en": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=FFFFFFFFFFF&lang=en&fmt=json3"
+   },
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=FFFFFFFFFFF&lang=en&fmt=vtt"
+   }
+  ]
+ },
+ "automatic_captions": {
+  "en-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=FFFFFFFFFFF&lang=en&fmt=json3"
+   },
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=FFFFFFFFFFF&lang=en&fmt=vtt"
+   }
+  ]
+ }
+}

@@ -1,0 +1,37 @@
+{
+ "id": "GGGGGGGGGGG",
+ "title": "Zaitsev vs Hofmann in two minutes",
+ "channel": "Fixture Auto",
+ "channel_follower_count": 12345,
+ "upload_date": "20240115",
+ "duration": 150,
+ "view_count": 5000,
+ "playable_in_embed": true,
+ "availability": "public",
+ "live_status": "not_live",
+ "language": "en",
+ "description": "Fixture video Zaitsev vs Hofmann in two minutes.",
+ "webpage_url": "https://www.youtube.com/watch?v=GGGGGGGGGGG",
+ "chapters": null,
+ "subtitles": {},
+ "automatic_captions": {
+  "en-orig": [
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=GGGGGGGGGGG&lang=en&fmt=vtt"
+   }
+  ],
+  "en": [
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=GGGGGGGGGGG&lang=en&fmt=vtt&tlang=en"
+   }
+  ],
+  "fr": [
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=GGGGGGGGGGG&lang=en&fmt=vtt&tlang=fr"
+   }
+  ]
+ }
+}

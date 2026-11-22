@@ -32,6 +32,8 @@ CASES = {
     'graph_tiny': {'view': 'graph', 'title': 'Photon energy', 'expression': 'h*x', 'x_range': [0, 1e-19], 'x_label': 'E (J)', 'y_label': 'y', 'parameters': [
         {'name': 'h', 'label': 'scale', 'min': 1, 'max': 3, 'value': 1, 'step': 1}]},
     'video': {'view': 'video', 'status': 'ok', 'id': 'dQw4w9WgXcQ', 'title': 'SN1 vs SN2', 'channel': "Chad's Prep", 'thumbnail': 'https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg', 'watch_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'start': 30, 'watch_for': 'What decides between the two paths?', 'pause_points': [{'at': 60, 'ask': 'Predict the rate law.'}, {'at': 200, 'ask': 'Which substrate favors SN1?'}], 'recall_prompt': 'What decides SN1 or SN2?'},
+    'video_segments': {'view': 'video', 'status': 'ok', 'id': 'dQw4w9WgXcQ', 'title': 'E2 geometry', 'channel': "Chad's Prep", 'watch_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'watch_for': 'Which hydrogen leaves, and why that one?', 'segments': [{'start': 250, 'end': 570, 'label': 'Anti-periplanar H'}, {'start': 600, 'end': 660, 'label': 'A worked example'}], 'pause_points': [{'at': 610, 'ask': 'Which H leaves?'}], 'recall_prompt': 'Why must the H be anti-periplanar?'},
+    'video_end': {'view': 'video', 'status': 'ok', 'id': 'dQw4w9WgXcQ', 'title': 'SN1 in a minute', 'watch_url': 'https://www.youtube.com/watch?v=dQw4w9WgXcQ', 'start': 30, 'end': 90},
     'video_blocked': {'view': 'video', 'status': 'blocked', 'id': 'privatevid1', 'watch_url': 'https://www.youtube.com/watch?v=privatevid1', 'note': 'Its owner turned off embedding.'},
     'rtl': {'view': 'flashcards', 'title': 'חוק אוהם', 'cards': [{'front': 'מהו המתח לפי חוק אוהם?', 'back': 'V = IR'}]},
 }
@@ -156,6 +158,86 @@ with sync_playwright() as p:
     ok(src.startswith('https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ?') and 'start=30' in src, 'play loads the privacy-mode player at the start time')
     ok(page.locator('iframe').get_attribute('referrerpolicy') == 'strict-origin-when-cross-origin', 'the player gets a referrer (YouTube error 153 without one)')
     ctx.close()
+    # A stand-in player records the commands it gets; the test posts YouTube's infoDelivery from inside it.
+    stub_player = '<!doctype html><script>window.got = []; addEventListener("message", e => got.push(JSON.parse(e.data)));</script>'
+    tell = "t => parent.postMessage(JSON.stringify({event: 'infoDelivery', id: 1, info: {currentTime: t}}), '*')"
+    pauses = "got.filter(c => c.func === 'pauseVideo').length"
+    over = 'Segment over. Answer the question below before moving on.'
+
+    def player(page):
+        frame = page.locator('iframe').element_handle().content_frame()
+        frame.wait_for_function('window.got && got.some(c => c.event === "listening")')
+        return frame
+
+    ctx, page, errs, reqs = open_case(b, 'video_segments')
+    page.route(re.compile(r'^https://www\.youtube-nocookie\.com/'), lambda route: route.fulfill(content_type='text/html', body=stub_player))
+    early = [r for r in reqs if 'youtube' in r or 'ytimg' in r]
+    ok(not early and page.locator('iframe, script[src]').count() == 0, f'segments: nothing loads from YouTube before play {early}')
+    segs = page.locator('button.seg')
+    ok(segs.count() == 2 and segs.first.inner_text().replace('\n', ' ') == '4:10 to 9:30 Anti-periplanar H (about 5 min)', 'a segment button shows its range, label and minutes')
+    ok(page.get_by_text('Watch these parts in order, about 6 min in all').count() == 1, 'the segment list gives the total minutes')
+    segs.first.click()
+    src = page.locator('iframe').get_attribute('src')
+    ok('start=250' in src and 'end=570' in src, 'a segment starts the player at its start and ends it at its end')
+    frame = player(page)
+    frame.evaluate(tell, 400)
+    page.wait_for_timeout(300)
+    ok(page.get_by_text(over).count() == 0 and frame.evaluate(pauses) == 0, 'mid-segment, nothing stops')
+    frame.evaluate(tell, 570)
+    page.get_by_text(over).wait_for(timeout=5000)
+    frame.evaluate(tell, 575)
+    page.wait_for_timeout(300)
+    ok(frame.evaluate(pauses) == 1, 'reaching the end pauses once and shows the note')
+    segs.nth(1).click()
+    frame.wait_for_function("got.some(c => c.func === 'loadVideoById')")
+    ok(frame.evaluate("got.find(c => c.func === 'loadVideoById').args[0]") == {'videoId': 'dQw4w9WgXcQ', 'startSeconds': 600, 'endSeconds': 660} and page.get_by_text(over).count() == 0, 'the next segment loads at its own range and clears the note')
+    frame.evaluate(tell, 630)
+    frame.evaluate(tell, 660)
+    page.get_by_text(over).wait_for(timeout=5000)
+    segs.first.click()
+    frame.evaluate(tell, 660)  # a stale report from the segment that just ended
+    page.wait_for_timeout(300)
+    ok(page.get_by_text(over).count() == 0 and frame.evaluate(pauses) == 2, 'a stale time from the last segment does not stop the new one')
+    frame.evaluate(tell, 300)
+    frame.evaluate(tell, 570)
+    page.get_by_text(over).wait_for(timeout=5000)
+    ok(frame.evaluate(pauses) == 3, 'the new segment still stops at its own end')
+    ok(not errs, f'segments: no page errors {errs}')
+    ctx.close()
+
+    ctx, page, errs, reqs = open_case(b, 'video_segments')
+    page.route(re.compile(r'^https://www\.youtube-nocookie\.com/'), lambda route: route.fulfill(content_type='text/html', body=stub_player))
+    page.get_by_role('button', name='Play E2 geometry').click()
+    src = page.locator('iframe').get_attribute('src')
+    ok('start=250' in src and 'end=570' in src and 'on' in (page.locator('button.seg').first.get_attribute('class') or ''), 'Play starts the first segment and marks it')
+    ctx.close()
+
+    # Played with its first report already at the end (video_end below) or jumped into from a pause point,
+    # a range still stops at its end.
+    ctx, page, errs, reqs = open_case(b, 'video_segments')
+    page.route(re.compile(r'^https://www\.youtube-nocookie\.com/'), lambda route: route.fulfill(content_type='text/html', body=stub_player))
+    page.locator('button.pause:not(.seg)').first.click()
+    src = page.locator('iframe').get_attribute('src')
+    ok('start=610' in src and 'end=660' in src, 'a pause point inside a segment keeps that segment\'s end')
+    frame = player(page)
+    frame.evaluate(tell, 660)
+    page.get_by_text(over).wait_for(timeout=5000)
+    ctx.close()
+
+    ctx, page, errs, reqs = open_case(b, 'video_end')
+    page.route(re.compile(r'^https://www\.youtube-nocookie\.com/'), lambda route: route.fulfill(content_type='text/html', body=stub_player))
+    ok(not [r for r in reqs if 'youtube' in r or 'ytimg' in r], 'end: nothing loads from YouTube before play')
+    page.get_by_role('button', name='Play SN1 in a minute').click()
+    src = page.locator('iframe').get_attribute('src')
+    ok('start=30' in src and 'end=90' in src, 'a plain end goes to the player')
+    frame = player(page)
+    frame.evaluate(tell, 90)
+    page.get_by_text(over).wait_for(timeout=5000)
+    frame.evaluate(tell, 91)
+    page.wait_for_timeout(300)
+    ok(frame.evaluate(pauses) == 1, 'a plain end stops playback once and shows the note')
+    ctx.close()
+
     ctx, page, errs, reqs = open_case(b, 'video_blocked')
     ok(page.locator('iframe, .video-frame').count() == 0 and page.get_by_role('link', name='Open on YouTube').count() == 1, 'a video that blocks embedding gets a link, not a dead player')
     ctx.close()

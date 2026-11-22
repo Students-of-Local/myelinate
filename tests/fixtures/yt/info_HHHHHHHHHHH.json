@@ -1,0 +1,43 @@
+{
+ "id": "HHHHHHHHHHH",
+ "title": "Eliminacion E2",
+ "channel": "Fixture Espanol",
+ "channel_follower_count": 12345,
+ "upload_date": "20240115",
+ "duration": 400,
+ "view_count": 5000,
+ "playable_in_embed": true,
+ "availability": "public",
+ "live_status": "not_live",
+ "language": "es",
+ "description": "Fixture video Eliminacion E2.",
+ "webpage_url": "https://www.youtube.com/watch?v=HHHHHHHHHHH",
+ "chapters": null,
+ "subtitles": {},
+ "automatic_captions": {
+  "es-orig": [
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=HHHHHHHHHHH&lang=es&fmt=vtt"
+   }
+  ],
+  "es": [
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=HHHHHHHHHHH&lang=es&fmt=vtt"
+   }
+  ],
+  "en": [
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=HHHHHHHHHHH&lang=es&fmt=vtt&tlang=en"
+   }
+  ],
+  "fr": [
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=HHHHHHHHHHH&lang=es&fmt=vtt&tlang=fr"
+   }
+  ]
+ }
+}

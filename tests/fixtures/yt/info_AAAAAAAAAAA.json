@@ -1,0 +1,82 @@
+{
+ "id": "AAAAAAAAAAA",
+ "title": "E2 explained with Newman projections",
+ "channel": "Fixture Chem",
+ "channel_follower_count": 12345,
+ "upload_date": "20240115",
+ "duration": 600,
+ "view_count": 5000,
+ "playable_in_embed": true,
+ "availability": "public",
+ "live_status": "not_live",
+ "language": "en",
+ "description": "Fixture video E2 explained with Newman projections.",
+ "webpage_url": "https://www.youtube.com/watch?v=AAAAAAAAAAA",
+ "chapters": [
+  {
+   "start_time": 0,
+   "end_time": 120,
+   "title": "Intro to eliminations"
+  },
+  {
+   "start_time": 120,
+   "end_time": 400,
+   "title": "Anti-periplanar geometry"
+  },
+  {
+   "start_time": 400,
+   "end_time": 600,
+   "title": "Practice problems"
+  }
+ ],
+ "subtitles": {
+  "live_chat": [
+   {
+    "ext": "json",
+    "url": "https://www.youtube.com/live_chat"
+   }
+  ]
+ },
+ "automatic_captions": {
+  "en-orig": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=AAAAAAAAAAA&lang=en&fmt=json3"
+   },
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=AAAAAAAAAAA&lang=en&fmt=vtt"
+   }
+  ],
+  "en": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=AAAAAAAAAAA&lang=en&fmt=json3"
+   },
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=AAAAAAAAAAA&lang=en&fmt=vtt"
+   }
+  ],
+  "fr": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=AAAAAAAAAAA&lang=en&fmt=json3&tlang=fr"
+   },
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=AAAAAAAAAAA&lang=en&fmt=vtt&tlang=fr"
+   }
+  ],
+  "de": [
+   {
+    "ext": "json3",
+    "url": "https://www.youtube.com/api/timedtext?v=AAAAAAAAAAA&lang=en&fmt=json3&tlang=de"
+   },
+   {
+    "ext": "vtt",
+    "url": "https://www.youtube.com/api/timedtext?v=AAAAAAAAAAA&lang=en&fmt=vtt&tlang=de"
+   }
+  ]
+ }
+}

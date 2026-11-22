@@ -1,0 +1,92 @@
+{
+ "_type": "playlist",
+ "id": "E2 elimination",
+ "entries": [
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "AAAAAAAAAAA",
+   "title": "E2 explained with Newman projections",
+   "channel": "Fixture",
+   "duration": 600,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/watch?v=AAAAAAAAAAA"
+  },
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "CCCCCCCCCCC",
+   "title": "E2 in 30 seconds #shorts",
+   "channel": "Fixture",
+   "duration": 40,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/shorts/CCCCCCCCCCC"
+  },
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "FFFFFFFFFFF",
+   "title": "Elimination quick review",
+   "channel": "Fixture",
+   "duration": 300,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/watch?v=FFFFFFFFFFF"
+  },
+  {
+   "_type": "url",
+   "title": "entry with no id",
+   "url": "https://www.youtube.com/channel/x"
+  },
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "DDDDDDDDDDD",
+   "title": "Full organic chemistry course",
+   "channel": "Fixture",
+   "duration": 10800,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/watch?v=DDDDDDDDDDD"
+  },
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "EEEEEEEEEEE",
+   "title": "Live tutoring stream",
+   "channel": "Fixture",
+   "duration": null,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/watch?v=EEEEEEEEEEE",
+   "live_status": "is_live"
+  },
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "BBBBBBBBBBB",
+   "title": "E2 overview (no captions)",
+   "channel": "Fixture",
+   "duration": 500,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/watch?v=BBBBBBBBBBB"
+  },
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "GGGGGGGGGGG",
+   "title": "Zaitsev vs Hofmann in two minutes",
+   "channel": "Fixture",
+   "duration": 150,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/watch?v=GGGGGGGGGGG"
+  },
+  {
+   "_type": "url",
+   "ie_key": "Youtube",
+   "id": "IIIIIIIIIII",
+   "title": "E2 premiere tonight",
+   "channel": "Fixture",
+   "duration": null,
+   "view_count": 1000,
+   "url": "https://www.youtube.com/watch?v=IIIIIIIIIII"
+  }
+ ]
+}

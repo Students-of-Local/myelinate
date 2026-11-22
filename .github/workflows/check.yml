@@ -22,6 +22,8 @@ jobs:
           persist-credentials: false
       - name: Check entrypoint parity and local references
         run: python3 scripts/check.py
+      - name: YouTube finder against a fake yt-dlp (offline)
+        run: python3 tests/yt_tool.py
       - name: Trigger guard (prompt labels, committed eval results, baseline floors)
         run: |
           python3 evals/triggers/test_check.py
