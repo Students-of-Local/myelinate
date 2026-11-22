@@ -37,7 +37,7 @@ Cut to three or four candidates on facts you read, not on the title:
 
 ## 3. Find the segment, then read it
 
-Chapters come first: a chapter titled with the target is the segment. Otherwise use the term hits (`find`), and widen to the full explanation: start at the sentence that sets up the problem, end after the result is stated or the example is finished. Twenty seconds before and after is cheap.
+Chapters come first: a chapter titled with the target is the segment. Otherwise search the transcript for the must-say terms (the finder's `find` does this where you have it), and widen to the full explanation: start at the sentence that sets up the problem, end after the result is stated or the example is finished. Twenty seconds before and after is cheap.
 
 Then **read the transcript of that segment yourself.** Term hits only say where words occur. A speaker who lists "SN1, SN2, E1, E2" in an intro scores well and teaches nothing. A good segment explains why, works an example, or shows the move step by step.
 

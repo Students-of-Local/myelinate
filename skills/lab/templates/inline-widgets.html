@@ -99,9 +99,9 @@
   {"view":"flashcards","title":"...","cards":[{"front":"...","back":"...","source":"..."}]}
   {"view":"steps","title":"...","question":"...","steps":[{"text":"...","svg":"<svg ...>...</svg>","alt":"...","predict":"What happens next?"}]}
   {"view":"graph","title":"...","expression":"a*sin(b*x)","x_range":[0,6.28],"y_range":[-3,3],"x_label":"x","y_label":"y","parameters":[{"name":"a","label":"amplitude","min":0,"max":3,"value":1,"step":0.1}],"predict":"...","question":"..."}
-  {"view":"video","status":"ok","id":"VIDEO_ID","title":"...","channel":"...","thumbnail":"https://i.ytimg.com/vi/VIDEO_ID/hqdefault.jpg","watch_url":"https://www.youtube.com/watch?v=VIDEO_ID","start":0,"end":300,"segments":[{"start":250,"end":570,"label":"..."}],"watch_for":"...","pause_points":[{"at":60,"ask":"..."}],"recall_prompt":"..."}
+  {"view":"video","status":"ok","id":"VIDEO_ID","title":"...","channel":"...","thumbnail":"https://i.ytimg.com/vi/VIDEO_ID/hqdefault.jpg","watch_url":"https://www.youtube.com/watch?v=VIDEO_ID","start":0,"end":300,"watch_for":"...","pause_points":[{"at":60,"ask":"..."}],"recall_prompt":"..."}
   Video: use a real ID you checked. Use times only if you read them in a transcript. If embedding is off, set "status":"blocked" and "note".
-  "end" (optional, seconds) stops playback once there. "segments" (optional) are buttons, each playing one range and stopping once at its end; leave out "end" when you give segments.
+  "end" (optional, seconds) stops playback once there. Or, instead of "start" and "end", give "segments":[{"start":250,"end":570,"label":"..."}]: buttons that each play one range and stop once at its end; Play starts the first one.
   In JSON, every "<" must be written as \u003c (the svg above included).
 -->
 <script>
@@ -503,7 +503,7 @@ function compileExpression(source, variables) {
       .filter(g => g.start != null && g.end != null && g.end > g.start);
     const segBtns = [];
     const over = el('p', { class: 'note', role: 'status' });
-    let range = null, stopped = false;
+    let range = null, stopped = false, armed = false;
     const canEmbed = d.status === 'ok';
     const watchAt = t => d.watch_url + (t ? '&t=' + t + 's' : '');
     const stage = canEmbed ? el('div', { class: 'video-frame' }) : null;
@@ -531,7 +531,9 @@ function compileExpression(source, variables) {
       const info = m && m.info;
       if (!info) return;
       const t = info.currentTime;
-      if (range && !stopped && ((typeof t === 'number' && t >= range.end - 0.5) || info.playerState === 0)) {
+      // Act on the end only after a report from inside this range: a stale report from the last range must not stop it.
+      if (range && typeof t === 'number' && t >= range.start - 1 && t < range.end - 0.5) armed = true;
+      if (range && armed && !stopped && ((typeof t === 'number' && t >= range.end - 0.5) || info.playerState === 0)) {
         stopped = true;
         command('pauseVideo');
         over.textContent = 'Segment over. Answer the question below before moving on.';
@@ -546,11 +548,14 @@ function compileExpression(source, variables) {
       const at = pauses[k].at;
       passed = k; mark(k);
       if (!stage) { openLink(watchAt(at)); return; }
-      if (ytFrame) { command('seekTo', [at, true]); command('pauseVideo'); } else loadPlayer(at, range ? range.end : seconds(d.end));
+      if (ytFrame) { command('seekTo', [at, true]); command('pauseVideo'); return; }
+      const end = range ? range.end : seconds(d.end);
+      if (end && !range) { range = { start: at, end }; stopped = false; armed = false; }
+      loadPlayer(at, end);
     }
     function play(start, end) {
       range = end ? { start, end } : null;
-      stopped = false;
+      stopped = false; armed = false;
       over.textContent = '';
       if (!stage) { openLink(watchAt(Math.floor(start))); return; }
       if (!ytFrame) { loadPlayer(start, end); return; }
@@ -559,12 +564,13 @@ function compileExpression(source, variables) {
       command('loadVideoById', [load]);
     }
     if (stage) {
-      const startPlayer = el('button', { class: 'video-frame', 'aria-label': 'Play ' + (d.title || 'video'), onclick: () => play(d.start || 0, seconds(d.end)) },
+      const startPlayer = el('button', { class: 'video-frame', 'aria-label': 'Play ' + (d.title || 'video'), onclick: () => segs.length ? playSeg(0) : play(d.start || 0, seconds(d.end)) },
         el('img', { src: d.thumbnail, alt: '', onerror: e => e.target.remove() }), el('span', { class: 'play', text: 'Play here' }));
       stage.append(startPlayer);
     }
     pauses.forEach((p, k) => pauseBtns.push(el('button', { class: 'pause', onclick: () => jump(k) }, el('b', { text: clock(p.at) }), richEl('span', p.ask))));
-    segs.forEach((g, k) => segBtns.push(el('button', { class: 'pause seg', onclick: () => { segBtns.forEach((b, j) => b.classList.toggle('on', j === k)); play(g.start, g.end); } },
+    function playSeg(k) { segBtns.forEach((b, j) => b.classList.toggle('on', j === k)); play(segs[k].start, segs[k].end); }
+    segs.forEach((g, k) => segBtns.push(el('button', { class: 'pause seg', onclick: () => playSeg(k) },
       el('b', { text: clock(g.start) + ' to ' + clock(g.end) }), el('span', { dir: 'auto', text: (g.label ? g.label + ' ' : '') + '(' + minutes(g.end - g.start) + ')' }))));
     const segTotal = segs.reduce((sum, g) => sum + g.end - g.start, 0);
     show(

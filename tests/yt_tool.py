@@ -261,6 +261,32 @@ def test_sliding_window_takes_best_then_merges():
     assert yt.best_spans(hits, 60, 3, 120) == [{'start': 0.0, 'end': 103.0}, {'start': 150.0, 'end': 203.0}]
 
 
+def test_a_line_said_again_later_is_kept():
+    vtt = ('WEBVTT\n\n00:00:01.000 --> 00:00:03.000\nThe hydrogen must be anti-periplanar.\n\n'
+           '00:02:00.000 --> 00:02:03.000\nThe hydrogen must be anti-periplanar.\n')
+    cues = yt.parse_vtt(vtt)
+    assert [c['start'] for c in cues] == [1.0, 120.0], cues
+
+
+def test_cache_is_per_user_and_private():
+    if not hasattr(os, 'getuid'):
+        return
+    assert yt.CACHE.name == 'myelinate-yt-%d' % os.getuid(), yt.CACHE
+    saved = yt.CACHE
+    try:
+        yt.CACHE = Path(tempfile.mkdtemp(dir=WORK)) / 'cache'
+        yt.vdir(A)
+        assert (yt.CACHE.stat().st_mode & 0o777) == 0o700, oct(yt.CACHE.stat().st_mode)
+    finally:
+        yt.CACHE = saved
+
+
+def test_every_call_ignores_the_users_yt_dlp_config():
+    b = Box()
+    b.run('scan', 'E2 elimination', '--terms', TERMS)
+    assert b.calls() and all(c[0] == '--ignore-config' for c in b.calls()), b.calls()[:2]
+
+
 def test_padding_never_joins_spans_past_the_cap():
     # Hits every 20s for ten minutes: best_spans caps each span at 300s, and the padding
     # that makes two capped spans touch must not join them into one long segment.
@@ -345,7 +371,7 @@ def test_cache_second_call_makes_no_ytdlp_call():
     first = b.run('transcript', A)
     n = len(b.calls())
     assert first[0] == 0 and n == 2, b.calls()
-    assert (b.dir / 'myelinate-yt' / A / 'transcript-en.json').is_file()
+    assert (b.dir / ('myelinate-yt-%d' % os.getuid()) / A / 'transcript-en.json').is_file()
     second = b.run('transcript', A)
     assert second == first and len(b.calls()) == n, 'the second transcript call ran yt-dlp'
     b.run('info', A)

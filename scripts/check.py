@@ -41,9 +41,9 @@ SUBSKILLS = ['teach', 'tutor', 'assignment', 'project', 'code', 'assess', 'cours
 required += [f'skills/{name}/SKILL.md' for name in SUBSKILLS]
 # Claude Code resolves a plugin name to its command before its skill, so a command named like a
 # skill hides the skill: myelinate:video loaded commands/video.md and never the video skill.
-for cmd in sorted(Path('commands').glob('*.md')):
+for cmd in sorted((ROOT / 'commands').glob('*.md')):
     if cmd.stem in SUBSKILLS + ['myelinate']:
-        errors.append(f'{cmd}: shares the name of the {cmd.stem} skill and hides it; the skill is already a slash command')
+        errors.append(f'{cmd.relative_to(ROOT)}: shares the name of the {cmd.stem} skill and hides it; the skill is already a slash command')
 for name in required:
     if not (ROOT / name).is_file():
         errors.append(f'Missing required file: {name}')

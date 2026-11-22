@@ -12,7 +12,7 @@ whole run at the first subtitle error.
     python3 scripts/yt.py find VIDEO_ID --terms "anti-periplanar,Zaitsev"
     python3 scripts/yt.py scan "E2 elimination" --terms "anti-periplanar,Zaitsev" --n 8
 
-Every command takes --json. Results are cached under $TMPDIR/myelinate-yt/
+Every command takes --json. Results are cached under $TMPDIR/myelinate-yt-<uid>/
 by video id, so asking again makes no network request.
 
 Exit codes: 0 ok, 1 video unavailable or no captions, 3 yt-dlp missing,
@@ -33,7 +33,8 @@ from urllib.parse import parse_qs, urlparse
 
 MISSING = ("yt-dlp is not installed; use a host transcript tool, the browser's Show transcript panel, "
            "or ask the learner to paste the transcript.")
-CACHE = Path(tempfile.gettempdir()) / 'myelinate-yt'
+# One cache per user, private to them: on a shared machine another account could plant a transcript.
+CACHE = Path(tempfile.gettempdir()) / ('myelinate-yt-%d' % os.getuid() if hasattr(os, 'getuid') else 'myelinate-yt')
 INFO_FRESH = 5 * 3600  # caption URLs in an info JSON expire after some hours
 TRACK_PAUSE = 2.0  # before the next caption track, after one failed
 VIDEO_PAUSE = 1.5  # before any other request, after an earlier one
@@ -66,7 +67,7 @@ def classify(stderr):
     last = errs[-1] if errs else (text.strip().splitlines() or ['yt-dlp failed'])[-1]
     last = re.sub(r'^ERROR:\s*', '', last)[:240]
     low = text.lower()
-    if '429' in text or 'too many requests' in low:
+    if 'http error 429' in low or 'too many requests' in low:
         return 'ratelimit', 'YouTube rate limited the request (HTTP 429); wait a minute and ask for less.'
     if "confirm you're not a bot" in low or 'confirm you are not a bot' in low:
         return 'ratelimit', 'YouTube asked for a bot check; wait and try later, or use the browser transcript panel.'
@@ -89,7 +90,7 @@ def run(args, timeout=120, gap=VIDEO_PAUSE):
         time.sleep(gap * PAUSE_SCALE)
     NET_CALLS += 1
     try:
-        p = subprocess.run(['yt-dlp'] + args, capture_output=True, text=True, timeout=timeout)
+        p = subprocess.run(['yt-dlp', '--ignore-config'] + args, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired:
         raise YTError('network', f'network failure: yt-dlp took over {timeout}s')
     except OSError as exc:
@@ -134,8 +135,11 @@ def clock(s):
 
 
 def vdir(vid):
+    CACHE.mkdir(mode=0o700, parents=True, exist_ok=True)
+    if hasattr(os, 'getuid') and CACHE.stat().st_uid != os.getuid():
+        raise YTError('other', f'{CACHE} belongs to another user; not reading a cache someone else can write')
     d = CACHE / vid
-    d.mkdir(parents=True, exist_ok=True)
+    d.mkdir(exist_ok=True)
     return d
 
 
@@ -274,14 +278,15 @@ def parse_vtt(text):
     recent = []  # [(line, cue index)] for the last lines emitted
     for start, end, lines in vtt_blocks(text):
         new = []
-        for raw in lines:
-            line = clean(raw)
-            if not line:
-                continue
+        shown = [ln for ln in (clean(r) for r in lines) if ln]
+        for k, line in enumerate(shown):
             hit = next(((ln, ci) for ln, ci in recent[-2:] if ln == line), None)
-            if hit:  # the previous line shown again; it only stretches its cue if the two touch
-                if start <= cues[hit[1]]['end'] + 1:
-                    cues[hit[1]]['end'] = max(cues[hit[1]]['end'], end)
+            # A line shown again is the same words when the cues touch, or when it is the top line a rolling
+            # caption carries over (even after a pause). A single line said again later is new speech.
+            touches = hit and start <= cues[hit[1]]['end'] + 1
+            if touches:
+                cues[hit[1]]['end'] = max(cues[hit[1]]['end'], end)
+            if touches or (hit and k == 0 and len(shown) > 1):
                 continue
             if recent and line.startswith(recent[-1][0] + ' ') and start <= cues[recent[-1][1]]['end'] + 1:
                 ci = recent[-1][1]  # one line growing word by word
