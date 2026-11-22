@@ -1,5 +1,5 @@
 {
- "note": "Floors raised 2026-11-22 (3.0.1) to that day's scores minus one item of slack: latest.json measured 99.4% hit (155 of 156) and 9.5% false fire (6 of 63); holdout.json 100% (57 of 57) and 0.0% (0 of 18). The change was the game description; a same-day A/B on 25 prompts at 5 passes cut its false fires on p40 from 4 of 5 to 0 of 5 and changed nothing else. Part of the full-set gain may be a quieter eval model, since main's descriptions are not rerun on the full set the same day. Raise them when a change or a quieter model beats them; never lower them without a written reason in the pull request. Previous floors (2026-11-21, 3.0.0, re-baselined for eval-model noise): latest 0.897 and 0.191, holdout 0.859 and 0.056. Earlier (2026-11-01): latest 0.991 and 0.048, holdout 0.972 and 0.056.",
+ "note": "Floors raised 2026-11-22 (3.0.1) to that day's scores with one item of slack (hit floors rounded down, false-fire floors rounded up, so one more miss still passes): latest.json measured 99.4% hit (155 of 156) and 9.5% false fire (6 of 63); holdout.json 100% (57 of 57) and 0.0% (0 of 18). The change was the game description; a same-day A/B on 25 prompts at 5 passes cut its false fires on p40 from 4 of 5 to 0 of 5 and changed nothing else. Part of the full-set gain may be a quieter eval model, since main's descriptions are not rerun on the full set the same day. Raise them when a change or a quieter model beats them; never lower them without a written reason in the pull request. Previous floors (2026-11-21, 3.0.0, re-baselined for eval-model noise): latest 0.897 and 0.191, holdout 0.859 and 0.056. Earlier (2026-11-01): latest 0.991 and 0.048, holdout 0.972 and 0.056.",
  "protocol": {
   "model": "gpt-5.6-luna",
   "effort": "low",
@@ -13,7 +13,7 @@
   "latest.json": {
    "prompts": "prompts.jsonl",
    "min_hit_rate": 0.987,
-   "max_false_fire_rate": 0.111
+   "max_false_fire_rate": 0.112
   },
   "holdout.json": {
    "prompts": "holdout.jsonl",

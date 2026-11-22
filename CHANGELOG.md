@@ -18,7 +18,7 @@ Follow-ups from the 3.0.0 review (issue #31).
 
 ### Changed
 - **`game` says what it isn't more plainly:** "Not making a game (Unity, Godot, code)." On "Help me build a platformer game in Unity for my portfolio", false fires fell from 4 of 5 passes to 0 of 5.
-- **Trigger floors raised** to 98.7% hit and 11.1% false fire on the main set and 98.2% and 5.6% on the holdout, after the full eval measured 99.4% and 9.5%, and 100% and 0%.
+- **Trigger floors raised** to 98.7% hit and 11.2% false fire on the main set and 98.2% and 5.6% on the holdout, after the full eval measured 99.4% and 9.5%, and 100% and 0%.
 
 ## [3.0.0] - 2026-11-21
 
