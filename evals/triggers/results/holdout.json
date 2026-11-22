@@ -5,7 +5,7 @@
  "harness": "codex exec, isolated HOME, skills in ~/.agents/skills",
  "prompt_set": "holdout.jsonl",
  "partial": false,
- "descriptions_sha256": "68735a9963353aedb4d2797baf514277f0dd0154c5d6f14ad8683370369c1b0d",
+ "descriptions_sha256": "7a08b99b568ee93d2ab22bb1abc365ec7d70d42e11f5cf9130b556d9d2e229be",
  "inputs_sha256": "cb1b4073d6f63a6699df972d27d64aaa485ff6d111560885f1fc49d6662bef33",
  "skills": [
   "assess",
@@ -32,7 +32,7 @@
  ],
  "positives": 19,
  "negatives": 6,
- "hit_rate": 0.8772,
+ "hit_rate": 1.0,
  "false_fire_rate": 0.0,
  "errors": 0,
  "majority_hit_rate": 1.0,
@@ -43,23 +43,17 @@
    "false_fire": 0
   },
   {
-   "hit": 16,
+   "hit": 19,
    "false_fire": 0
   },
   {
-   "hit": 15,
+   "hit": 19,
    "false_fire": 0
   }
  ],
  "unstable": [
-  "h07",
-  "h10",
-  "h18",
-  "h90",
-  "h93",
-  "h23",
-  "h24",
-  "h25"
+  "h02",
+  "h18"
  ],
  "rows": [
   {
@@ -87,7 +81,7 @@
    "choices": [
     "tutor",
     "tutor",
-    "tutor"
+    "myelinate"
    ],
    "ok": 3
   },
@@ -153,9 +147,9 @@
    "choices": [
     "memory-hooks",
     "memory-hooks",
-    "flashcards"
+    "memory-hooks"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "h08",
@@ -191,10 +185,10 @@
    ],
    "choices": [
     "print",
-    "none",
+    "print",
     "print"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "h11",
@@ -301,9 +295,9 @@
     "writing-editor"
    ],
    "choices": [
-    "none",
     "writing-editor",
-    "none"
+    "none",
+    "writing-editor"
    ],
    "ok": 3
   },
@@ -315,10 +309,10 @@
    ],
    "choices": [
     "video",
-    "teach",
+    "video",
     "video"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "h91",
@@ -358,9 +352,9 @@
    "choices": [
     "teach",
     "teach",
-    "tutor"
+    "teach"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "h23",
@@ -371,9 +365,9 @@
    "choices": [
     "debrief",
     "debrief",
-    "teach"
+    "debrief"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "h24",
@@ -383,10 +377,10 @@
    ],
    "choices": [
     "debrief",
-    "none",
+    "debrief",
     "debrief"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "h25",
@@ -397,9 +391,9 @@
    "choices": [
     "assignment",
     "assignment",
-    "none"
+    "assignment"
    ],
-   "ok": 2
+   "ok": 3
   }
  ]
 }

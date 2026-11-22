@@ -1,6 +1,6 @@
 ---
 name: game
-description: "Use for a study game, a fun way to drill for an exam, or typed practice that proves they know it. Not game development. Decks go to flashcards; tests to assess."
+description: "Use for a study game, a fun way to drill for an exam, or typed practice that proves they know it. Not making a game (Unity, Godot, code). Decks: flashcards; tests: assess."
 ---
 
 # Game

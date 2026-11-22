@@ -124,8 +124,9 @@ def main():
     if args.out:
         Path(args.out).write_text(json.dumps(result, indent=1) + '\n')
     print(f"model {args.model} ({args.effort}), {args.passes} passes, {len(pos)} positives, {len(neg)} negatives")
-    print(f"hit rate {result['hit_rate']:.1%} (majority {result['majority_hit_rate']:.1%}); "
-          f"false-fire rate {result['false_fire_rate']:.1%} (majority {result['majority_false_fire_rate']:.1%}); errors {result['errors']}")
+    pct = lambda v: 'n/a' if v is None else f'{v:.1%}'
+    print(f"hit rate {pct(result['hit_rate'])} (majority {pct(result['majority_hit_rate'])}); "
+          f"false-fire rate {pct(result['false_fire_rate'])} (majority {pct(result['majority_false_fire_rate'])}); errors {result['errors']}")
     for r in rows:
         if r['ok'] < args.passes:
             print(f"  {r['id']} {r['kind']}: got {r['choices']} want {r['accept']}")

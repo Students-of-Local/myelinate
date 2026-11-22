@@ -37,7 +37,7 @@ Give each missed item one cause. If you can't tell, ask one question about that 
 | **Process slip** | Units, signs, arithmetic, skipped a part, misread "not" | Untimed practice; no habit of checking |
 | **Ran out of time or froze** | Blank or rushed items near the end | Never practiced under time |
 
-**Check the cause with a cold retest.** Before you settle a cause, ask the missed item again, reworded or with new numbers, with no notes. Instant and right now means it was retrieval or a slip under pressure. Still wrong or blank means it was never learned. Keep the two apart: they need different fixes. A confident wrong answer is the best kind to correct; give the right one with the reason, then retest it later in the session (`references/how-the-mind-learns.md`, hypercorrection). On corrections for points (§6), don't: locate the step and work a parallel problem instead.
+**Check the cause with a cold retest.** Before you settle a cause, ask the missed item again, reworded or with new numbers, with no notes. Instant and right now means it was retrieval or a slip under pressure. Still wrong or blank means it was never learned, unless the learner record shows an unassisted-correct or later state on it before the exam: then it was learned and lost (**Knew it, lost it**), a spacing problem, not a teaching one. Keep the two apart: they need different fixes. A confident wrong answer is the best kind to correct; give the right one with the reason, then retest it later in the session (`references/how-the-mind-learns.md`, hypercorrection). On corrections for points (§6), don't: locate the step and work a parallel problem instead.
 
 ## 3. Tie the causes to the methods
 
