@@ -1,6 +1,6 @@
 ---
 name: tutor
-description: "Use when a learner asks about a class topic or exam, checks practice answers, or wants a class diagram, even a quick question. Homework and graded work go to assignment."
+description: "Use for class or exam material, practice answers to check or a class diagram, even quick. Homework and online quiz items go to assignment; returned exams to debrief."
 ---
 
 # Tutor

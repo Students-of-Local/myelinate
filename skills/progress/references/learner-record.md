@@ -30,6 +30,29 @@ Chats forget dates and drift. When a learner asks for their progress to be kept,
 }
 ```
 
+A record can also hold `exams`, one entry per graded exam the learner debriefed (`debrief`). Add it only with their OK, like the rest:
+
+```json
+"exams": [
+  {
+    "course": "CHEM 221",
+    "exam": "Exam 2",
+    "date": "2026-10-28",
+    "score_reported": "71/100",
+    "methods": [
+      { "method": "built a flashcard deck", "hours": 4, "kind": "making" },
+      { "method": "flipped the deck", "hours": 2, "kind": "recognition" },
+      { "method": "practice exam, timed", "hours": 0, "kind": "practice" }
+    ],
+    "misses": { "not-studied": 1, "recognized-not-recalled": 3, "recalled-not-used": 6, "look-alikes": 2, "format": 1, "lost-it": 0, "slip": 1, "time": 0 },
+    "change": "10 exam-style questions from memory to end every session from day 5 out",
+    "change_done": null
+  }
+]
+```
+
+`kind` is one of: making (building decks, guides, notes or pages), recognition (rereading, watching, flipping cards without answering first), practice (answering from memory, problems, practice tests), spaced (review across days). `score_reported` is the learner's own report; never compute or predict a grade. Set `change_done` at the next debrief: true, false or "partly".
+
 Dates are ISO `YYYY-MM-DD` in the learner's time zone. `state` is one of: Not checked, Needs support, Independent this session, Retrieved after delay, Transferred. `last_outcome` is one of: unassisted-correct, hinted-correct, revealed, incorrect, self-assessed.
 
 ## Scheduling the next review

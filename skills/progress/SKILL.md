@@ -32,7 +32,7 @@ Read what's available: their record, what they've shown in this conversation, wh
 1. **What's holding:** topics they retrieved later without help, with the dates.
 2. **What only looks learned:** topics they got with hints or after a reveal. Say so plainly: "TCA looks further along than it is: hinted on the 20th, revealed on the 28th."
 3. **What's overdue:** by name, with the last date.
-4. **One pattern, if the record shows one,** with the evidence. Things like warm-ups being skipped, or a topic that held and then dropped after a gap.
+4. **One pattern, if the record shows one,** with the evidence. Things like warm-ups being skipped, a topic that held and then dropped after a gap, or, across debriefed exams (`exams`), a miss cause that keeps coming back with the methods that preceded it.
 5. **One change to make and one next step.** Not a list.
 
 No percentages they didn't earn. No score prediction. No comment on what time of night they study unless they ask. A topic that went from wrong to hinted has moved, but it isn't learned, so don't call it progress without saying that. If you have no record, say what you can see, and offer to start one. No emoji and no scoreboard.

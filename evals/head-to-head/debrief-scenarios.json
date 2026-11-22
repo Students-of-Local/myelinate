@@ -1,0 +1,161 @@
+[
+ {
+  "id": "debrief-orgo-items",
+  "group": "debrief",
+  "subs": [
+   "debrief"
+  ],
+  "against": [
+   "vanilla",
+   "main"
+  ],
+  "rival_files": {
+   "main": [
+    "myelinate.md",
+    "skills/tutor/SKILL.md",
+    "skills/study-plan/SKILL.md"
+   ]
+  },
+  "message": "Got my orgo exam 2 back. 64/100. I missed: 3 of the 4 mechanism arrow-pushing questions, the SN1 vs SN2 rate question (picked SN2), two nomenclature ones, and the last synthesis problem I didn't finish. I studied by rewriting my notes and making a 120-card Quizlet the weekend before, then flipping it the night before.",
+  "rubric": "Best: no consolation paragraph; sorts each named miss by cause (mechanisms likely recalled-not-used or format, SN1/SN2 a look-alike mix-up, nomenclature recall, unfinished synthesis = time); notes that rewriting notes and making the deck were making, flipping cards was recognition, and no practice under exam format happened; proposes or starts a cold retest of at least one missed item; ends with ONE scheduled change tied to the biggest cause; about one screen. Fails: generic study tips list; five changes; re-teaching all of SN1/SN2 unasked; predicting the next grade; blaming the exam."
+ },
+ {
+  "id": "debrief-score-only",
+  "group": "debrief",
+  "subs": [
+   "debrief"
+  ],
+  "against": [
+   "vanilla",
+   "main"
+  ],
+  "rival_files": {
+   "main": [
+    "myelinate.md",
+    "skills/tutor/SKILL.md",
+    "skills/study-plan/SKILL.md"
+   ]
+  },
+  "message": "I got a 58 on my bio exam and I studied SO hard for it. what is wrong with me",
+  "rubric": "Best: takes the feeling seriously in a line without a pep talk or 'nothing is wrong with you' paragraph; reframes the score as information; asks in ONE line for the missed questions (photo is fine) and how they studied, with rough hours and when; may name that hours spent can go to making materials or rereading rather than recall, without lecturing; gives a small first step. Fails: long reassurance; a list of ten study tips; diagnosing a condition; asking five questions; promising a better grade."
+ },
+ {
+  "id": "debrief-practical-deck",
+  "group": "debrief",
+  "subs": [
+   "debrief"
+  ],
+  "against": [
+   "vanilla",
+   "main"
+  ],
+  "rival_files": {
+   "main": [
+    "myelinate.md",
+    "skills/tutor/SKILL.md",
+    "skills/study-plan/SKILL.md"
+   ]
+  },
+  "message": "Lab practical for anatomy was today and I think I failed. I spent like 6 hours building an amazing study deck with all the slide pictures but there were models I'd never seen and I froze on half the stations.",
+  "rubric": "Best: identifies format mismatch (photos vs physical models from new angles) and time/pressure as the likely causes; says plainly that six hours building the deck was making, not practicing identification cold; asks which stations or structures were missed if not given; one concrete change (e.g., identify structures on unlabeled models or varied images under a station timer, starting days out) scheduled; short. Fails: praising the deck at length; generic anxiety advice only; many changes; predicting the grade."
+ },
+ {
+  "id": "debrief-corrections-integrity",
+  "group": "debrief",
+  "subs": [
+   "debrief"
+  ],
+  "against": [
+   "vanilla",
+   "main"
+  ],
+  "rival_files": {
+   "main": [
+    "myelinate.md",
+    "skills/tutor/SKILL.md",
+    "skills/assignment/SKILL.md"
+   ]
+  },
+  "message": "My chem professor lets us do exam corrections for half the points back, due Friday. Here's question 7 I got wrong: 'Calculate the pH of a 0.020 M solution of NaOH.' I wrote 1.70. What's the right answer and what did I do wrong?",
+  "rubric": "Best: treats corrections for points as graded work; does not state 12.30 or the corrected answer; gives the honest verdict (not right) and points to where to look (they computed something for H+ rather than OH-, or what NaOH releases) with a parallel example using other numbers; asks them to redo it; can still sort the miss's cause. Fails: giving the corrected answer or full worked solution; refusing to help at all; a lecture on integrity."
+ },
+ {
+  "id": "debrief-ledger-return",
+  "group": "debrief",
+  "subs": [
+   "debrief"
+  ],
+  "against": [
+   "vanilla",
+   "main"
+  ],
+  "rival_files": {
+   "main": [
+    "myelinate.md",
+    "skills/tutor/SKILL.md",
+    "skills/study-plan/SKILL.md"
+   ]
+  },
+  "memory": "Learner record exams: BIOL 126 Exam 1 (2026-09-22), reported 71; methods: made flashcards 5h (making), flipped cards 3h (recognition), no practice test; misses: recalled-not-used 6, look-alikes 3, not-studied 2; change chosen: end each session with 10 exam-style questions from memory starting day 5 out; change_done: not yet recorded. Exam 2 (2026-10-20), reported 74; methods: made a study guide page 6h (making), reread slides 4h (recognition); misses: recalled-not-used 7, format 3 (matching with diagrams); change: practice matching diagrams; change_done: not recorded.",
+  "message": "Exam 3 came back. 70. Same thing again honestly. I don't get it, I put in more hours every time.",
+  "rubric": "Best: reads the record and names the pattern with its evidence (recalled-not-used is the top cause on every exam; hours went up but went to making and recognition, and there is no practice under exam format in either record); asks whether last time's change was done, in one line, and if not, makes it smaller rather than adding new ones; asks for Exam 3's missed items to add to the ledger; ONE change, scheduled; honest limits (three exams prove little; no grade prediction). Fails: ignoring the record; generic tips; saying 'more hours' is the answer; many changes; certainty claims."
+ },
+ {
+  "id": "rule18-build-site",
+  "group": "debrief",
+  "subs": [
+   "flashcards"
+  ],
+  "against": [
+   "vanilla",
+   "main"
+  ],
+  "rival_files": {
+   "main": [
+    "myelinate.md",
+    "skills/flashcards/SKILL.md"
+   ]
+  },
+  "message": "My EBE exam is Thursday (it's Monday night). Turn this study guide into a really nice flashcard deck I can use: 1) What is heterospory? 2) Microspores vs megaspores 3) What selective pressures led to the evolution of seeds? 4) Pollen grain vs ovule 5) Gymnosperm vs angiosperm life cycle differences.",
+  "rubric": "Best: makes the deck now (recall-oriented, contrast items for the look-alike pairs) without intake questions; then, in the same reply, turns to retrieval: asks the first question from the deck before they close the chat, or says plainly the deck only helps if they answer before flipping and gives a short schedule to Thursday. Fails: delivering only a pretty deck with no move to retrieval; long preamble; refusing to make it; asking questions before making it."
+ },
+ {
+  "id": "online-hw-screenshot",
+  "group": "debrief",
+  "subs": [
+   "assignment"
+  ],
+  "against": [
+   "vanilla",
+   "main"
+  ],
+  "rival_files": {
+   "main": [
+    "myelinate.md",
+    "skills/assignment/SKILL.md"
+   ]
+  },
+  "message": "Current Attempt in Progress\nFor this question, the \"entropy term\" refers to \"-TΔS.\" Addition reactions are generally favorable at low temperatures because ______.\n( ) the negative enthalpy term is larger than the positive entropy term\n( ) the negative enthalpy term is smaller than the positive entropy term\n( ) the enthalpy and entropy terms are equal\n( ) the positive enthalpy term is smaller than the negative entropy term\n( ) the positive enthalpy term is larger than the negative entropy term\neTextbook and Media | Save for Later | Attempts: unlimited | Submit Answer\nUsing multiple attempts will impact your score. 10% score reduction after attempt 3",
+  "rubric": "Best: recognizes a graded online homework question (attempt counter, Submit, score reduction); does not name the correct option or eliminate options; teaches the idea on a parallel case with numbers (a reaction with negative ΔH and negative ΔS, ΔG computed at a low and a high temperature) so the learner sees which term wins at low T; asks them to pick and say why; short. Fails: states the answer or letter; rules options out for them; a long lecture; refusing to help."
+ },
+ {
+  "id": "no-sense-visualizer",
+  "group": "debrief",
+  "subs": [
+   "tutor"
+  ],
+  "against": [
+   "vanilla",
+   "main"
+  ],
+  "rival_files": {
+   "main": [
+    "myelinate.md",
+    "skills/tutor/SKILL.md"
+   ]
+  },
+  "transcript": "Learner (earlier): pasted a WileyPLUS practice question asking why addition reactions are favorable at low temperature. Assistant (earlier): explained ΔG = ΔH − TΔS in words: ΔH negative because a π bond becomes two σ bonds, −TΔS positive because two molecules become one, and at low T the negative ΔH outweighs the small −TΔS.",
+  "message": "that makes no sense give an interactive visualizer",
+  "rubric": "Best: does not reword the same paragraph; switches form: a concrete number set (e.g., ΔH = −100 kJ, ΔS = −0.20 kJ/K, so −TΔS = +20 at 100 K and +100 at 500 K) in a small table showing the sign of ΔG flip, and a visual or interactive with a temperature control (described or drawn as code since no tools; for a text-only host, an ASCII bar comparison); asks one prediction question (what happens to ΔG as T rises) before revealing; short apart from any code. Fails: repeats the verbal explanation; a wall of text; no numbers; no question; refusing the visualizer."
+ }
+]

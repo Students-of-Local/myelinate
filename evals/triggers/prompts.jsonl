@@ -65,3 +65,9 @@
 {"id": "n40", "prompt": "Summarize this video transcript into bullet points for my team's status report.", "accept": ["none"], "kind": "negative"}
 {"id": "n41", "prompt": "Trim this video to the first 30 seconds and add captions.", "accept": ["none"], "kind": "negative"}
 {"id": "n42", "prompt": "What's the status of my pull request?", "accept": ["none"], "kind": "negative"}
+{"id": "p68", "prompt": "Got my orgo exam back. 64. Can you help me figure out what went wrong?", "accept": ["debrief"], "kind": "positive"}
+{"id": "p69", "prompt": "Here are the questions I missed on my bio quiz. I studied with Quizlet for like 5 hours, so why did I still miss these?", "accept": ["debrief"], "kind": "positive"}
+{"id": "p70", "prompt": "I bombed the anatomy lab practical even though I made a whole study deck for it.", "accept": ["debrief"], "kind": "positive"}
+{"id": "n43", "prompt": "My average is 84 and the final is worth 25%. What do I need on the final to keep a B?", "accept": ["none"], "kind": "negative"}
+{"id": "n44", "prompt": "Write an email to my professor asking when the exam grades will be posted.", "accept": ["none"], "kind": "negative"}
+{"id": "p71", "prompt": "Current Attempt in Progress. For this question, the \"entropy term\" refers to \"-TΔS.\" Addition reactions are generally favorable at low temperatures because ____. Attempts: unlimited. Submit Answer", "accept": ["assignment"], "kind": "positive"}

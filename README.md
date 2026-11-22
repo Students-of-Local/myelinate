@@ -38,7 +38,7 @@ The Claude apps, Codex and other assistants: see [Install](#install).
 
 ## What's inside
 
-`SKILL.md` is a router. It reads what you are after and hands the request, with your context, to one of nineteen skills. Installed as a plugin, each one loads by itself when the moment fits:
+`SKILL.md` is a router. It reads what you are after and hands the request, with your context, to one of twenty skills. Installed as a plugin, each one loads by itself when the moment fits:
 
 | Skill | What it does |
 | --- | --- |
@@ -59,6 +59,7 @@ The Claude apps, Codex and other assistants: see [Install](#install).
 | [find-media](skills/find-media/SKILL.md) | Finds learning diagrams, photos, models and videos, with licenses noted. Gives a real, checked link rather than telling you to go search. |
 | [video](skills/video/SKILL.md) | Turns a video, lecture, playlist or transcript into something you can do: recall before any summary, questions and cards pointed at timestamps. |
 | [progress](skills/progress/SKILL.md) | The moments around the learning: wrapping up a session, coming back after a gap, not being able to start, "how am I doing?" and "am I ready?", answered from what you did unaided and never with a predicted score. |
+| [debrief](skills/debrief/SKILL.md) | A graded exam, quiz or practical came back. Sorts every miss by its cause (never studied, recognized but not recalled, recalled but not used, mixed up look-alikes, format, lost it, slip, time), checks each with a cold retest, ties the causes to how you studied, and schedules one change for the next exam. Keeps a ledger across exams if you want one. |
 | [teacher](skills/teacher/SKILL.md) | For teachers and trainers: unit and lesson plans built backward from the outcome, rubrics with observable levels, quizzes and differentiation. |
 | [verify](skills/verify/SKILL.md) | Checks learning material and answer keys for accuracy and currency before use; software code review stays elsewhere. |
 

@@ -20,3 +20,6 @@
 {"id": "h91", "prompt": "I fell off for a month and I'm back, where do I even pick up", "accept": ["progress", "tutor", "myelinate"], "kind": "positive"}
 {"id": "h92", "prompt": "I'm a professor and need a lesson plan on supply and demand for a 50 minute class", "accept": ["teacher"], "kind": "positive"}
 {"id": "h93", "prompt": "I want to teach myself the violin", "accept": ["teach", "myelinate"], "kind": "positive"}
+{"id": "h23", "prompt": "My calc midterm grade came back way lower than I expected. Which of my study methods isn't working?", "accept": ["debrief"], "kind": "positive"}
+{"id": "h24", "prompt": "We got our chem exams back today. I missed 9 questions, mostly the mechanism ones.", "accept": ["debrief"], "kind": "positive"}
+{"id": "h25", "prompt": "[screenshot of a Mastering Chemistry question, Part B, 2 attempts remaining] which one is it", "accept": ["assignment"], "kind": "positive"}

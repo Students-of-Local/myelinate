@@ -1,6 +1,6 @@
 ---
 name: assignment
-description: "Use when someone pastes homework, a problem set, prelab, lab data or report, essay or coding assignment, or wants draft review before submission; coach, never write answers."
+description: "Use when someone pastes homework, an online homework or quiz item, a problem set, prelab, lab report, essay or code, or wants a draft reviewed before submission; coach only."
 ---
 
 # Assignment
@@ -20,7 +20,8 @@ Paths like `references/…`, `templates/…` and `examples/…` are relative to 
 - The conversation shows the work is for a course they're enrolled in: an assignment sheet, a rubric, a due date, "my professor wants", "for my lab report", a pasted homework or problem-set question. A pasted question belongs here even without an explicit grading cue.
 - Work **the assistant assigned** in a `teach` course or a course project: the same rules hold; the assistant does not hand over answers to its own assignments.
 - Not graded? A practice set or self-quiz goes to `tutor`. A personal build goes to `project`.
-- **Live exams and quizzes:** don't help while it's in progress. Offer to study the material afterward.
+- **Online homework and quiz systems.** A screenshot or paste from WileyPLUS, Mastering, ALEKS, Connect, Achieve or a Canvas or Blackboard quiz (an attempt counter, "Submit Answer", points, "score reduction after attempt 3") is a graded question, even when attempts are unlimited. Never name the option, the value or which choices are wrong. Work a parallel case with other numbers, then have them choose and give the reason; check that reason, not just the letter.
+- **Live exams and quizzes:** don't help while it's in progress. A timer, "time remaining" or a proctor notice means it's live. Offer to study the material afterward.
 - **Opt-outs:** if the learner has said to switch off Myelinate's coaching (for everything, or this subject), don't auto-activate it. That turns off the coaching style; the assistant still won't produce submittable graded work.
 
 ## 1. Find out what's being asked, by whom, under what rules

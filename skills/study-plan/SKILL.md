@@ -16,6 +16,7 @@ Paths like `references/…`, `templates/…` and `examples/…` are relative to 
 - **Scope**: study guide / objectives (confirmed) or inferred list (label it). From `tutor`'s course map, or `teach`'s curriculum for self-directed learners.
 - **Exam**: date and time, format, weight in the course, allowed materials.
 - **Real hours**: hours they can actually study per day until the exam. Ask; don't assume. Subtract classes, work, sleep (7 to 9 h), commute, other exams.
+- **Last exam's debrief**, if there was one (`../debrief/SKILL.md`, or `exams` in their learner record): its one change goes into the first week of this plan, and its missed topics are the first reviews. If the last change wasn't done, make it smaller, don't drop it.
 - **Current state per target**: from a quick check (5 to 15 mixed items) or tracked states: Not checked / Needs support / Independent this session / Retrieved after delay / Transferred. Self-ratings are a weak signal; prefer a quick check.
 
 ## 2. Rank

@@ -5,13 +5,14 @@
  "harness": "codex exec, isolated HOME, skills in ~/.agents/skills",
  "prompt_set": "holdout.jsonl",
  "partial": false,
- "descriptions_sha256": "0d371582e7438399d994f53133b9297fa6857ee0eb5a6c767ce7de514e56ca7c",
- "inputs_sha256": "9331866b09b5f172697f1b4fc67f04a13190f67af711a989bc4179834c769fc1",
+ "descriptions_sha256": "6cca1c15e98fda6ac5b93da1fde8edd1807ee231c4729cef71c7b16000332017",
+ "inputs_sha256": "cb1b4073d6f63a6699df972d27d64aaa485ff6d111560885f1fc49d6662bef33",
  "skills": [
   "assess",
   "assignment",
   "code",
   "course-project",
+  "debrief",
   "find-media",
   "flashcards",
   "game",
@@ -29,30 +30,28 @@
   "verify",
   "video"
  ],
- "positives": 16,
+ "positives": 19,
  "negatives": 6,
  "hit_rate": 1.0,
- "false_fire_rate": 0.0556,
+ "false_fire_rate": 0.0,
  "errors": 0,
  "majority_hit_rate": 1.0,
  "majority_false_fire_rate": 0.0,
  "per_pass": [
   {
-   "hit": 16,
-   "false_fire": 1
-  },
-  {
-   "hit": 16,
+   "hit": 19,
    "false_fire": 0
   },
   {
-   "hit": 16,
+   "hit": 19,
+   "false_fire": 0
+  },
+  {
+   "hit": 19,
    "false_fire": 0
   }
  ],
- "unstable": [
-  "h13"
- ],
+ "unstable": [],
  "rows": [
   {
    "id": "h01",
@@ -225,11 +224,11 @@
     "none"
    ],
    "choices": [
-    "tutor",
+    "none",
     "none",
     "none"
    ],
-   "ok": 2
+   "ok": 3
   },
   {
    "id": "h14",
@@ -351,6 +350,45 @@
     "teach",
     "teach",
     "teach"
+   ],
+   "ok": 3
+  },
+  {
+   "id": "h23",
+   "kind": "positive",
+   "accept": [
+    "debrief"
+   ],
+   "choices": [
+    "debrief",
+    "debrief",
+    "debrief"
+   ],
+   "ok": 3
+  },
+  {
+   "id": "h24",
+   "kind": "positive",
+   "accept": [
+    "debrief"
+   ],
+   "choices": [
+    "debrief",
+    "debrief",
+    "debrief"
+   ],
+   "ok": 3
+  },
+  {
+   "id": "h25",
+   "kind": "positive",
+   "accept": [
+    "assignment"
+   ],
+   "choices": [
+    "assignment",
+    "assignment",
+    "assignment"
    ],
    "ok": 3
   }

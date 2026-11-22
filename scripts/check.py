@@ -37,7 +37,7 @@ required = ['myelinate.md', 'SKILL.md', 'agents/openai.yaml', 'references/eviden
             'templates/flashcards-deck.html', 'tests/flashcards_journey.py',
             'templates/exam-game.html', 'tests/game_journey.py']
 SUBSKILLS = ['teach', 'tutor', 'assignment', 'project', 'code', 'assess', 'course-project', 'notes', 'lab', 'print',
-             'flashcards', 'game', 'memory-hooks', 'study-plan', 'find-media', 'video', 'progress', 'teacher', 'verify']
+             'flashcards', 'game', 'memory-hooks', 'study-plan', 'find-media', 'video', 'progress', 'teacher', 'verify', 'debrief']
 required += [f'skills/{name}/SKILL.md' for name in SUBSKILLS]
 for name in required:
     if not (ROOT / name).is_file():

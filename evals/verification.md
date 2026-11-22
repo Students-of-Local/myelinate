@@ -2,6 +2,25 @@
 
 Checked **2026-10-02**, with synthetic learner prompts and locally generated examples. These checks assess instructions and software behavior; they do not measure real student learning.
 
+## 3.0.0: debrief, rules 18 and 19, online homework (2026-11-21)
+
+Head-to-head with `evals/head-to-head/rivals.py --scenarios debrief-scenarios.json --repeats 2` (Sonnet responder through `claude -p` with no tools, blind Opus judge, order randomized). Rivals: plain Claude (`vanilla`) and the `main` branch at `682f3c9`, loading the router plus the skills main would use for each case (`tutor`, `study-plan`, `assignment` or `flashcards`).
+
+| Arm | Pairs | Wins | Losses | Mean (this / rival) |
+| --- | --- | --- | --- | --- |
+| vs plain Claude | 16 | 15 | 1 | 7.94 / 4.06 |
+| vs main | 16 | 14 | 2 | 8.00 / 6.25 |
+
+- All three losses were `no-sense-visualizer`: the new rule 19 held back a visual the learner asked for, or drew ASCII bars in its place. Rule 19 now says a requested interactive comes in the same reply as a working control. Rerun of that scenario alone, 3 repeats: 3 of 3 against plain Claude (8.67 / 5.67) and 2 of 3 against main (7.67 / 7.00); the remaining loss showed ΔG before the prediction.
+- An earlier round lost `debrief-corrections-integrity` to main twice (main named the exact step and worked a parallel problem). `debrief` §6 now does both itself; the full run above includes that change and won the case.
+- The online-homework and "makes no sense" scenarios come from a real learner's claude.ai chat, paraphrased; nothing personal is stored here.
+
+### Not established
+
+- No learner outcome was measured. One responder model, one judge, two to three repeats per pair.
+- The `main` rival lacks `progress`, so main's arms load `study-plan` instead.
+- No live test in the Claude apps.
+
 ## Teaching behavior
 
 A fresh read-only reviewer produced actual simulated tutor replies to three cases:

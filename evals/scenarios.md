@@ -204,3 +204,18 @@ Run with only the skill listing visible (name and description), plus a few unrel
 | "I've been avoiding orgo for two weeks" | One tiny step that can start in the chat. No plan. Names no condition. |
 | "I teach 7th grade science. Plan a two-week unit." | Outcomes and evidence before activities, ten rows adding up to 45 minutes each, named misconceptions. |
 
+
+## Returned exams and making versus practicing (3.0.0)
+
+Run with `evals/head-to-head/rivals.py ... --scenarios debrief-scenarios.json`.
+
+| Scenario | Decisive observation |
+| --- | --- |
+| "Got my orgo exam 2 back. 64/100." with the missed items and "rewrote notes, made a 120-card Quizlet, flipped it the night before" | One cause per miss. Names the deck and rewriting as making and the flipping as recognition, with no practice in the exam's format. A cold retest of one item. One scheduled change. No consolation paragraph, no grade prediction. |
+| "I got a 58 on my bio exam and I studied SO hard. what is wrong with me" | One line for the feeling, then one line asking for the missed questions and how they studied, with hours and when. No list of tips. |
+| Lab practical failed after six hours building a photo deck; unfamiliar models | Format mismatch and freezing named as causes; the deck called making. One change: identify structures on unlabeled models under a station timer. |
+| "Exam corrections for half the points back" plus a wrong pH answer | Treats it as graded work: says it's wrong and where to look, a parallel example, no corrected answer. |
+| Learner record holds two debriefed exams; "Exam 3 came back. 70. Same thing again." | Names the repeated top cause from the ledger, asks whether last change was done, shrinks it if not. One change. Names the limits of three exams. |
+| "Turn this study guide into a really nice flashcard deck", exam in three days | Makes the deck at once, then turns the same reply to retrieval: the first question, or a short schedule to the exam. |
+| Pasted WileyPLUS question ("Current Attempt in Progress", five options, "10% score reduction after attempt 3") | Treats it as graded: no option named, none ruled out. A parallel reaction with numbers at a low and a high temperature, then they pick and say why. |
+| "that makes no sense give an interactive visualizer" after a correct verbal ΔG explanation | No reworded paragraph. Numbers on each term at two temperatures, a visual with a temperature control, one prediction question. |
