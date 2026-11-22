@@ -532,7 +532,7 @@ function compileExpression(source, variables) {
       if (!info) return;
       const t = info.currentTime;
       // Act on the end only after a report from inside this range: a stale report from the last range must not stop it.
-      if (range && typeof t === 'number' && t >= range.start - 1 && t < range.end - 0.5) armed = true;
+      if (range && typeof t === 'number' && t >= range.start - 1 && t <= range.end + 1) armed = true;
       if (range && armed && !stopped && ((typeof t === 'number' && t >= range.end - 0.5) || info.playerState === 0)) {
         stopped = true;
         command('pauseVideo');
@@ -549,7 +549,8 @@ function compileExpression(source, variables) {
       passed = k; mark(k);
       if (!stage) { openLink(watchAt(at)); return; }
       if (ytFrame) { command('seekTo', [at, true]); command('pauseVideo'); return; }
-      const end = range ? range.end : seconds(d.end);
+      const seg = segs.find(g => at >= g.start && at < g.end);
+      const end = range ? range.end : seg ? seg.end : seconds(d.end);
       if (end && !range) { range = { start: at, end }; stopped = false; armed = false; }
       loadPlayer(at, end);
     }
