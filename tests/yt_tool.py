@@ -586,6 +586,7 @@ def test_course_refuses_a_pdf_and_says_how_to_get_text():
     (tool / 'pdftotext').chmod(0o755)
     code, out, err = b.run('course', str(pdf), words, path=EMPTY, PATH=str(tool))
     assert code == 2 and 'run pdftotext' in err, (code, err)  # it can make the text itself: a wrong command
+    assert 'slides-pdftotext.txt' in err and 'out.txt' not in err, err  # beside the PDF, never a bare name
     no_tool = b.run('course', str(pdf), words, path=EMPTY)
     assert no_tool[0] == 1 and 'cannot be machine-checked' in no_tool[2], no_tool  # it can't: the check can't run
     for msg in (err, no_tool[2]):
@@ -606,6 +607,9 @@ def test_course_refuses_a_pdf_and_says_how_to_get_text():
         shutil.which = which
     code, out, err = b.run('course', str(b.dir / 'missing.txt'), words, path=EMPTY)
     assert code == 2 and 'no such file' in err, (code, err)
+    for body in ('', '\n\x0c\n  \n'):  # what pdftotext writes for a scanned PDF: the check can't run
+        code, out, err = course(b, words, name='scan-pdftotext.txt', body=body)
+        assert code == 1 and 'has no text' in err and 'NOT CONFIRMED' not in out, (code, out, err)
     code, out, err = quote(b, '8m01s', ANTI)
     assert code == 2 and '--at takes' in err, (code, err)
 
@@ -629,8 +633,16 @@ def test_course_reads_a_pasted_transcript_panel():
     # A quote copied across a stamp line keeps its words; the stamp is not one of them.
     code, out, _ = course(b, 'so the hydrogen and the leaving group 0:35 must be anti periplanar', name='transcript.txt', body=panel)
     assert code == 0, out
-    # A word split across a stamp line is never glued to the stamp ("anti0").
+    # A stamp line starts a new caption segment: nothing is joined across it, least of all the stamp.
     code, out, _ = course(b, 'draw the Newman projection of the anti 12 conformer', name='transcript.txt', body=panel)
+    assert code == 0, out
+    code, out, _ = course(b, 'draw the Newman projection of the anti12 conformer', name='transcript.txt', body=panel)
+    assert code == 6, out
+    # A clock time the speaker says is a word; only the panel's own stamps are skipped.
+    timed = panel + '0:50\nwe meet at 9:45 in the lab\n'
+    code, out, _ = course(b, 'we meet at 9:45 in the lab', name='transcript.txt', body=timed)
+    assert code == 0, out
+    code, out, _ = course(b, 'we meet at 9:15 in the lab', name='transcript.txt', body=timed)
     assert code == 6, out
 
 

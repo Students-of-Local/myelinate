@@ -6,6 +6,15 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+## [3.1.3] - 2026-11-22
+
+Closes the last notes from PR #35's review of the quote checker, each with a test the 3.1.2 checker fails.
+
+- **A file with no text can't be checked, not "not confirmed".** An empty file, or what `pdftotext` writes for a scanned PDF, now exits 1, so the quote is labeled "not machine-checked" instead of reading as a wrong quote.
+- **`pdftotext` output goes beside the PDF** under a name that can't overwrite the learner's own `.txt` (`slides-pdftotext.txt`), and the docs say to run the command `course` prints.
+- **Pasted transcript panels:** only the panel's own stamps are skipped in a quote, so a time the speaker says ("we meet at 9:45") still counts, and no word is joined across a stamp line.
+- **Exit 2 in `skills/video`:** if the file never existed, the quote is not machine-checked.
+
 ## [3.1.2] - 2026-11-22
 
 Closes the gaps a second review found in the 3.1.1 quote checker, each with a test that fails on 3.1.1.

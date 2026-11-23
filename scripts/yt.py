@@ -18,7 +18,8 @@ Every command takes --json. Results are cached under $TMPDIR/myelinate-yt-<uid>/
 by video id, so asking again makes no network request.
 
 Exit codes: 0 ok, 1 video unavailable or no captions, 2 usage error (fix the
-command: a bad --at, a missing, PDF or binary course file), 3 yt-dlp missing,
+command: a bad --at, a mistyped video id or URL, a missing file, a PDF when
+pdftotext is installed), 3 yt-dlp missing,
 4 network failure, 5 rate limited (HTTP 429) or blocked by YouTube,
 6 quote not confirmed (quote and course).
 """
@@ -54,7 +55,7 @@ NET_CALLS = 0  # yt-dlp runs so far in this process
 
 
 class YTError(Exception):
-    """An expected failure. kind: unavailable, network, ratelimit, nocaptions, other."""
+    """An expected failure. kind: unavailable, network, ratelimit, nocaptions, usage, other."""
 
     def __init__(self, kind, message):
         super().__init__(message)
@@ -603,7 +604,7 @@ class Source:
     def __init__(self):
         self.tokens, self.where, self.raw_index, self.raw = [], [], [], []
         self.stamps = {}    # line number -> the last transcript-panel stamp above it
-        self.panel = False  # the file is a pasted transcript panel (stamps on their own lines)
+        self.panel = set()  # stamps removed from a pasted transcript panel (each on its own line)
 
     def add(self, text, where_for):
         words = raw_words(text)
@@ -658,30 +659,35 @@ def file_source(path):
     # Never suggest retyping or pasting the text into a new file: a check against the model's own copy proves nothing.
     if head.startswith(b'%PDF'):
         if shutil.which('pdftotext'):
-            raise YTError('usage', f'{path} is a PDF: run pdftotext "{path}" out.txt (without -layout), then check against out.txt')
+            out = path.with_name(path.stem + '-pdftotext.txt')  # beside the PDF, never over the learner's own .txt
+            raise YTError('usage', f'{path} is a PDF: run pdftotext "{path}" "{out}" (without -layout), then check against "{out}"')
         raise YTError('other', f'{path} is a PDF and pdftotext is not installed, so this quote cannot be machine-checked')
     if b'\x00' in head:
         raise YTError('other', f'{path} is not a text file, so this quote cannot be machine-checked')
     text = path.read_text(encoding='utf-8', errors='replace')
     src = Source()
-    lines, stamp = [], None
+    lines, stamp, after_stamp = [], None, False
     for n, line in enumerate(text.splitlines(), 1):
         if PANEL_STAMP.match(line):  # a stamp on its own line, as YouTube's transcript panel pastes it
-            stamp, src.panel = line.strip(), True
+            stamp, after_stamp = line.strip(), True
+            src.panel.add(stamp)
             continue
         if stamp:
             src.stamps[n] = stamp
-        lines.append([n, STAMP.sub(' ', line)])
-    # Rejoin a word split across lines ("anti-" / "periplanar"); stamp lines are already gone, so a
-    # stamp is never glued onto a word.
+        lines.append([n, STAMP.sub(' ', line), after_stamp])
+        after_stamp = False
+    # Rejoin a word split across lines ("anti-" / "periplanar"). A panel's stamp line marks a new
+    # caption segment, not a split word, so nothing is joined across one.
     for k in range(len(lines) - 1):
         m = re.search(r'(\w)-[ \t]*$', lines[k][1])
         nxt = re.match(r'[ \t]*(\w+)', lines[k + 1][1])
-        if m and nxt:
+        if m and nxt and not lines[k + 1][2]:
             lines[k][1] = lines[k][1][:m.start() + 1] + nxt.group(1)
             lines[k + 1][1] = lines[k + 1][1][nxt.end():]
-    for n, line in lines:
+    for n, line, _ in lines:
         src.add(line, lambda k, total, n=n: n)
+    if not src.tokens:
+        raise YTError('other', f'{path} has no text (a scanned PDF or an empty file), so this quote cannot be machine-checked')
     return src
 
 
@@ -782,8 +788,8 @@ def match_quote(text, src, starts):
     end and problems for the best span: one that passes, if there is one. A quote is one unbroken
     stretch of words: a cut ("a ... b") can hide words that reverse it, so it is refused."""
     text = STAMP.sub(' ', text)  # a [8:01] copied from the transcript view is not a spoken word
-    if src.panel:  # nor is a bare 0:31 copied across a pasted panel's stamp line
-        text = re.sub(r'(?<!\S)\d{1,2}:\d\d(?::\d\d)?(?!\S)', ' ', text)
+    if src.panel:  # nor is a bare 0:31 copied across one of a pasted panel's stamp lines
+        text = re.sub(r'(?<!\S)\d{1,2}:\d\d(?::\d\d)?(?!\S)', lambda m: ' ' if m.group() in src.panel else m.group(), text)
     if ELLIPSIS.search(text):
         return {'ok': False, 'score': 0.0, 'problems': [
             'the quote has a cut (...): the left-out words can change its meaning, so check each unbroken stretch as its own quote']}

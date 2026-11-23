@@ -2,6 +2,10 @@
 
 Checked **2026-10-02**, with synthetic learner prompts and locally generated examples. These checks assess instructions and software behavior; they do not measure real student learning.
 
+## 3.1.3: last quote-checker notes from PR #35 (2026-11-22)
+
+`python3 tests/yt_tool.py`: 43 of 43. Run against the 3.1.2 checker, it fails at a bare `out.txt` in the PDF message and at a panel quote across a stamp line. Checked one at a time, the 3.1.2 checker also exits 6 on an empty file (now 1) and refuses "we meet at 9:45 in the lab" in a pasted panel (now confirmed). The small-model attack run was not rerun: these changes touch empty files, PDF messages and panel stamps, none of which its cases use. No fresh-agent run.
+
 ## 3.1.2: second-review gaps in the quote checker (2026-11-22)
 
 `python3 tests/yt_tool.py`: 43 of 43. The 3.1.1 checker fails five of the first 41:
