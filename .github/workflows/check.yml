@@ -28,6 +28,10 @@ jobs:
         run: python3 tests/video_check_test.py
       - name: Video checker catches all seven accuracy attacks
         run: python3 evals/make-video/attacks.py --self-test
+      - name: Small-model make-video result meets its floors
+        run: |
+          python3 evals/make-video/results.py --self-test
+          python3 evals/make-video/results.py --check
       - name: Narration voice tools against tone clips and fake engines (needs ffmpeg)
         run: |
           command -v ffmpeg >/dev/null || { sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg; }

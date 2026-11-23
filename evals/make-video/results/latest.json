@@ -1,0 +1,109 @@
+{
+ "model": "LFM3-1.7B Q4_K_M (llama-server, CPU)",
+ "rounds": 6,
+ "run": "runs4",
+ "rows": [
+  {
+   "id": "equations-class",
+   "arm": "baseline",
+   "rep": 1,
+   "rounds": 1,
+   "valid_drafts": 1,
+   "ready": false,
+   "final_errors": 36,
+   "won": true,
+   "teaches_false": false,
+   "overall": 6,
+   "accuracy": 6
+  },
+  {
+   "id": "equations-class",
+   "arm": "skill",
+   "rep": 1,
+   "rounds": 6,
+   "valid_drafts": 3,
+   "ready": false,
+   "final_errors": 25,
+   "won": false,
+   "teaches_false": false,
+   "overall": 3,
+   "accuracy": 5
+  },
+  {
+   "id": "osmosis-class",
+   "arm": "baseline",
+   "rep": 1,
+   "rounds": 1,
+   "valid_drafts": 1,
+   "ready": false,
+   "final_errors": 20,
+   "won": true,
+   "teaches_false": true,
+   "overall": 3,
+   "accuracy": 2
+  },
+  {
+   "id": "osmosis-class",
+   "arm": "skill",
+   "rep": 1,
+   "rounds": 6,
+   "valid_drafts": 0,
+   "ready": false,
+   "final_errors": null,
+   "won": false,
+   "teaches_false": false,
+   "overall": 1,
+   "accuracy": 1
+  },
+  {
+   "id": "seasons-self",
+   "arm": "baseline",
+   "rep": 1,
+   "rounds": 1,
+   "valid_drafts": 0,
+   "ready": false,
+   "final_errors": null,
+   "won": false,
+   "teaches_false": false,
+   "overall": 1,
+   "accuracy": 1
+  },
+  {
+   "id": "seasons-self",
+   "arm": "skill",
+   "rep": 1,
+   "rounds": 6,
+   "valid_drafts": 1,
+   "ready": false,
+   "final_errors": 21,
+   "won": true,
+   "teaches_false": true,
+   "overall": 3,
+   "accuracy": 2
+  }
+ ],
+ "summary": {
+  "skill": {
+   "lessons": 3,
+   "ready": 0,
+   "playable": 2,
+   "problems_left": 46,
+   "valid_drafts": 4,
+   "drafts": 18,
+   "wins": 1,
+   "teaches_false": 1,
+   "mean_overall": 2.33
+  },
+  "baseline": {
+   "lessons": 3,
+   "ready": 0,
+   "playable": 2,
+   "problems_left": 56,
+   "valid_drafts": 2,
+   "drafts": 3,
+   "wins": 2,
+   "teaches_false": 1,
+   "mean_overall": 3.33
+  }
+ }
+}
