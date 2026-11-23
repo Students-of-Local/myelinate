@@ -103,18 +103,18 @@ def tone(dest, seconds, kind='good'):
         quiet.replace(dest)
 
 
-def build(name, kinds=None, voice_entries=None, disclose=True, extra_clips=None, lesson=None):
+def build(name, kinds=None, voice_entries=None, disclose=True, extra_clips=None, lesson=None, lines=None, secs=None):
     """A lesson folder with one clip per line made directly (no engine), voice.json and the lesson's "audio"."""
     lesson = copy.deepcopy(lesson or LESSON)
     d, path = lesson_dir(name, lesson)
     kinds = kinds or {}
     clips, table = {}, {}
-    for i, text in enumerate(LINES):
+    for i, text in enumerate(lines or LINES):
         key = vv.vc.fnv1a(text)
         kind = kinds.get(i, 'good')
         if kind == 'missing':
             continue
-        tone(d / 'audio' / f'{key}.mp3', len(text.split()) * 60 / 150, kind)
+        tone(d / 'audio' / f'{key}.mp3', (secs or (lambda x: len(x.split()) * 60 / 150))(text), kind)
         clips[key] = f'audio/{key}.mp3'
         table[key] = {'file': f'{key}.mp3', 'tts_sha256': 'x', 'engine': 'cmd', 'voice': 'v1'}
     table.update(voice_entries or {})
@@ -167,6 +167,8 @@ def test_numbers_and_wer():
     check(n('1/4 of the 21st') == 'one quarter of the twenty first'.split(), 'normalize: a quarter and ordinals')
     check(n('Chi-square, isn’t it?') == 'chi square isnt it'.split(), 'normalize: hyphens split, punctuation and apostrophes drop')
     check(n('forty percent') == n('40%'), 'normalize: spoken and written numbers match')
+    check(n('Carriers are 2pq times') == n('Carriers are 2 p q times') == 'carriers are two p q times'.split(), 'normalize: letters run together (2pq) match letters said apart')
+    check(vk.wer('Carriers are 2 p q times 50,000, about 990.', 'Carriers are 2pq times 50,000, about 990.') == 0, 'WER: 2pq heard for 2 p q is not an error')
     check(vk.wer('The sky is blue.', 'the sky is blue') == 0, 'WER: case and punctuation do not count')
     check(abs(vk.wer('the sky is blue today', 'the sky blue to day') - 0.6) < 1e-9, 'WER: 1 deletion + 1 substitution + 1 insertion over 5 words is 60%')
     edits, missed = vk.align('rayleigh scattering makes blue'.split(), 'raleigh scattering blue'.split())
@@ -206,6 +208,27 @@ def test_clean():
     check(130 <= summary['pace'] <= 165, f'clean clips: pace in range ({summary["pace"]} wpm)')
     r = subprocess.run([sys.executable, str(SCRIPTS / 'voice_check.py'), str(path), '--asr', 'none'], capture_output=True, text=True)
     check(r.returncode == 0 and r.stdout.strip().endswith('READY.'), 'clean clips: the command prints READY and exits 0')
+
+
+def test_pace_counts_spoken_words():
+    lines = ['Step 2: p squared is 0.4225, 2 p q is 0.455, and q squared is 0.1225.',
+             'Multiply 0.7 times 0.7 to get 0.49, which is p squared.',
+             'Carriers are 2 p q times 50,000, about 990 people in all.']
+    lesson = copy.deepcopy(LESSON)
+    beats = lesson['scenes'][0]['beats']
+    beats[0]['say'], beats[1]['say'], beats[3]['say'] = lines
+    d, path = build('numbers', lesson=lesson, lines=lines, secs=lambda x: len(vk.normalize(x)) * 60 / 150)
+    p, notes, summary = problems_of(path)
+    check(not has(p, 'words a minute'), f'pace: numbers count as the words spoken, so 150 spoken wpm passes ({p[:2]})')
+    check(140 <= summary['pace'] <= 160, f'pace: the summary counts spoken words ({summary["pace"]} wpm)')
+
+    d, path = build('slow', secs=lambda x: len(vk.normalize(x)) * 60 / 100)
+    vj = json.loads((d / 'audio' / 'voice.json').read_text())
+    vj['settings'] = {'speed': 0.7}
+    (d / 'audio' / 'voice.json').write_text(json.dumps(vj))
+    probs, _, summary = vk.check(path, asr='none')
+    fixes = [f for w, pr, f in probs if 'words a minute' in pr]
+    check(len(fixes) == 1 and '--speed 1.03' in fixes[0], f'pace: a slow voice gets one problem naming the speed to rerun with ({fixes})')
 
 
 def test_stale_and_missing():
@@ -431,7 +454,7 @@ def main():
     if not (shutil.which('ffmpeg') and shutil.which('ffprobe')):
         print('FAIL: these tests need ffmpeg and ffprobe')
         return 1
-    tests = [test_pronounce, test_numbers_and_wer, test_voxtype_parse, test_sample_lines, test_clean, test_stale_and_missing,
+    tests = [test_pronounce, test_numbers_and_wer, test_voxtype_parse, test_sample_lines, test_clean, test_pace_counts_spoken_words, test_stale_and_missing,
              test_loudness_clipping_dead_air, test_one_voice_and_disclose, test_no_asr, test_asr_round_trip, test_engine_cmd_and_cache,
              test_busy_gpu_falls_through, test_engine_none]
     for t in tests:

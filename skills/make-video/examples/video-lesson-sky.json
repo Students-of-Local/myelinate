@@ -155,7 +155,7 @@
  ],
  "misconception": {
   "wrong": "Only blue light gets scattered.",
-  "right": "All colors scatter. Blue scatters the most.",
+  "right": "All colors scatter. Blue scatters far more than red.",
   "claims": [
    "c5",
    "c6"
@@ -280,7 +280,7 @@
   },
   {
    "id": "s3",
-   "title": "Air scatters blue the most",
+   "title": "Air scatters blue more",
    "role": "explain",
    "beats": [
     {
@@ -372,7 +372,7 @@
        ],
        "rightItems": [
         "All colors scatter",
-        "Blue scatters the most"
+        "Blue scatters far more"
        ]
       }
      ]
@@ -391,7 +391,7 @@
      "show": [
       {
        "type": "highlight",
-       "target": "Blue scatters the most"
+       "target": "Blue scatters far more"
       }
      ]
     }
@@ -487,14 +487,14 @@
      ]
     },
     {
-     "say": "Air scatters the short blue waves the most.",
+     "say": "Air scatters the short blue waves more than the other colors.",
      "claims": [
       "c6"
      ],
      "show": [
       {
        "type": "step",
-       "text": "Air scatters blue most"
+       "text": "Air scatters blue more"
       }
      ]
     },
@@ -506,7 +506,7 @@
      "show": [
       {
        "type": "step",
-       "text": "Short path: blue sky"
+       "text": "Scattered light: blue sky"
       }
      ]
     },
@@ -518,7 +518,7 @@
      "show": [
       {
        "type": "step",
-       "text": "Long path: red sun"
+       "text": "Leftover light: red sun"
       }
      ]
     }
@@ -534,22 +534,23 @@
   ]
  },
  "practice": {
-  "ask": "A wildfire far away fills the air with fine smoke. Predict the color of tonight's sunset and explain it with this lesson's idea.",
-  "answer": "Redder than usual. The smoke particles also scatter blue light, so even more blue is removed and more red and yellow light gets through.",
+  "ask": "At noon the Sun looks white. At sunset it looks red. Explain the difference with this lesson's idea.",
+  "answer": "At sunset the Sun's light crosses far more air, so much more of the blue is scattered away and mostly red and yellow light comes straight through.",
   "steps": [
-   "Smoke adds small particles to the air.",
-   "Those particles scatter blue light too.",
-   "With more blue removed, more red and yellow light reaches you."
+   "Sunlight holds every color, so at noon it looks white.",
+   "At sunset its light takes a long path through the air.",
+   "Along that path the blue is scattered away, and red and yellow get through."
   ],
   "claims": [
-   "c11"
+   "c1",
+   "c8",
+   "c10"
   ]
  },
- "verifiedBy": "Claude Opus 5.5 read every quote against the NASA page on 2026-11-22",
  "review": {
   "by": "independent reviewer agent",
   "date": "2026-11-22",
   "result": "pass",
-  "notes": "Reviewer asked to separate scattered skylight from the direct sunbeam, give a real reason on the horizon pause, keep the sunset comparison about light paths, and fix a backwards arrow label. All four were fixed with new quoted claims c12 and c13. A violet caveat was left out because the source does not cover it."
+  "notes": "Reviewer asked to separate scattered skylight from the direct sunbeam, give a real reason on the horizon pause, keep the sunset comparison about light paths, and fix a backwards arrow label. All four were fixed with new quoted claims c12 and c13. A violet caveat was left out because the source does not cover it. A second review (verify skill, fresh agent) asked for physics wording that does not say blue scatters the most, a practice question that does not repeat a pause, and summary steps that name scattered and leftover light; all three were made."
  }
 }

@@ -39,7 +39,7 @@ import video_check as vc  # noqa: E402
 WER_MAX, CLIP_WER_MAX = 0.05, 0.15
 PACE_MIN, PACE_MAX = 130, 165
 CLIP_PACE_MIN, CLIP_PACE_MAX = 110, 190
-CLIP_PACE_WORDS = 5  # shorter lines give a noisy per-clip pace, so only the overall pace counts them
+CLIP_PACE_WORDS = 8  # a short line like "So where does the blue come from?" runs fast by nature, and 0.1 s of trim moves its pace by 10; only the overall pace counts them
 GARBLED = 0.5  # a clip this wrong is one problem; listing each of its words would bury the fix
 LUFS_MONO, LUFS_STEREO, LUFS_TOL = -19.0, -16.0, 1.5
 TP_MAX, SAMPLE_PEAK_MAX = -1.5, -0.1
@@ -130,7 +130,11 @@ def normalize(text):
     text = spell_numbers(text)
     text = re.sub(r"'", '', text)
     text = re.sub(r'[-\u2010-\u2015]', ' ', text)  # hyphen and the Unicode dashes
-    return re.sub(r'[^a-z0-9 ]+', ' ', text).split()
+    out = []
+    for w in re.sub(r'[^a-z0-9 ]+', ' ', text).split():
+        # Speech-to-text writes "2 p q" as "2pq": a short run of letters with no vowel is read letter by letter.
+        out.extend(w if 2 <= len(w) <= 4 and not re.search(r'[aeiouy0-9]', w) else [w])
+    return out
 
 
 def align(ref, hyp):
@@ -455,23 +459,33 @@ def check(lesson_path, audio_dir=None, asr='auto', download=False, partial=False
     if len(formats) > 1:
         problems.append(('The clips', 'use different formats: ' + ', '.join(f'{r} Hz {c} ch' for r, c in sorted(formats)) + '.',
                          'Use one engine and one voice for the whole lesson. ' + RERUN))
-    total_words, total_secs = 0, 0.0
+    total_words, total_secs, clip_pace = 0, 0.0, []
     for n, key, text, path in present:
         if key not in info:
             continue
         p, lv = info[key]
         secs = speech_seconds(p['duration'], lv['silences'])
-        wc = vc.words(text)
+        # Count words as spoken: "0.4225" is five words aloud ("zero point four two two five"), not one.
+        wc = len(normalize(text))
         total_words += wc
         total_secs += secs
         wpm = wc * 60 / secs
         if wc >= CLIP_PACE_WORDS and not CLIP_PACE_MIN <= wpm <= CLIP_PACE_MAX:
-            problems.append((f'Line {n} ({key})', f'is spoken at {wpm:.0f} words a minute; keep each clip within {CLIP_PACE_MIN} to {CLIP_PACE_MAX}.',
+            clip_pace.append((f'Line {n} ({key})', f'is spoken at {wpm:.0f} words a minute; keep each clip within {CLIP_PACE_MIN} to {CLIP_PACE_MAX}.',
                              'Check the clip for a stretched or rushed word, then ' + RERUN.lower()))
     pace = total_words * 60 / total_secs if total_secs else 0
     if total_secs and not PACE_MIN <= pace <= PACE_MAX:
-        problems.append(('The narration', f'runs at {pace:.0f} words a minute; it should be {PACE_MIN} to {PACE_MAX}.',
-                         'Use a voice or speed setting that lands in range, then ' + RERUN.lower()))
+        # One cause, one fix: the per-line pace problems all follow from the overall speed, so list only this.
+        speed = ((vj or {}).get('settings') or {}).get('speed') if isinstance(vj, dict) else None
+        target = (PACE_MIN + PACE_MAX) / 2
+        if isinstance(speed, (int, float)) and not isinstance(speed, bool) and speed > 0:
+            fix = (f'Run python3 scripts/video_voice.py on the lesson again with --speed {speed * target / pace:.2f} '
+                   f'(it was {speed:g}). That remakes every clip at about {target:.0f} words a minute.')
+        else:
+            fix = 'Use a voice or speed setting that lands in range, then ' + RERUN.lower()
+        problems.append(('The narration', f'runs at {pace:.0f} words a minute; it should be {PACE_MIN} to {PACE_MAX}.', fix))
+    else:
+        problems.extend(clip_pace)
 
     # 2. ASR round trip.
     round_trip = None

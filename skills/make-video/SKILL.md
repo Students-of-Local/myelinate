@@ -11,7 +11,7 @@ Paths like `templates/…` and `scripts/…` are relative to this skill's folder
 
 **Stand down when it isn't wanted.** A demo of an app, a vlog edit, a YouTube intro or a trailer is not this skill. To find an existing video, use `find-media`. To learn from a video they already have, use `video`.
 
-Evidence and limits: the design follows multimedia learning research (Mayer, *Multimedia Learning*, 3rd ed., 2020): names before process, narration with few words on screen, short segments, worked then faded examples, and questions during the video (`references/evidence.md`). No study has tested this player. Never say it raises grades.
+Evidence and limits: names before process, narration with few words on screen and short segments follow Mayer's multimedia principles (*Multimedia Learning*, 3rd ed.; see `references/visual-teaching.md`); worked then faded examples follow Renkl et al. (2002) and questions during the video follow retrieval research (Roediger & Karpicke, 2006), both in `references/evidence.md`. No study has tested this player. Never say it raises grades.
 
 ## 0. Never
 
@@ -102,10 +102,10 @@ Each beat is **one** of these:
 - `{"say": "A question, an instruction or a transition.", "talk": true}` for words that state no fact.
 - `{"pause": {"ask": "...", "choices": ["...", "..."], "answer": "...", "why": "...", "claims": ["c3"]}}` for a question. Leave out `choices` to have the learner type an answer.
 
-Rules the checker enforces:
+Rules (the checker enforces 1 to 6; check 7 and the predict-first part of 2 yourself):
 
 1. Sentences of 22 words or fewer. Never more than 30.
-2. A pause every 60 to 90 seconds of narration. **Ask them to predict before you explain:** the pause comes first, the answer after.
+2. A pause at least every 120 seconds of narration; aim for every 60 to 90. **Ask them to predict before you explain:** the pause comes first, the answer after.
 3. The screen shows key words, never the sentence being said. 40 words on screen per scene at most.
 4. **Say symbols as words.** The voice reads `say` aloud: write "p squared", "equals", "divided by", "delta H". Put the symbols on screen in an `equation` or `step`.
 5. `wpm` from 130 to 160. Use 145.
@@ -154,7 +154,7 @@ With no shell, check the file yourself against steps 3 to 5, one rule at a time,
 
 Code can match quotes and numbers. It cannot judge whether an explanation teaches the right idea. Before you deliver:
 
-1. Give a second reader the claims, every sentence, every pause with its answer, and the practice problem **without its answer**: the `key-worker` agent if you have it, or the `verify` skill. It works the problems itself and reads each explanation against its claims.
+1. Give a second reader that did not write the lesson (the `key-worker` agent, or the `verify` skill run in a fresh agent or another model) the claims with their quotes, every `say` line with the claims it cites, every `talk` line, all screen text, every pause with its answer, `misconception`, `recall` and the practice problem **without its answer**. It works the problems itself and answers two questions for each sentence: does it say only what its claims' quotes say, and does each `talk` line state no fact?
 2. Fix everything it finds. Delete what can't be fixed.
 3. Only then add, with its real name and today's date:
 
@@ -164,7 +164,7 @@ Code can match quotes and numbers. It cannot judge whether an explanation teache
 
 4. Run the checker with `--final`. It fails without `--sources` and without a passing review.
 
-With no second reader, leave `review` out. The badge then says *Explanations not independently reviewed*. Say so in your reply too. Never write a review that did not happen.
+If you are the only reader, you are not a second reader: leave `review` out. The badge then says *Explanations not independently reviewed*. Say so in your reply too. Never write a review that did not happen.
 
 ## 8. Narration voice
 
@@ -175,10 +175,10 @@ The player tries voices in this order and the credits name the one that played:
 1. **Recorded clips in the lesson** (best). Make them with one of:
    - **A text-to-speech tool from your host.** Run `python3 scripts/video_check.py lesson.json --audio-plan`. For each line, make speech from its `read` text and save it as `audio/<clip>`. Then add `"audio": {"clips": {"<clip name without .mp3>": "audio/<clip>"}, "voice": {"engine": "<tool>", "name": "<voice>", "disclose": "Narration is an AI voice: <tool> (<voice>)."}}`.
 <!-- local-tools -->
-   - **A voice engine on this machine:** `python3 scripts/video_voice.py lesson.json` picks the best engine it finds (a command or server the learner names, a local Kokoro or Piper, then Kokoro in a headless browser), makes one clip per line, levels them and writes `audio` into the lesson. It never installs anything. `--sample 30` makes a 30-second sample first.
+   - **A voice engine on this machine:** `python3 scripts/video_voice.py lesson.json` picks the best engine it finds (a command or server the learner names, a local Kokoro or Piper, then Kokoro in a headless browser), makes one clip per line, levels them and writes `audio` into the lesson, with each clip's length. The player times every line to its clip, so run the checker again afterward: the real length can pass 6 minutes. It never installs anything. `--sample 30` makes a 30-second sample first.
    - **Check the clips:** `python3 scripts/voice_check.py lesson.json` transcribes each clip back and checks it says its caption, at 130 to 165 words a minute, at an even loudness, with no long silences, in one voice. Fix what it prints and run it again.
 <!-- /local-tools -->
-2. **Kokoro in the learner's browser**, when the page may download it. The player offers it on a button.
+2. **Kokoro in the learner's browser**, when the page may download it. The player offers it on a button. A claude.ai artifact blocks that download, so a video published there needs recorded clips, published as files next to the page.
 3. **The browser's built-in voice**, labeled a robotic fallback. Captions show either way.
 
 A changed sentence gets a new clip name, so a stale clip never plays; the checker lists clips that no longer match.
@@ -189,7 +189,7 @@ A changed sentence gets a new clip name, so a stale clip never plays; the checke
 **With a shell:** `python3 scripts/video_check.py lesson.json --sources sources/ --final --build video.html` signs the lesson and writes the finished video (it refuses while there are problems). Open it, play the first minute, answer one pause, and look at it at phone width. Then publish it where the learner can open it, or give them the file.
 <!-- /local-tools -->
 
-**With files but no shell:** copy `templates/video-player.html` and replace only the JSON between `<script type="application/json" id="lesson">` and `</script>`. Write every `<` inside the JSON as `<`. Never edit the rest of the page. It shows *Unverified*, because only the checker can sign it.
+**With files but no shell:** copy `templates/video-player.html` and replace only the JSON between `<script type="application/json" id="lesson">` and `</script>`. Write every `<` inside the JSON as `\u003c`. Never edit the rest of the page. It shows *Unverified*, because only the checker can sign it.
 
 **With no files at all** (this skill was pasted into a chat): give the lesson JSON in one code block, and tell the learner to paste it into the Myelinate video player page (listed in the Myelinate README). Under it, give the same lesson as a read-along script: each chapter title, each sentence, and each pause question with its answer below a line, so they can learn from it right away.
 

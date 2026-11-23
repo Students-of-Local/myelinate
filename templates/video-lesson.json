@@ -8,13 +8,13 @@
   "part": {"n": 1, "of": 1, "series": "<<the whole topic, the same in every part>>"},
   "learner": {
     "kind": "<<course or self-study>>",
-    "course": "<<course name and instructor; for self-study write nothing between the quotes>>",
-    "tag": "<<course: the exam or unit, 3 words or fewer, like EXAM 4; otherwise nothing>>",
-    "purpose": "<<self-study: why they want to learn it; for a course write nothing>>",
+    "course": "<<course name and instructor; for self-study leave it empty>>",
+    "tag": "<<course: the exam or unit, 3 words or fewer, like EXAM 4; otherwise leave it empty>>",
+    "purpose": "<<self-study: why they want to learn it; for a course leave it empty>>",
     "level": "<<their level in plain words>>",
     "materials": ["<<each thing they gave you: notes, slides, study guide, textbook with edition; use [] if nothing>>"],
-    "target": "<<a question they missed before, if you know one; otherwise nothing>>",
-    "notation": "<<symbols or words their course uses, if you know them; otherwise nothing>>"
+    "target": "<<a question they missed before, if you know one; otherwise leave it empty>>",
+    "notation": "<<symbols or words their course uses, if you know them; otherwise leave it empty>>"
   },
   "pronounce": {"<<a word the voice may say wrong, or delete this line and the comma before it>>": "<<how to say it, like uh-LEEL>>"},
   "objectives": [
@@ -66,11 +66,58 @@
     },
     {
       "id": "s3",
-      "title": "<<chapter name for the worked example, or delete this scene>>",
+      "title": "<<chapter name>>",
+      "role": "explain",
+      "beats": [
+        {"say": "<<one step of the idea, in one sentence>>", "claims": ["c1"],
+         "show": [{"type": "arrow", "from": "<<cause>>", "to": "<<effect>>", "label": "<<how, 4 words or fewer>>"}]}
+      ]
+    },
+    {
+      "id": "s4",
+      "title": "<<concept lessons: chapter name for one concrete case; problem lessons: delete this scene>>",
+      "role": "example",
+      "beats": [
+        {"say": "<<apply the idea to one real case>>", "claims": ["c1"],
+         "show": [{"type": "label", "text": "<<the case, 4 words or fewer>>"}]}
+      ]
+    },
+    {
+      "id": "s5",
+      "title": "<<problem lessons: chapter name for the worked example; concept lessons: delete this scene>>",
       "role": "worked",
       "beats": [
         {"say": "<<one step of the worked example, saying its number in words a voice can read>>", "claims": ["k1"],
          "show": [{"type": "step", "text": "<<the same step written with symbols, like p = (2*49 + 42) / 200 = 0.7>>"}]}
+      ]
+    },
+    {
+      "id": "s6",
+      "title": "<<problem lessons: chapter name for a similar problem; concept lessons: delete this scene>>",
+      "role": "faded",
+      "beats": [
+        {"say": "<<the first step of a similar problem, done for them>>", "claims": ["k1"],
+         "show": [{"type": "step", "text": "<<that step with symbols>>"}]},
+        {"pause": {"ask": "Your turn: <<ask for the next step>>", "answer": "<<the next step's result>>", "why": "<<how to get it, one sentence>>", "claims": ["k1"]}}
+      ]
+    },
+    {
+      "id": "s7",
+      "title": "<<chapter name, like A common slip>>",
+      "role": "misconception",
+      "beats": [
+        {"say": "<<name the common mistake as a mistake>>", "talk": true,
+         "show": [{"type": "compare", "left": "The slip", "right": "What is true", "leftItems": ["<<the wrong idea, 4 words or fewer>>"], "rightItems": ["<<the right idea, 4 words or fewer>>"]}]},
+        {"say": "<<the correction, in one sentence>>", "claims": ["c1"]}
+      ]
+    },
+    {
+      "id": "s8",
+      "title": "<<chapter name, like The whole chain>>",
+      "role": "summary",
+      "beats": [
+        {"say": "<<first link of the chain>>", "claims": ["c1"], "show": [{"type": "step", "text": "<<4 words or fewer>>"}]},
+        {"say": "<<last link of the chain>>", "claims": ["c1"], "show": [{"type": "step", "text": "<<4 words or fewer>>"}]}
       ]
     }
   ],

@@ -47,6 +47,7 @@ SCREEN_WORDS_MAX, SCREEN_WORDS_WARN = 40, 30
 STALE_DAYS = 365
 TIME_WINDOW = 20  # seconds either side of a transcript timestamp
 BEAT_GAP = 0.4  # seconds of silence after each sentence, same as the player
+CLIP_WPM_MAX = 260  # no recorded sentence is faster than this; a shorter length was not measured
 TEMPLATE = Path(__file__).resolve().parent.parent / 'templates' / 'video-player.html'
 DATE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 CALC_ID = re.compile(r'^[A-Za-z][A-Za-z0-9_]{0,15}$')
@@ -68,6 +69,38 @@ def fnv1a(text):
 
 def words(text):
     return len(str(text).split())
+
+
+SPOKEN_NUMBER = re.compile(r'(\d[\d,]*)(?:\.(\d+))?(%?)|\.(\d+)(%?)')
+
+
+def _number_words(n):
+    """How many words a whole number takes aloud: 7 -> 1, 42 -> 2, 990 -> 4, 50000 -> 2."""
+    if n < 20:
+        return 1
+    if n < 100:
+        return 1 if n % 10 == 0 else 2
+    for value in (10 ** 9, 10 ** 6, 1000, 100):
+        if n >= value:
+            head, rest = divmod(n, value)
+            return _number_words(head) + 1 + (_number_words(rest) if rest else 0)
+    return 1
+
+
+def _spoken_number(m):
+    if m.group(1) is not None:
+        whole, frac, pct = m.group(1).replace(',', ''), m.group(2), m.group(3)
+        k = _number_words(int(whole or 0))
+    else:
+        frac, pct, k = m.group(4), m.group(5), 1
+    k += (1 + len(frac) if frac else 0) + (1 if pct else 0)
+    return ' ' + 'w ' * k
+
+
+def spoken_words(text):
+    """Words as said aloud, which sets how long a line takes: "0.4225" is five ("zero point four two two five").
+    The player counts the same way."""
+    return len([w for w in SPOKEN_NUMBER.sub(_spoken_number, str(text)).split() if re.search(r'\w', w)])
 
 
 def screen_words(text):
@@ -102,9 +135,11 @@ def hold_of(beat):
     return float(h)
 
 
-def beat_seconds(beat, wpm):
+def beat_seconds(beat, wpm, clip_seconds=None):
+    """A sentence's time on the timeline: its recorded clip's length when there is one, like the player."""
     if 'say' in beat and isinstance(beat['say'], str):
-        return words(beat['say']) * 60.0 / wpm + BEAT_GAP + (hold_of(beat) or 0.0)
+        speak = (clip_seconds or {}).get(fnv1a(beat['say'])) or spoken_words(beat['say']) * 60.0 / wpm
+        return speak + BEAT_GAP + (hold_of(beat) or 0.0)
     return 0.0
 
 
@@ -497,11 +532,27 @@ def check(lesson, sources=None, final=False, today=None):
         r.error('"objectives"', 'must list 1 to 3 goals.', 'Write 1 to 3 short goals, each starting with a verb such as Explain, Solve or Compare.')
     kind = lesson.get('lessonType')
     if kind not in ('concept', 'problem'):
-        r.error('"lessonType"', 'is missing.', 'Set "lessonType": "problem" if the learner must solve problems with steps; otherwise "concept".')
+        r.error('"lessonType"', 'is missing.' if kind is None else f'is {kind!r}; it must be "concept" or "problem".', 'Set "lessonType": "problem" if the learner must solve problems with steps; otherwise "concept".')
     wpm = lesson.get('wpm')
     if not isinstance(wpm, (int, float)) or isinstance(wpm, bool) or not WPM_MIN <= wpm <= WPM_MAX:
         r.error('"wpm"', f'is {wpm!r}.', f'Set "wpm" to a number from {WPM_MIN} to {WPM_MAX}. Use 145 if unsure.')
         wpm = 145
+    # Recorded clip lengths, written by video_voice.py. A length far shorter than the words could be said in is
+    # refused, so a lesson cannot shrink its own running time.
+    clip_seconds = {}
+    audio = lesson.get('audio')
+    if isinstance(audio, dict) and audio.get('seconds') is not None:
+        said = {fnv1a(b['say']): b['say'] for sc in (lesson.get('scenes') if isinstance(lesson.get('scenes'), list) else [])
+                if isinstance(sc, dict) for b in (sc.get('beats') if isinstance(sc.get('beats'), list) else [])
+                if isinstance(b, dict) and isinstance(b.get('say'), str)}
+        secs = audio['seconds']
+        bad = [k for k, v in secs.items() if k in said and (isinstance(v, bool) or not isinstance(v, (int, float))
+               or not spoken_words(said[k]) * 60.0 / CLIP_WPM_MAX <= v <= 120)] if isinstance(secs, dict) else ['all']
+        if bad:
+            r.error('"audio.seconds"', f'has {len(bad)} length(s) that do not fit their sentence: ' + ', '.join(map(str, bad[:5])) + '.',
+                    'Do not write "audio.seconds" by hand. Run scripts/video_voice.py again; it measures every clip.')
+        else:
+            clip_seconds = {k: float(v) for k, v in secs.items() if k in said}
     if 'verification' in lesson:
         v = lesson['verification']
         if not isinstance(v, dict) or v.get('sha256') != sha256_of(lesson) or v.get('by') != 'video_check.py':
@@ -871,8 +922,8 @@ def check(lesson, sources=None, final=False, today=None):
                 numbers_ok(where, say, refs, 'The sentence')
                 coverage(where, say, refs)
             cited_pairs.append(set(refs))
-            scene_seconds += beat_seconds(beat, wpm)
-            gap += beat_seconds(beat, wpm)
+            scene_seconds += beat_seconds(beat, wpm, clip_seconds)
+            gap += beat_seconds(beat, wpm, clip_seconds)
             if gap > PAUSE_GAP_MAX:
                 r.error(where, f'comes {gap:.0f} s after {gap_from} with no pause question.', 'Add a pause beat before this one: {"pause": {"ask": ..., "answer": ..., "why": ..., "claims": [...]}}. Aim for one every 60 to 90 s.')
                 gap = 0.0

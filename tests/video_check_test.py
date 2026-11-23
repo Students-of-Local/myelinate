@@ -257,7 +257,7 @@ def old_rules():
 
     d = sky()
     del d['scenes'][2]['beats'][1]['claims']
-    expect('fact sentence with no claims', d, 'has no claim ids', 'Scene 3 (Air scatters blue the most), beat 2')
+    expect('fact sentence with no claims', d, 'has no claim ids', 'Scene 3 (Air scatters blue more), beat 2')
 
     d = sky()
     b = d['scenes'][0]['beats'][0]
@@ -554,9 +554,8 @@ def numbers():
     d = osmosis()
     beat(d, 2, 0)['show'] = [{'type': 'table', 'columns': ['Bag', 'Salt'], 'rows': [['Saline', '7 g']]}]
     expect('an unbacked number in a table cell', d, "The screen states '7'", 'Scene 3 (Normal saline), beat 1, show 1', OSMOSIS_SOURCES)
-    # Checker bug, left failing on purpose: backs() checks a percent's fraction (0.8% -> 0.008) to the percent's own
-    # decimals and lets any non-whole pool number within 0.5 back a whole percent, so 0.8% is "backed" by the
-    # 0.009 that c5's "0.9 percent" adds to the pool, and 37% by any 0.5.
+    # Regression: backs() once checked a percent's fraction (0.8% -> 0.008) at the percent's own decimals and let
+    # any non-whole pool number within 0.5 back a whole percent, so 0.8% passed on the 0.009 from "0.9 percent".
     d = osmosis()
     beat(d, 2, 0)['show'][1]['cells'] = ['Saline', '0.8%']
     expect('0.8% in a table row backed only by "0.9 percent"', d, "The screen states '0.8%'", 'Scene 3', OSMOSIS_SOURCES)
@@ -713,6 +712,25 @@ def pause_and_length():
     d = sky()
     stretch(d, 4, 1, 60)
     absent('a video under 6.5 minutes', d, 'minutes of narration')
+
+    # Time follows words as spoken, and recorded clips when there are any.
+    for text, n in (('Step 2: p squared is 0.4225, 2 p q is 0.455.', 20), ('Carriers are 50,000 times 2 p q, about 990.', 12),
+                    ('40% of .5', 6), ('The sky is blue.', 4)):
+        check(vc.spoken_words(text) == n, f'spoken words: {text!r} is {n} words aloud ({vc.spoken_words(text)})')
+
+    def voiced(lesson, factor=None, fixed=None):
+        lines = [b['say'] for b in say_beats(lesson)]
+        secs = {vc.fnv1a(t): fixed if fixed is not None else round(vc.spoken_words(t) * 60 / lesson['wpm'] * factor, 2) for t in lines}
+        lesson['audio'] = {'clips': {k: f'audio/{k}.mp3' for k in secs}, 'seconds': secs,
+                           'voice': {'engine': 'cmd', 'name': 'v', 'disclose': 'Narration is an AI voice: test (v).'}}
+        return lesson
+    absent('recorded clips at the lesson pace', voiced(stretch(sky(), 4, 1, 60), 1.0), 'minutes of narration')
+    expect('recorded clips three times as long as the estimate push it past 6.5 minutes', voiced(stretch(sky(), 4, 1, 60), 3.0),
+           'minutes of narration', 'The video')
+    d = voiced(sky(), 1.0)
+    d['audio']['seconds'][vc.fnv1a(say_beats(d)[1]['say'])] = 0.2
+    expect('a clip length too short for its sentence', d, 'do not fit their sentence', '"audio.seconds"')
+    expect('"audio.seconds" that is not a map', voiced(sky(), fixed='long'), 'do not fit their sentence', '"audio.seconds"')
     for bad in ({'n': 3, 'of': 2, 'series': 'Sky'}, {'n': 0, 'of': 2}, {'n': 1, 'of': 13}, {'n': '1', 'of': 2}, [1, 2]):
         d = sky()
         d['part'] = bad

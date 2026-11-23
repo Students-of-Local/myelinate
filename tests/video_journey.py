@@ -186,6 +186,45 @@ with sync_playwright() as p:
             check(not v_errors, f'no page errors at {w}x{h} {scheme}: {v_errors}')
             ctx.close()
 
+    # A table fills row by row, bars grow to their share, and tier badges show. A bar fill once drew at zero width
+    # (an inline span ignores width), and no other check could see it.
+    rich = json.loads(SKY.read_text())
+    beats = rich['scenes'][2]['beats']
+    beats[0]['show'] = [{'type': 'table', 'title': 'Colors', 'columns': ['Color', 'Wave'], 'rows': [['Blue', 'short']]}]
+    beats[1]['show'] = [{'type': 'row', 'cells': ['Red', 'long']}]
+    beats[2]['show'] = [{'type': 'bars', 'title': 'Scattering', 'items': [{'label': 'Blue', 'value': 4}, {'label': 'Red', 'value': 1}]}]
+    beats[3]['show'] = [{'type': 'label', 'text': 'Shorter wave, more scattering', 'tier': 'memorize'}]
+    # A line is timed as spoken ("0.4225" is five words aloud), or to its recorded clip. Counting written words once
+    # left number-heavy lines too short, so the voice ran past the picture.
+    def fnv(text):
+        h = 0x811c9dc5
+        for b in text.encode('utf-8'):
+            h = ((h ^ b) * 0x01000193) & 0xffffffff
+        return f'{h:08x}'
+    opening = rich['scenes'][0]['beats']
+    opening[0]['say'] = 'It is 0.4225 of 50,000.'
+    rich['audio'] = {'clips': {}, 'seconds': {fnv(opening[1]['say']): 9.87}}
+    rp, rp_errors, _, ctx = open_page(browser, variant(rich))
+    rtl = rp.evaluate('__video.timeline()')
+    said = [i for i in rtl if i['kind'] == 'say']
+    check(abs(said[0]['dur'] - (11 * 60 / rich['wpm'] + 0.4)) < 0.02, f'a line with numbers is timed by its 11 spoken words ({said[0]["dur"]:.2f} s)')
+    check(abs(said[1]['dur'] - 10.27) < 0.02, f'a recorded clip sets its line\'s time ({said[1]["dur"]:.2f} s for a 9.87 s clip)')
+    after = next(i for i in rtl if i['kind'] == 'say' and i['text'] == beats[3]['say'])
+    t_end = after['start'] + after['dur'] - 0.05
+    board = rp.evaluate("""t => { __video.pause(); __video.renderAt(t);
+      const q = s => [...document.querySelectorAll('#board ' + s)];
+      return {rows: q('.e-table tbody tr').map(r => r.innerText.replace(/\\s+/g, ' ').trim()),
+              fills: q('.e-bars .b-fill').map(f => f.getBoundingClientRect().width),
+              tracks: q('.e-bars .b-track').map(f => f.getBoundingClientRect().width),
+              tiers: q('.tier.memorize').length}; }""", t_end)
+    check(board['rows'] == ['Blue short', 'Red long'], f'a row joins the table above it ({board["rows"]})')
+    fills, tracks = board['fills'], board['tracks']
+    check(len(fills) == 2 and fills[0] > 0.9 * tracks[0] and 0.15 * tracks[1] < fills[1] < 0.35 * tracks[1],
+          f'bars grow to their share of the largest ({[round(f) for f in fills]} of {[round(t) for t in tracks]} px)')
+    check(board['tiers'] == 1, 'a memorize badge shows on its label')
+    check(not rp_errors, f'no page errors with a table, bars and a tier: {rp_errors}')
+    ctx.close()
+
     # Reduced motion still plays, and elements appear without a fade.
     rm, rm_errors, _, ctx = open_page(browser, url, reduced_motion='reduce')
     check(rm.evaluate("matchMedia('(prefers-reduced-motion: reduce)').matches"), 'the reduced motion context is on')

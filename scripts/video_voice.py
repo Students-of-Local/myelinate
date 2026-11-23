@@ -141,7 +141,7 @@ def sample_lines(lines, seconds, wpm):
         if picked and total >= seconds:
             break
         picked.append((key, text))
-        total += vc.words(text) * 60.0 / wpm + GAP
+        total += vc.spoken_words(text) * 60.0 / wpm + GAP
     return picked
 
 
@@ -685,6 +685,15 @@ def write_lesson(path, lesson, original_text):
     Path(path).write_text(text + '\n')
 
 
+def clip_seconds(path):
+    r = subprocess.run(['ffprobe', '-v', 'error', '-show_entries', 'format=duration', '-of', 'default=nw=1:nk=1', str(path)],
+                       capture_output=True, text=True)
+    try:
+        return round(float(r.stdout.strip()), 2)
+    except ValueError:
+        raise Broke(f'Could not read the length of {path.name} with ffprobe. Make the clip again.')
+
+
 def clip_path(out, name, lesson_dir):
     return os.path.relpath(out / name, lesson_dir).replace(os.sep, '/')
 
@@ -828,6 +837,12 @@ def main(argv=None):
     audio = lesson.get('audio') if isinstance(lesson.get('audio'), dict) else {}
     audio['clips'] = {key: clip_path(out, clips[key]['file'], lesson_dir) for key, _ in lines
                       if key in clips and (out / clips[key]['file']).is_file()}
+    # Each clip's real length, so the player and the checker time every line to the voice, not to a word count.
+    try:
+        audio['seconds'] = {key: clip_seconds(out / clips[key]['file']) for key in audio['clips']}
+    except Broke as exc:
+        say(str(exc))
+        return 3
     audio['voice'] = {'engine': engine.name, 'name': engine.voice, 'disclose': engine.disclose()}
     lesson['audio'] = audio
     write_lesson(lesson_path, lesson, original)
