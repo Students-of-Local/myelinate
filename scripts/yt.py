@@ -77,10 +77,12 @@ def classify(stderr):
         return 'ratelimit', 'YouTube rate limited the request (HTTP 429); wait a minute and ask for less.'
     if "confirm you're not a bot" in low or 'confirm you are not a bot' in low:
         return 'ratelimit', 'YouTube asked for a bot check; wait and try later, or use the browser transcript panel.'
+    for pat in ('incomplete youtube id', 'is not a valid url'):
+        if pat in low:
+            return 'usage', f'not a valid video id or URL (check it for a typo): {last}'
     for pat, why in (('private video', 'private'), ('age', 'age-restricted'), ('members-only', 'members only'),
                      ('video unavailable', 'unavailable'), ('not available', 'unavailable'),
-                     ('has been removed', 'removed'), ('copyright', 'blocked for copyright'),
-                     ('incomplete youtube id', 'not a valid video id'), ('is not a valid url', 'not a valid video id')):
+                     ('has been removed', 'removed'), ('copyright', 'blocked for copyright')):
         if pat in low and (pat != 'age' or 'sign in to confirm your age' in low or 'age-restricted' in low or 'age restricted' in low):
             return 'unavailable', f'video {why}: {last}'
     if any(p in low for p in ('getaddrinfo', 'name resolution', 'timed out', 'connection', 'network is unreachable',
@@ -126,7 +128,7 @@ def video_id(ref):
     else:
         cand = ''
     if not ID_RE.match(cand or ''):
-        raise YTError('unavailable', f'not a YouTube video URL or id: {ref}')
+        raise YTError('usage', f'not a YouTube video URL or id: {ref}')
     return cand
 
 
@@ -548,7 +550,7 @@ def parse_terms(s):
 QUOTE_THRESHOLD = 0.90  # character similarity of the whole quote to the words found
 WORD_THRESHOLD = 0.75   # a source word this similar to one of the quote's first three may start a match
 QUOTE_WINDOW = 20       # seconds either side of --at
-FILLER = {'uh', 'um', 'uhm', 'er', 'ah', 'oh', 'hmm', 'mm'}  # sounds, never words: 'a' in 'hepatitis A' counts
+FILLER = {'uh', 'um', 'uhm', 'hmm'}  # sounds that are never words: 'a' (hepatitis A), 'mm' (5 mM), 'oh', 'er' count
 NEGATION = {'not', 'no', 'never', 'cannot', 'cant', 'dont', 'doesnt', 'isnt', 'arent', 'wont', 'wasnt',
             'werent', 'shouldnt', 'couldnt', 'wouldnt', 'nor', 'without', 'neither', 'none'}
 QUOTE_MARKS = {'‘': "'", '’': "'", '‚': "'", '′': "'", '“': '"', '”': '"',
@@ -600,6 +602,8 @@ class Source:
 
     def __init__(self):
         self.tokens, self.where, self.raw_index, self.raw = [], [], [], []
+        self.stamps = {}    # line number -> the last transcript-panel stamp above it
+        self.panel = False  # the file is a pasted transcript panel (stamps on their own lines)
 
     def add(self, text, where_for):
         words = raw_words(text)
@@ -613,15 +617,26 @@ class Source:
     def text(self, i, j):
         return ' '.join(self.raw[self.raw_index[i]:self.raw_index[j - 1] + 1])
 
-    def context(self, i, j, reach=25):
-        """The raw words around tokens i..j: back to the sentence start and on to its end, at most
-        `reach` words each way, so a quote can be read in its frame ("Some say X, but that's wrong")."""
+    def context(self, i, j, reach=40):
+        """The raw words around tokens i..j: the sentence they are in plus one whole sentence before and
+        one after, at most `reach` words each way, so a quote can be read in its frame ("A common myth.
+        X." or "Some books say X. That's wrong.")."""
+        def ends(w):
+            return w.rstrip('"\')]”’').endswith(('.', '?', '!'))
         a, b = self.raw_index[i], self.raw_index[j - 1]
-        lo = a
-        while lo > 0 and a - lo < reach and not self.raw[lo - 1].endswith(('.', '?', '!')):
+        lo, crossed = a, 0
+        while lo > 0 and a - lo < reach:
+            if ends(self.raw[lo - 1]):
+                if crossed:
+                    break
+                crossed = 1
             lo -= 1
-        hi = b
-        while hi + 1 < len(self.raw) and hi - b < reach and not self.raw[hi].endswith(('.', '?', '!')):
+        hi, crossed = b, 0
+        while hi + 1 < len(self.raw) and hi - b < reach:
+            if ends(self.raw[hi]):
+                if crossed:
+                    break
+                crossed = 1
             hi += 1
         return ('... ' if lo > 0 and a - lo >= reach else '') + ' '.join(self.raw[lo:hi + 1]) + \
             (' ...' if hi + 1 < len(self.raw) and hi - b >= reach else '')
@@ -638,20 +653,35 @@ def transcript_source(tr):
 def file_source(path):
     path = Path(path)
     if not path.is_file():
-        raise YTError('usage', f'no such file: {path}')
+        raise YTError('usage', f'no such file: {path} (fix the path; if the text was never in a file, do not make one: the quote cannot be machine-checked)')
     head = path.read_bytes()[:4096]
+    # Never suggest retyping or pasting the text into a new file: a check against the model's own copy proves nothing.
     if head.startswith(b'%PDF'):
-        raise YTError('usage', f'{path} is a PDF; give its text (pdftotext "{path}" out.txt, without -layout) or paste the passage into a .txt file')
+        if shutil.which('pdftotext'):
+            raise YTError('usage', f'{path} is a PDF: run pdftotext "{path}" out.txt (without -layout), then check against out.txt')
+        raise YTError('other', f'{path} is a PDF and pdftotext is not installed, so this quote cannot be machine-checked')
     if b'\x00' in head:
-        raise YTError('usage', f'{path} is not a text file; save the course text as .txt or .md first')
+        raise YTError('other', f'{path} is not a text file, so this quote cannot be machine-checked')
     text = path.read_text(encoding='utf-8', errors='replace')
-    # Rejoin a word split across lines ("anti-" / "periplanar") and keep the line count.
-    text = re.sub(r'(\w)-[ \t]*\r?\n[ \t]*(\w+)', r'\1\2\n', text)
     src = Source()
+    lines, stamp = [], None
     for n, line in enumerate(text.splitlines(), 1):
-        if PANEL_STAMP.match(line):
-            continue  # a stamp on its own line, as YouTube's transcript panel pastes it
-        src.add(STAMP.sub(' ', line), lambda k, total, n=n: n)
+        if PANEL_STAMP.match(line):  # a stamp on its own line, as YouTube's transcript panel pastes it
+            stamp, src.panel = line.strip(), True
+            continue
+        if stamp:
+            src.stamps[n] = stamp
+        lines.append([n, STAMP.sub(' ', line)])
+    # Rejoin a word split across lines ("anti-" / "periplanar"); stamp lines are already gone, so a
+    # stamp is never glued onto a word.
+    for k in range(len(lines) - 1):
+        m = re.search(r'(\w)-[ \t]*$', lines[k][1])
+        nxt = re.match(r'[ \t]*(\w+)', lines[k + 1][1])
+        if m and nxt:
+            lines[k][1] = lines[k][1][:m.start() + 1] + nxt.group(1)
+            lines[k + 1][1] = lines[k + 1][1][nxt.end():]
+    for n, line in lines:
+        src.add(line, lambda k, total, n=n: n)
     return src
 
 
@@ -752,6 +782,8 @@ def match_quote(text, src, starts):
     end and problems for the best span: one that passes, if there is one. A quote is one unbroken
     stretch of words: a cut ("a ... b") can hide words that reverse it, so it is refused."""
     text = STAMP.sub(' ', text)  # a [8:01] copied from the transcript view is not a spoken word
+    if src.panel:  # nor is a bare 0:31 copied across a pasted panel's stamp line
+        text = re.sub(r'(?<!\S)\d{1,2}:\d\d(?::\d\d)?(?!\S)', ' ', text)
     if ELLIPSIS.search(text):
         return {'ok': False, 'score': 0.0, 'problems': [
             'the quote has a cut (...): the left-out words can change its meaning, so check each unbroken stretch as its own quote']}
@@ -819,8 +851,11 @@ def check_course_quote(path, text):
     out = {'kind': 'course', 'file': str(path), 'threshold': QUOTE_THRESHOLD, 'word_threshold': WORD_THRESHOLD,
            'quote': text, 'ok': res['ok'], 'score': res['score'], 'problems': res['problems']}
     if res.get('end') is not None and res['score'] > 0:
-        out.update({'line': src.where[res['start']], 'source_words': src.text(res['start'], res['end']),
+        line = src.where[res['start']]
+        out.update({'line': line, 'source_words': src.text(res['start'], res['end']),
                     'context': src.context(res['start'], res['end'])})
+        if line in src.stamps:
+            out['stamp'] = src.stamps[line]
     return out
 
 
@@ -857,7 +892,8 @@ def cmd_course(a):
     if a.json:
         print(json.dumps(r, indent=1))
         return 0 if r['ok'] else 6
-    return print_check(r, f'{Path(a.file).name}, line {r.get("line")}')
+    stamp = f', under stamp {r["stamp"]}' if r.get('stamp') else ''
+    return print_check(r, f'{Path(a.file).name}, line {r.get("line")}{stamp}')
 
 
 # ---------- search ----------

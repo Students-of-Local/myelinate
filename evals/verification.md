@@ -4,13 +4,15 @@ Checked **2026-10-02**, with synthetic learner prompts and locally generated exa
 
 ## 3.1.2: second-review gaps in the quote checker (2026-11-22)
 
-`python3 tests/yt_tool.py`: 41 of 41. The 3.1.1 checker fails five of them:
+`python3 tests/yt_tool.py`: 43 of 43. The 3.1.1 checker fails five of the first 41:
 
 - a `context:` line that shows "but that is wrong for E2" after a confirmed misconception;
 - 1.000 vs 1,000, "we'll" vs "well", and "hepatitis A" with the "A" dropped;
 - a pasted transcript panel with its stamps on their own lines;
 - a quote 28 seconds into a printed paragraph, checked at that paragraph's stamp, with a 2:29 control still refused;
 - exit 2 for a PDF, a missing file and `--at 8m01s`.
+
+After review round 1 on PR #35, five more fail on the round-0 checker: a PDF message that never says to paste or retype (exit 2 with `pdftotext`, exit 1 without), a mistyped video id or URL exiting 2, a panel quote that names its stamp, skips a copied stamp and never glues one onto a word, context that reaches the next and previous sentence, and quoted terms, possessives, "5 mM" and "oh" kept as words.
 
 The small-model run (`evals/quote-check/run.py`, LFM3 1.7B), rerun on this checker, gives the same table as 3.1.1: 8 of 8 attacks refused, both controls confirmed, and the judge answering NO throughout. The docs changes (context rule, exit 2, `course` only on an existing file) had no fresh-agent run.
 
