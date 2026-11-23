@@ -216,10 +216,42 @@ def old_rules():
     expect('template', template, 'blank(s) from the template')
     check('<<' in vc.check(template)[0][0][1], 'the placeholder error quotes one of the blanks')
 
-    # Reading the file: broken JSON and ``` fences.
-    r = run(BROKEN)
-    check(r.returncode == 2, f'broken JSON exits 2 (got {r.returncode})')
+    # Reading the file: broken JSON, repairs and ``` fences.
+    r = run(write('unfixable.json', '{\n "format": "myelinate-video/1",\n "title": "x",\n "wpm": ,\n "scenes": []\n}\n'))
+    check(r.returncode == 2, f'JSON with a missing value exits 2 (got {r.returncode})')
     check(re.search(r'NOT VALID JSON: line 4, column \d+', r.stdout) is not None, f'broken JSON names its line and column ({r.stdout.splitlines()[:1]})')
+    bcopy = write('broken-copy.json', BROKEN.read_text())
+    r = run(bcopy)
+    check(r.returncode == 1 and r.stdout.startswith('NOTE: The file was not valid JSON. Repaired') and 'line 4: added a missing comma' in r.stdout,
+          f'a missing comma is repaired, named and the check goes on (exit {r.returncode}, {r.stdout.splitlines()[:1]})')
+    check(json.loads(bcopy.read_text())['wpm'] == 145, 'the repaired file is saved as valid JSON')
+    check(BROKEN.read_text().count(',') == 1, 'the broken fixture itself is untouched')
+
+    def fixed(text):
+        got = vc.repair_json(text)
+        return (got[0], ' | '.join(got[1])) if got else (None, '')
+    # The slips a 1.7B model made in the small-model run (2026-11-22), each in its real shape.
+    o, f = fixed('{"beats": [\n {"pause": {"ask": "Which?", "answer": "A", "claims": ["c3"]},\n {"say": "Next.", "claims": ["c3"]}\n]}')
+    check(o == {'beats': [{'pause': {'ask': 'Which?', 'answer': 'A', 'claims': ['c3']}}, {'say': 'Next.', 'claims': ['c3']}]} and 'closed a { left open' in f,
+          f'a pause beat missing its outer }} is closed where it belongs ({o}, {f})')
+    o, f = fixed('{"claims": [\n {"id": "c1"},\n ],\n "scenes": []}')
+    check(o == {'claims': [{'id': 'c1'}], 'scenes': []} and 'removed a comma before ]' in f, f'a comma before ] is removed ({o}, {f})')
+    o, f = fixed('{"claims": [\n {"id": "c1"}\n ]\n },\n "calc": [],\n "scenes": []\n}')
+    check(o == {'claims': [{'id': 'c1'}], 'calc': [], 'scenes': []} and 'line 4: removed an extra }' in f, f'an extra }} that closed the lesson early is removed ({o}, {f})')
+    o, f = fixed('{"show": [{"type": "arrow", "from": "p^2", "to": "AA"}, "label": "AA odds"}]}')
+    check(o == {'show': [{'type': 'arrow', 'from': 'p^2', 'to': 'AA', 'label': 'AA odds'}]}, f'an object closed one key early is reopened ({o}, {f})')
+    o, f = fixed('{"say": "Not because we get closer to the Sun.""}\n')
+    check(o == {'say': 'Not because we get closer to the Sun.'} and 'doubled' in f, f'a doubled closing quote is removed ({o}, {f})')
+    o, f = fixed('<tool_call>\n<function=write>\n<parameter=content>\n{"title": "T"}\n</parameter>\n</function>\n</tool_call>')
+    check(o == {'title': 'T'} and 'before the first {' in f, f'a made-up tool call around the JSON is dropped ({o}, {f})')
+    o, f = fixed('{"title": "T"}\n\nNow run the checker? We have no shell: "x": 1')
+    check(o == {'title': 'T'} and 'after the last }' in f, f'words after the object are dropped ({o}, {f})')
+    o, f = fixed('{"say": "A set {1, 2} and ] marks", "n": 1}}\n')
+    check(o is None or o == {'say': 'A set {1, 2} and ] marks', 'n': 1}, f'a brace inside text is never touched ({o})')
+    o, f = fixed('{"say": "one",\n "text": "a line\nbreak"}')
+    check(o == {'say': 'one', 'text': 'a line break'} and 'line break inside text' in f, f'a raw line break inside text becomes a space ({o}, {f})')
+    for bad in ('{"expr": "2*k1"? Wait, recompute.", "value": 1}', '{"lang": "en"}\n<parameter=part>\n{"n": 1}', 'no object here', '{"a": tru}'):
+        check(fixed(bad)[0] is None, f'no guess for {bad[:30]!r}')
     fenced = write('fenced.json', '```json\n' + SKY.read_text().strip() + '\n```\n')
     lesson, note = vc.read_lesson(fenced)
     check(lesson == SKY_LESSON and note and '```' in note, 'a ```json fence is tolerated and noted by read_lesson')
@@ -532,7 +564,31 @@ def numbers():
     d = osmosis()
     clean('a number in "say" backed by its cited calc', d, OSMOSIS_SOURCES)
     d['scenes'][2]['beats'][1]['claims'] = ['c5']
-    expect('the same number with nothing cited behind it', d, "states 'four point five'", 'Scene 3', OSMOSIS_SOURCES)
+    expect('the same number with nothing cited behind it', d, "'four point five', which no cited", 'Scene 3', OSMOSIS_SOURCES)
+
+    d = osmosis()
+    beat(d, 0, 1)['say'] = 'Subtract 7 from 19 and you get 12, then divide by 2 to get 6.'
+    hit = expect('unbacked numbers in one sentence', d, "'7', '19', '12', '2', '6', which no cited", 'Scene 1', OSMOSIS_SOURCES)
+    fix = hit[0][2] if hit else ''
+    pasted = [json.loads(x) for x in re.findall(r'\{"id": "k\d+", "expr": "[^"]+", "value": [\d.]+\}', fix)]
+    check(len(pasted) >= 1 and 'For ' not in fix and 'to its "claims"' in fix, f'the fix gives calc lines to paste for every number ({fix[:200]})')
+    d['calc'] += pasted
+    beat(d, 0, 1)['claims'] = beat(d, 0, 1).get('claims', []) + [k['id'] for k in pasted]
+    absent('pasting the suggested calcs clears the problem', d, 'which no cited', OSMOSIS_SOURCES)
+    beat(d, 0, 1)['say'] = 'The tank holds 37 liters.'
+    fix = (expect('a number no arithmetic gives', d, "'37'", 'Scene 1', OSMOSIS_SOURCES) or [('', '', '')])[0][2]
+    check('"expr"' in fix and 'cite the claim whose quote has it' in fix and '37' in fix, f'with no arithmetic match the fix says to cite or work an example ({fix[:160]})')
+    many = sky()
+    for c in many['claims']:
+        c['from'] = 'sky-notes.md'
+    r = run(write('many.json', many))
+    check(re.search(r'^1\. Claim c1; Claim c2.*\(\d+ places\): "from" is', r.stdout, re.M) is not None and 'a file or address' in r.stdout,
+          f'the same problem in many places is printed once, naming each place ({[l for l in r.stdout.splitlines() if l[:2] == "1."][:1]})')
+    lots = sky()
+    lots['scenes'][0]['beats'][0]['claims'] = [f'zz{i}' for i in range(15)]
+    r = run(write('lots.json', lots))
+    shown = len(re.findall(r'^\d+\. ', r.stdout, re.M))
+    check(shown == vc.SHOW_MAX and 'more kinds of problem' in r.stdout, f'a long report shows the first {vc.SHOW_MAX} and says more remain (showed {shown})')
 
     d = osmosis()
     beat(d, 0, 1)['say'] = 'Osmosis moves eighty four point five percent of the water across a selectively permeable membrane.'

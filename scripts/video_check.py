@@ -36,6 +36,7 @@ ROLES = ('intro', 'names', 'explain', 'example', 'worked', 'faded', 'misconcepti
 SHOW_TYPES = ('title', 'question', 'term', 'label', 'equation', 'step', 'arrow', 'highlight', 'graph',
               'image', 'compare', 'quote', 'table', 'row', 'bars')
 TIERS = ('memorize', 'given')
+SHOW_MAX = 12  # problems printed per run: a long list swamps a small model, and fixing the first ones often clears the rest
 # The player puts these on the left of a two-column screen and words and steps on the right.
 BOARD_VISUAL = {'title', 'question', 'equation', 'arrow', 'compare', 'quote', 'image', 'graph', 'table', 'row', 'bars'}
 WPM_MIN, WPM_MAX = 130, 160
@@ -682,6 +683,9 @@ def check(lesson, sources=None, final=False, today=None):
                 r.error(where, 'is outside the course but "where" is not a web address.', 'Put the full https:// address of the page in "where". Use only a reliable source: a textbook, a university, a government agency or a journal.')
             if not DATE.match(str(c.get('checked', ''))):
                 r.error(where, 'has no date checked.', 'Add "checked": "YYYY-MM-DD", the day you read the page.')
+        elif isinstance(frm, str) and re.search(r'\.\w{1,5}$|^https?://', frm.strip()):
+            r.error(where, f'"from" is {frm!r}, a file or address.',
+                    'Write "from": "course" when it is one of the learner\'s files, or "from": "outside" for anything else. The file name goes in "file".')
         else:
             r.error(where, '"from" must be "course" or "outside".', 'Use "course" for the learner\'s own materials and "outside" for anything else.')
         if c.get('changes') is True or DATE.match(str(c.get('checked', ''))):
@@ -805,12 +809,59 @@ def check(lesson, sources=None, final=False, today=None):
                 pool += [k['value'], k['stated']] + k['inputs']
         return pool
 
+    taken_ids = set(calcs) | set(ids)
+
+    def new_calc_id():
+        n = 1
+        while f'k{n}' in taken_ids:
+            n += 1
+        taken_ids.add(f'k{n}')
+        return f'k{n}'
+
     def numbers_ok(where, text, refs, what):
+        """One problem per text, listing every number nothing backs, with calc lines to paste where
+        two of the text's own numbers (or a cited source's) give it by + - * /."""
         pool = backing(refs)
-        for n in numbers_in(text):
-            if not backs(n, pool):
-                r.error(where, f'{what} states {n[4]!r}, which no cited quote or calc gives.',
-                        'Add a "calc" entry that computes it and cite its id, or cite the claim whose quote has this number. If it is wrong, fix it.')
+        nums = numbers_in(text)
+        bad = [n for n in nums if not backs(n, pool)]
+        if not bad:
+            return
+        cands = list(dict.fromkeys([n[0] for n in nums] + [n[0] / 100 for n in nums if n[2]] + pool))[:30]
+        covered, lines, kids, left = list(pool), [], [], []
+        for n in bad:
+            if backs(n, covered):
+                continue
+            hit = None
+            for a in cands:
+                for b in cands:
+                    for sym, f in (('+', operator.add), ('-', operator.sub), ('*', operator.mul), ('/', operator.truediv)):
+                        if (sym in '*/' and b in (0, 1)) or (sym in '+-' and b == 0) or backs(n, [a]) or backs(n, [b]):
+                            continue
+                        v = f(a, b)
+                        if backs(n, [v]):
+                            hit = (a, sym, b, v)
+                            break
+                    if hit:
+                        break
+                if hit:
+                    break
+            if hit:
+                a, sym, b, v = hit
+                kid = new_calc_id()
+                kids.append(f'"{kid}"')
+                num = lambda x: f'{x:g}'
+                lines.append(f'{{"id": "{kid}", "expr": "{num(a)} {sym} {num(b)}", "value": {num(round(v, 6))}}}')
+                covered += [a, b, v]
+            else:
+                left.append(n[4])
+        shown = ', '.join(repr(n[4]) for n in bad)
+        fix = []
+        if lines:
+            fix.append('Add to "calc": ' + ', '.join(lines) + '. Then add ' + ', '.join(kids) + ' to its "claims".')
+        if left:
+            fix.append(f'For {", ".join(map(repr, left))}: cite the claim whose quote has it. If it is a number you chose for an example, '
+                       'put it in a calc that works the example, like {"id": "k9", "expr": "2*6 + 7", "value": 19}, and cite that. If it is wrong, fix it.')
+        r.error(where, f'{what} states {shown}, which no cited quote or calc gives.', ' '.join(fix))
 
     def coverage(where, text, refs):
         st = stems(text)
@@ -1170,8 +1221,197 @@ def sign(lesson, verification):
     return out
 
 
+class _Unfixable(Exception):
+    pass
+
+
+class _Loose:
+    """A forgiving JSON reader for the slips small models make. It repairs only what has one reading:
+    a comma before } or ], a missing comma between items, a { or [ left open, a doubled closing quote,
+    a line break inside text, and words before or after the object. Anything else is unfixable."""
+
+    NUM = re.compile(r'-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?')
+
+    def __init__(self, text):
+        self.t, self.i, self.fixes, self.closers = text, 0, [], []
+
+    def fix(self, what, at=None):
+        self.fixes.append(f'line {self.t.count(chr(10), 0, self.i if at is None else at) + 1}: {what}')
+
+    def peek(self):
+        while self.i < len(self.t) and self.t[self.i] in ' \t\r\n':
+            self.i += 1
+        return self.t[self.i] if self.i < len(self.t) else ''
+
+    def value(self):
+        c = self.peek()
+        if c == '{':
+            return self.obj()
+        if c == '[':
+            return self.arr()
+        if c == '"':
+            return self.string()
+        for word, val in (('true', True), ('false', False), ('null', None)):
+            if self.t.startswith(word, self.i):
+                self.i += len(word)
+                return val
+        m = self.NUM.match(self.t, self.i)
+        if m:
+            self.i = m.end()
+            return json.loads(m.group())
+        raise _Unfixable
+
+    def string(self):
+        start, self.i, buf = self.i, self.i + 1, []
+        while True:
+            if self.i >= len(self.t):
+                raise _Unfixable
+            ch = self.t[self.i]
+            if ch == '\\' and self.i + 1 < len(self.t):
+                buf.append(self.t[self.i:self.i + 2])
+                self.i += 2
+                continue
+            if ch == '\n':
+                self.fix('a line break inside text became a space', start)
+                buf.append(' ')
+                self.i += 1
+                continue
+            self.i += 1
+            if ch == '"':
+                break
+            buf.append(ch)
+        try:
+            return json.loads('"' + ''.join(buf) + '"')
+        except json.JSONDecodeError:
+            raise _Unfixable
+
+    def after_value(self, closer):
+        """After an item: True when another item follows."""
+        c = self.peek()
+        if c == ',':
+            self.i += 1
+            if self.peek() in '}]':
+                self.fix('removed a comma before ' + self.peek())
+                return False
+            return True
+        if c == '"' and closer == '}':
+            j = self.i + 1
+            while j < len(self.t) and self.t[j] in ' \t':
+                j += 1
+            if j < len(self.t) and self.t[j] in ',}]\r\n':
+                self.fix('removed a doubled "')
+                self.i += 1
+                return self.after_value(closer)
+        if c in '"{[' or (c and (c.isdigit() or c == '-')):
+            self.fix('added a missing comma')
+            return True
+        return False
+
+    def obj(self):
+        self.i += 1
+        out = {}
+        while True:
+            c = self.peek()
+            if c == '}':
+                self.closers.append(self.i)
+                self.i += 1
+                return out
+            if c in ']{' or not c:
+                self.fix('closed a { left open with }')
+                return out
+            if c != '"':
+                raise _Unfixable
+            key = self.string()
+            if self.peek() != ':':
+                raise _Unfixable
+            self.i += 1
+            out[key] = self.value()
+            if not self.after_value('}') and self.peek() not in '}]{':
+                raise _Unfixable
+
+    def arr(self):
+        self.i += 1
+        out = []
+        while True:
+            c = self.peek()
+            if c == ']':
+                self.closers.append(self.i)
+                self.i += 1
+                return out
+            if c == '}' or not c:
+                self.fix('closed a [ left open with ]')
+                return out
+            out.append(self.value())
+            if not self.after_value(']') and self.peek() not in ']}':
+                raise _Unfixable
+
+
+def _parse_loose(text, a):
+    """(object, fixes, closers, stop). On a clean read the object and its fixes; otherwise None, the
+    structural } and ] read before it stopped, and how far it got."""
+    p = _Loose(text)
+    p.i = a
+    try:
+        obj = p.obj()
+    except (_Unfixable, RecursionError):
+        return None, None, p.closers, p.i
+    rest = re.sub(r'</?[A-Za-z_][^>]*>', '', text[p.i:]).strip()
+    if rest and not re.match(r'[A-Za-z#*>]', rest):
+        return None, None, p.closers, p.i  # more JSON after the object: a } or ] closed it too early
+    if text[:a].strip():
+        p.fixes.insert(0, 'removed words before the first {')
+    if text[p.i:].strip():
+        p.fixes.append('removed words after the last }')
+    return obj, p.fixes, None, len(text)
+
+
+def repair_json(text, tries=12, window=40):
+    """(object, fixes) when the text is one JSON object with slips that have a single reading, else None.
+    When reading stops, it tries removing one extra } or ] that it had read as structure (never a
+    character inside text). It keeps a removal that reads the whole object with the fewest repairs, or
+    else the one that reads farthest, and removes at most `tries` in all."""
+    a = text.find('{')
+    if a < 0:
+        return None
+    removed = []
+    for _ in range(tries + 1):
+        obj, fixes, closers, stop = _parse_loose(text, a)
+        if obj is not None:
+            return obj, [f'line {n}: removed an extra {c}' for n, c in removed] + fixes
+        if len(removed) == tries:
+            return None
+        best = None
+        for j in sorted(closers, reverse=True)[:window]:
+            cand = text[:j] + text[j + 1:]
+            o, f, _, far = _parse_loose(cand, a)
+            score = (0, len(f)) if o is not None else (1, -far)
+            if far > stop and (best is None or score < best[0]):
+                best = (score, j, cand)
+        if best is None:
+            return None
+        removed.append((text.count('\n', 0, best[1]) + 1, text[best[1]]))
+        text = best[2]
+    return None
+
+
+def dump_lesson(lesson):
+    """The lesson as JSON in the template's shape: short values on one line, and one claim, calc or beat per line."""
+    def fmt(v, ind, one_line_items=False):
+        s = json.dumps(v, ensure_ascii=False)
+        if len(s) <= 100 or not isinstance(v, (dict, list)) or not v:
+            return s
+        pad = ' ' * (ind + 2)
+        if isinstance(v, list):
+            items = (json.dumps(x, ensure_ascii=False) if one_line_items else fmt(x, ind + 2) for x in v)
+            return '[\n' + ',\n'.join(pad + x for x in items) + '\n' + ' ' * ind + ']'
+        return ('{\n' + ',\n'.join(pad + json.dumps(k, ensure_ascii=False) + ': ' + fmt(x, ind + 2, k in ('beats', 'claims', 'calc'))
+                                     for k, x in v.items()) + '\n' + ' ' * ind + '}')
+    return fmt(lesson, 0) + '\n'
+
+
 def read_lesson(path):
-    """Load the lesson, tolerating a ```json fence around it. Returns (lesson, note) or raises SystemExit(2)."""
+    """Load the lesson, tolerating a ```json fence around it and repairing slips that have one reading.
+    A repaired file is saved back so the next draft starts from valid JSON. Returns (lesson, note) or raises SystemExit(2)."""
     text = Path(path).read_text()
     note = None
     fenced = re.match(r'^\s*```[a-zA-Z]*\s*\n(.*?)\n\s*```\s*$', text, re.S)
@@ -1180,6 +1420,13 @@ def read_lesson(path):
     try:
         return json.loads(text), note
     except json.JSONDecodeError as exc:
+        fixed = repair_json(text)
+        if fixed and isinstance(fixed[0], dict):
+            lesson, fixes = fixed
+            Path(path).write_text(dump_lesson(lesson))
+            shown = '; '.join(fixes[:8]) + (f'; and {len(fixes) - 8} more' if len(fixes) > 8 else '')
+            return lesson, (f'The file was not valid JSON. Repaired and saved it ({shown}). '
+                            'Read the saved file and check every beat is where you meant it.')
         lines = text.splitlines()
         shown = lines[exc.lineno - 1] if 0 < exc.lineno <= len(lines) else ''
         print(f'NOT VALID JSON: line {exc.lineno}, column {exc.colno}: {exc.msg}.')
@@ -1243,9 +1490,16 @@ def main(argv=None):
     if note:
         print('NOTE: ' + note)
     if errors:
+        groups = {}
+        for where, problem, fix in errors:  # the same problem in many places is printed once
+            groups.setdefault((problem, fix), []).append(where)
         print(f'NOT READY: {len(errors)} problem(s). Fix them in this order, then run the check again.')
-        for i, (where, problem, fix) in enumerate(errors, 1):
-            print(f'{i}. {where} {problem}\n   Fix: {fix}')
+        for i, ((problem, fix), wheres) in enumerate(groups.items(), 1):
+            if i > SHOW_MAX:
+                print(f'... and {len(groups) - SHOW_MAX} more kinds of problem. Fix the {SHOW_MAX} above first, then run the check again to see the rest.')
+                break
+            places = '; '.join(wheres[:8]) + (f'; and {len(wheres) - 8} more' if len(wheres) > 8 else '')
+            print(f'{i}. {places}{" (" + str(len(wheres)) + " places)" if len(wheres) > 1 else ""}: {problem}\n   Fix: {fix}')
     if warnings:
         print(f'WORTH FIXING ({len(warnings)}), not required:')
         for where, problem, fix in warnings:

@@ -12,8 +12,9 @@ Arms (same model, same request, same materials):
             player can show it. One draft, no checker.
 
 Any OpenAI-compatible server works (llama-server, ollama). Nothing here calls a paid API.
-Each run writes OUTDIR/<scenario>-<arm>-<rep>/ with every draft, every checker report,
-lesson.json (the last draft) and run.json (errors per round, valid JSON or not).
+Each run writes OUTDIR/<scenario>-<arm>-<rep>/ with every draft (as the checker left it: it saves
+repaired JSON in place), every checker report, lesson.json (the last draft) and run.json (errors per
+round, valid JSON or not, repaired or not).
 Judge the results with judge.py.
 """
 import json, re, subprocess, sys, urllib.request, concurrent.futures as cf
@@ -93,7 +94,9 @@ def run_one(scen, arm, rep, outdir, rounds):
         (d / f'draft{n}.json').write_text(draft)
         report, errors = run_check(d / f'draft{n}.json', scen)
         (d / f'report{n}.txt').write_text(report)
-        log['rounds'].append({'round': n, 'errors': errors, 'valid_json': errors is not None})
+        draft = (d / f'draft{n}.json').read_text()  # the checker saves a repaired file in place
+        log['rounds'].append({'round': n, 'errors': errors, 'valid_json': errors is not None,
+                              'repaired': 'Repaired and saved it' in report})
         (d / 'lesson.json').write_text(draft)
         if errors == 0:
             break
