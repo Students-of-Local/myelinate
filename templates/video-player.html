@@ -166,7 +166,8 @@ button { cursor: pointer; }
 .e-table sub, .e-table sup { font-size: .62em; }
 .e-bars { display: grid; gap: .5em; }
 .e-bars .b-title { font: 600 .8em/1.2 var(--sans); color: var(--muted); margin: 0 0 .2em; }
-.e-bars .b { display: grid; grid-template-columns: minmax(0, 6.5em) minmax(0, 1fr) 4.2em; gap: .7em; align-items: center; }
+/* Shares of the row, not em widths: when a sparse scene grows its type, the track still keeps at least 38%. */
+.e-bars .b { display: grid; grid-template-columns: fit-content(42%) minmax(38%, 1fr) auto; gap: .7em; align-items: center; }
 .e-bars .b-label { font-weight: 600; line-height: 1.2; text-align: right; }
 .e-bars .b-track { height: 1.15em; border-radius: .2em; background: var(--sunken); overflow: hidden; }
 .e-bars .b-fill { display: block; height: 100%; width: 0; border-radius: .2em; background: var(--ink); }
@@ -638,7 +639,11 @@ function buildBoard(ch) {
     e.items = [...w.querySelectorAll('li, td, .b')].map(li => ({li, text: norm(li.querySelector('.b-label') ? li.querySelector('.b-label').textContent : li.textContent)}));
     if (e.el.type === 'table') table = w.querySelector('table');
     if (e.el.type === 'step') {
-      if (!steps || steps.parentNode !== holder) { steps = document.createElement('div'); steps.className = 'steps'; holder.appendChild(steps); }
+      if (!steps || steps.parentNode !== holder) {
+        // A note between steps starts a new group; its numbers carry on from the steps before it.
+        steps = document.createElement('div'); steps.className = 'steps'; holder.appendChild(steps);
+        steps.style.counterReset = 'st ' + ch.els.slice(0, ch.els.indexOf(e)).filter(x => x.el.type === 'step').length;
+      }
       steps.appendChild(w);
     } else { steps = null; holder.appendChild(w); }
   }
