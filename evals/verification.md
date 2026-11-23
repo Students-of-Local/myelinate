@@ -62,6 +62,24 @@ What is left is in the model, not the format. In the drafts that still fail, the
 
 No learner has used these videos. Simulated learners and model judges do not show that anyone learns more from them. The voices were checked by speech-to-text and loudness meters, not by ear. The checker confirms that quoted words are in the named file and that numbers add up; it does not confirm that a source is right, and a second reader judges the explanations.
 
+## 3.1.3: last quote-checker notes from PR #35 (2026-11-22)
+
+`python3 tests/yt_tool.py`: 43 of 43. Run against the 3.1.2 checker, it fails at a bare `out.txt` in the PDF message and at a panel quote across a stamp line. Checked one at a time, the 3.1.2 checker also exits 6 on an empty file (now 1) and refuses "we meet at 9:45 in the lab" in a pasted panel (now confirmed). The small-model attack run was not rerun: these changes touch empty files, PDF messages and panel stamps, none of which its cases use. No fresh-agent run.
+
+## 3.1.2: second-review gaps in the quote checker (2026-11-22)
+
+`python3 tests/yt_tool.py`: 43 of 43. The 3.1.1 checker fails five of the first 41:
+
+- a `context:` line that shows "but that is wrong for E2" after a confirmed misconception;
+- 1.000 vs 1,000, "we'll" vs "well", and "hepatitis A" with the "A" dropped;
+- a pasted transcript panel with its stamps on their own lines;
+- a quote 28 seconds into a printed paragraph, checked at that paragraph's stamp, with a 2:29 control still refused;
+- exit 2 for a PDF, a missing file and `--at 8m01s`.
+
+After review round 1 on PR #35, five more fail on the round-0 checker: a PDF message that never says to paste or retype (exit 2 with `pdftotext`, exit 1 without), a mistyped video id or URL exiting 2, a panel quote that names its stamp, skips a copied stamp and never glues one onto a word, context that reaches the next and previous sentence, and quoted terms, possessives, "5 mM" and "oh" kept as words.
+
+The small-model run (`evals/quote-check/run.py`, LFM3 1.7B), rerun on this checker, gives the same table as 3.1.1: 8 of 8 attacks refused, both controls confirmed, and the judge answering NO throughout. The docs changes (context rule, exit 2, `course` only on an existing file) had no fresh-agent run.
+
 ## 3.1.1: quotes checked by code (2026-11-22)
 
 **Offline tests** (`python3 tests/yt_tool.py`, 38 checks, fixture transcripts and a fake `yt-dlp`). Real quotes confirm, with a one-letter typo, a plural, a copied `[m:ss]` stamp, "isn't" written as "is not", and the window edge at exactly 20 seconds. Refused, exit 6:

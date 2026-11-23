@@ -51,7 +51,7 @@
    "caught_by": "similarity below 0.90",
    "problems": [
     "closest source words \"And in this case, the chlorine here is a wedge, but it's on a cyclohexane ring.\" match only 0.44 (need 0.9)",
-    "number differs: quote \"an e2 reaction\", source \"and in this case the chlorine here is a wedge but its\"",
+    "number differs: quote \"an e2 reaction\", source \"and in this case the chlorine here is a wedge but it's\"",
     "not in the source: \"always gives the zaitsev product\""
    ]
   },

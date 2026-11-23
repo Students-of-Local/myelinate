@@ -19,6 +19,28 @@ Myelinate makes teaching videos: narrated, animated lessons built from the learn
 - **Small-model eval.** `evals/make-video/` runs a 1.7B model with and without the skill on three lessons (one with a planted wrong slide) and has Opus judge the pairs blind. Each run fixed what the last one showed: drafts build on the best valid one, the report quotes the exact spot of a JSON slip, and a sentence copied from the worked example is an error. On the last judged run no 1.7B lesson reached READY and the judge preferred the skill lesson in 1 of 3 pairs, so a small model's video plays labeled unverified; the numbers and floors are in `evals/make-video/results/`, and CI holds them.
 - **Trigger floors lowered with a written reason.** A same-day control run of 3.1.1's own descriptions scored below 3.1.1's floors, so the eval model was noisier that day; the branch beat it on the shared set and every positive still wins its majority vote. Details in `evals/triggers/thresholds.json`.
 
+## [3.1.3] - 2026-11-22
+
+Closes the last notes from PR #35's review of the quote checker, each with a test the 3.1.2 checker fails.
+
+- **A file with no text can't be checked, not "not confirmed".** An empty file, or what `pdftotext` writes for a scanned PDF, now exits 1, so the quote is labeled "not machine-checked" instead of reading as a wrong quote.
+- **`pdftotext` output goes beside the PDF** under a name that can't overwrite the learner's own `.txt` (`slides-pdftotext.txt`), and the docs say to run the command `course` prints.
+- **Pasted transcript panels:** only the panel's own stamps are skipped in a quote, so a time the speaker says ("we meet at 9:45") still counts, and no word is joined across a stamp line.
+- **Exit 2 in `skills/video`:** if the file never existed, the quote is not machine-checked.
+
+## [3.1.2] - 2026-11-22
+
+Closes the gaps a second review found in the 3.1.1 quote checker, each with a test that fails on 3.1.1.
+
+- **Context with every confirmed quote.** `quote` and `course` print a `context:` line with the sentence around the match. A speaker stating a view to reject it ("some books say syn-periplanar is required, but that's wrong") is not making that claim, and `video-finder.md` says a verdict must hold in that context.
+- **Fewer ways to read different words as the same.** "1.000" and "1,000" differ, "we'll" and "well" differ, and articles count ("hepatitis A virus"). Only sounds like "uh" and "um" may be left out.
+- **A pasted transcript panel checks cleanly.** `course` skips stamps that sit on their own line, as YouTube's Show transcript panel pastes them.
+- **Paragraph stamps.** `transcript` prints one stamp per paragraph, so `quote --at` on a paragraph's stamp searches the whole paragraph; true quotes from late in a paragraph no longer fail.
+- **Exit 2 for a wrong command** (a bad `--at`, a mistyped video id or URL, a missing file, a PDF that `pdftotext` can convert), so a typo is fixed and rerun instead of falling through to "not machine-checked". A PDF with no `pdftotext`, or a file that isn't text, exits 1: the check can't run. No message ever says to paste or retype the text into a file.
+- **Context reaches one sentence each way,** so "Some books say X. That's wrong." and "A common myth. X." show their frame. When the speaker rejects a view, the rejection is their claim: a course that states the view is contradicted, and the quote checked runs through the rejection.
+- **Units and sounds.** Only "uh", "um", "uhm" and "hmm" may be left out, so "5 mM" keeps its unit. On a pasted panel, `course` names the stamp above the match, skips a stamp copied into the quote, and never glues a stamp onto a hyphenated word.
+- **`course` runs whenever there's a shell,** and only against a file that already exists (the learner's file, an upload, `pdftotext` output), never one the assistant typed: checking against its own retyping would prove nothing.
+
 ## [3.1.1] - 2026-11-22
 
 Quotes in a vetting note are checked by code, not by the model that wrote them.
