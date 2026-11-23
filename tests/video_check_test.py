@@ -429,6 +429,15 @@ def old_rules():
     d['scenes'][2]['role'] = 'worked'
     d['scenes'][4]['role'] = 'faded'
     check(problems(d)[0] == [], f'a problem lesson with worked then faded (with a pause) is clean ({text_of(problems(d)[0])})')
+    # Regression: the half-screen warning reused the name holding lessonType, so a problem lesson with
+    # that layout lost its "has no faded example" error.
+    d = sky()
+    d['lessonType'] = 'problem'
+    d['scenes'][2]['role'] = 'worked'
+    d['scenes'][4]['beats'][3].setdefault('show', []).append({'type': 'step', 'text': 'Look up at noon'})
+    errs, warns = problems(d)
+    check(any('half the screen empty' in w[1] for w in warns), f'fixture: scene 5 leaves half the screen empty ({text_of(warns)})')
+    expect('a half-empty screen in a problem lesson with no faded example', d, 'has no faded example', 'The video')
 
     # Terms in the first two scenes.
     d = sky()
@@ -495,6 +504,16 @@ def old_rules():
     d = sky()
     d['audio'] = {'clips': {vc.fnv1a(beats[0]['say']): 'a.mp3', 'deadbeef': 'old.mp3'}}
     expect('stale audio clip', d, "clip(s) for sentences that changed: deadbeef", '"audio.clips"')
+    # --audio-plan is read-only: video_voice.py keys clips to the file as written, so a tidy here made every clip stale.
+    d = sky()
+    d['scenes'][2]['beats'][1]['say'] += ' (c5)'
+    path = write('plan-untidy.json', d)
+    before = path.read_text()
+    r = run(path, '--audio-plan')
+    check(r.returncode == 0 and path.read_text() == before, '--audio-plan leaves the lesson file unchanged')
+    # The copy check reads the example's source file; an install without it loses the check silently.
+    for root in (ROOT, ROOT / 'skills' / 'make-video'):
+        check((root / 'examples' / 'video-lesson-sky-source.md').is_file(), f'{root.name}/examples has the sky source the copy check needs')
 
     # Malformed values a small model writes must give a numbered fix, never a traceback.
     d = sky()
@@ -622,6 +641,10 @@ def numbers():
     check(nums('Step 2 and slide 5') == [], f'"Step 2" and "slide 5" are not numbers: {nums("Step 2 and slide 5")}')
     check(nums('x^2') == [], f'the exponent in x^2 is not a number: {nums("x^2")}')
     check(nums('70% of them') == [(70.0, True)], '70% is read as a percent')
+    # Regression: ordinal labels matched inside words, so "dropped 37" read as "p 37" and "increased forty" as "ed forty".
+    check(nums('it dropped 37 percent') == [(37.0, True)], f'"dropped 37 percent" is a number: {nums("it dropped 37 percent")}')
+    check(nums('it increased forty percent') == [(40.0, True)], f'"increased forty percent" is a number: {nums("it increased forty percent")}')
+    check(nums('see p. 37 and ch 4') == [], f'"p. 37" and "ch 4" are still labels: {nums("see p. 37 and ch 4")}')
 
     d = osmosis()
     clean('a number in "say" backed by its cited calc', d, OSMOSIS_SOURCES)
@@ -655,6 +678,8 @@ def numbers():
     d = osmosis()
     beat(d, 0, 1)['say'] = 'Osmosis moves eighty four point five percent of the water across a selectively permeable membrane.'
     expect('an unbacked spelled-out number', d, "states 'eighty four point five'", 'Scene 1', OSMOSIS_SOURCES)
+    beat(d, 0, 1)['say'] = 'Water uptake dropped 37 percent across the membrane.'
+    expect('an unbacked number after a word ending in p', d, "'37%'", 'Scene 1', OSMOSIS_SOURCES)
 
     d = osmosis()
     beat(d, 0, 0)['say'] = 'Look at slide 5 and Step 2 of your notes again.'
@@ -791,6 +816,15 @@ def badges():
     edited = copy.deepcopy(signed)
     beat(edited, 0, 1)['say'] = beat(edited, 0, 1)['say'].replace('water', 'wafer', 1)
     expect('one character of "say" edited after signing', edited, 'was not written by the checker for this exact file', '"verification"', OSMOSIS_SOURCES)
+    # The hash has no key. A hand-made "checked" block with a correct hash still fails once the sources are given.
+    d = osmosis()
+    d['claims'][0]['quote'] = 'A sentence that no slide ever says about water.'
+    honest = badge(d, OSMOSIS_SOURCES)
+    check(honest['level'] != 'checked', f'fixture: an unmatched quote is not checked ({honest["level"]})')
+    forged = vc.sign(d, {**honest, 'level': 'checked', 'label': 'Checked against your course: 4 of 4 claims quoted',
+                         'claims': {k: 'quoted' for k in honest['claims']}})
+    check(forged['verification']['sha256'] == vc.sha256_of(forged), 'fixture: the forged block carries a matching hash')
+    expect('a hand-made "checked" block with a matching hash', forged, 'other than this check finds', '"verification"', OSMOSIS_SOURCES)
     forged = osmosis()
     forged['verification'] = {'by': 'video_check.py', 'level': 'checked', 'label': 'Checked', 'sha256': '0' * 64}
     expect('a hand-written verification block', forged, 'was not written by the checker', '"verification"', OSMOSIS_SOURCES)

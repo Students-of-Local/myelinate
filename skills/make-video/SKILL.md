@@ -209,7 +209,7 @@ Then: what was checked against the learner's own materials and what was not, and
 
 ## 11. A small complete example
 
-This is `examples/video-lesson-sky.json` cut down to one claim and two scenes. The full file has 11 claims, 6 scenes, recall and practice, and its source text is in `video-lesson-sky-source.md`. Copy its shape, never its words: your lesson is about your learner's topic, and the checker flags any sky sentence your materials never say.
+This is `examples/video-lesson-sky.json` cut down to one claim and two scenes. The full file has 11 claims, 6 scenes, recall and practice, and its source text is in `examples/video-lesson-sky-source.md`. Copy its shape, never its words: your lesson is about your learner's topic, and the checker flags any sky sentence your materials never say.
 
 ```json
 {

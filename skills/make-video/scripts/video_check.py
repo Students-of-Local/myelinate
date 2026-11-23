@@ -186,7 +186,7 @@ def element_texts(el):
 
 ORDINAL_WORDS = r'(?:step|steps|part|chapter|scene|problem|question|example|exam|slide|slides|page|pages|lecture|figure|fig|table|unit|week|module|section|ch|p|pp|lab|quiz|homework|hw|beat|claim|item|choice|option|version|edition|ed|level)'
 NUM = re.compile(r'(?<![\w.^_])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)(?![\w])(\s?%| percent)?', re.I)
-ORDINAL_BEFORE = re.compile(ORDINAL_WORDS + r'\.?\s*$', re.I)
+ORDINAL_BEFORE = re.compile(r'(?<![A-Za-z])' + ORDINAL_WORDS + r'\.?\s*$', re.I)  # whole words: "dropped 37" is a number
 APPROX_BEFORE = re.compile(r'(?:about|around|roughly|nearly|almost|approximately|some|~|≈)\s*$', re.I)
 UNITS = {w: i for i, w in enumerate('zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split())}
 TENS = {w: 10 * i for i, w in enumerate('_ _ twenty thirty forty fifty sixty seventy eighty ninety'.split()) if w != '_'}
@@ -1131,9 +1131,9 @@ def check(lesson, sources=None, final=False, today=None):
         if len(cols_at) == 2 and len(beats) >= 4 and not all(isinstance(b, dict) and all(isinstance(e, dict) and e.get('type') in ('title', 'question') for e in (b.get('show') or [])) for b in beats):
             late = max(cols_at.values())
             if late >= len(beats) / 2:
-                kind = 'chart, table or equation' if cols_at[True] == late else 'word or step'
-                r.warn(sname, f'leaves half the screen empty until beat {late + 1} of {len(beats)}, when its first {kind} appears.',
-                       f'Show that {kind} earlier, or move it and its sentences into a scene of their own.')
+                what = 'chart, table or equation' if cols_at[True] == late else 'word or step'
+                r.warn(sname, f'leaves half the screen empty until beat {late + 1} of {len(beats)}, when its first {what} appears.',
+                       f'Show that {what} earlier, or move it and its sentences into a scene of their own.')
         if scene_seconds > SCENE_MAX_SECONDS:
             r.error(sname, f'runs {scene_seconds / 60:.1f} minutes.', 'Split it into two scenes of 6 minutes or less.')
         if scene_words > SCREEN_WORDS_MAX:
@@ -1264,6 +1264,14 @@ def check(lesson, sources=None, final=False, today=None):
     verification = {'by': 'video_check.py', 'version': VERSION, 'date': today.isoformat(), 'level': level, 'label': label,
                     'lines': lines, 'claims': {cid: ('quoted' if cid in quoted else 'not matched') for cid in ids if cid},
                     'sha256': ''}
+    # The hash has no key, so anyone can recompute it. With the sources in hand, refuse a block that claims
+    # more than this check finds, so a hand-made "checked" block fails here even when its hash matches.
+    old = lesson.get('verification')
+    if sources is not None and isinstance(old, dict) and old.get('sha256') == sha256_of(lesson):
+        differs = [k for k in ('level', 'label', 'claims') if old.get(k) != verification[k]]
+        if differs:
+            r.error('"verification"', f'says {", ".join(differs)} other than this check finds ({level}: {label}).',
+                    'Delete the whole "verification" block, then sign the lesson again with --write or --build.')
     summary = {'seconds': round(total), 'pauses': pauses, 'scenes': len(scenes), 'claims': n_claims,
                'claims_checked': n_quoted, 'calcs': len(calcs), 'verification': verification}
     return r.errors, r.warnings, summary
@@ -1602,14 +1610,14 @@ def main(argv=None):
     a = ap.parse_args(argv)
     lesson, note = read_lesson(a.lesson)
     sources = load_sources(a.sources) if a.sources else None
+    if a.audio_plan:  # read-only: video_voice.py keys its clips to the lesson as it is on disk
+        print(json.dumps(audio_plan(lesson), indent=1, ensure_ascii=False))
+        return 0
     tidied = tidy(lesson, sources)
     if tidied:
         Path(a.lesson).write_text(dump_lesson(lesson))
         shown = '; '.join(tidied[:8]) + (f'; and {len(tidied) - 8} more' if len(tidied) > 8 else '')
         note = ((note + ' ') if note else '') + f'Fixed and saved {len(tidied)} slip(s) with one right answer: {shown}.'
-    if a.audio_plan:
-        print(json.dumps(audio_plan(lesson), indent=1, ensure_ascii=False))
-        return 0
     errors, warnings, summary = check(lesson, sources, a.final)
     if a.json:
         print(json.dumps({'errors': errors, 'warnings': warnings, 'summary': summary}, indent=1, ensure_ascii=False))
