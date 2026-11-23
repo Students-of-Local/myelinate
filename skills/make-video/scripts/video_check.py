@@ -20,6 +20,7 @@ Reasoning and explanations need a second reader: that is the "review" block (ski
 import argparse
 import ast
 import datetime
+import difflib
 import hashlib
 import html
 import json
@@ -1394,6 +1395,54 @@ def repair_json(text, tries=12, window=40):
     return None
 
 
+def tidy(lesson, sources=None):
+    """Fix in place the slips that have one right answer, and return what changed. The check then
+    judges the result like any other file. A small model makes these often and can rarely fix them
+    from a report: a beat that only shows something, a file name one slip off a given file, a file
+    name written in "from", and a spaced = in narration."""
+    done = []
+    if not isinstance(lesson, dict):
+        return done
+    names = list(sources or {})
+    for c in lesson.get('claims') if isinstance(lesson.get('claims'), list) else []:
+        if not isinstance(c, dict):
+            continue
+        cid = c.get('id', '?')
+        f = c.get('file')
+        if names and isinstance(f, str) and f not in names:
+            close = difflib.get_close_matches(f, names, n=2, cutoff=0.8)
+            if len(close) == 1:
+                c['file'] = close[0]
+                done.append(f'claim {cid}: "file" {f!r} is now {close[0]!r}, the given file it was close to')
+        frm = c.get('from')
+        if isinstance(frm, str) and frm not in ('course', 'outside') and re.search(r'\.\w{1,5}$|^https?://', frm.strip()):
+            c['from'] = 'outside' if re.match(r'^https?://', str(c.get('where', ''))) else 'course'
+            done.append(f'claim {cid}: "from" was {frm!r}, a file name; it is now "{c["from"]}" (from its "where")')
+    for si, scene in enumerate(lesson.get('scenes') if isinstance(lesson.get('scenes'), list) else [], 1):
+        beats = scene.get('beats') if isinstance(scene, dict) else None
+        if not isinstance(beats, list):
+            continue
+        out = []
+        for bi, b in enumerate(beats, 1):
+            if (isinstance(b, dict) and set(b) <= {'show', 'claims'} and isinstance(b.get('show'), list)):
+                host = next((x for x in reversed(out) if isinstance(x, dict) and 'say' in x), None)
+                if host is None:
+                    host = next((x for x in beats[bi:] if isinstance(x, dict) and 'say' in x), None)
+                if host is not None:
+                    host['show'] = (host.get('show') if isinstance(host.get('show'), list) else []) + b['show']
+                    extra = [x for x in b.get('claims') or [] if isinstance(x, str) and x not in (host.get('claims') or [])]
+                    if extra:
+                        host['claims'] = list(host.get('claims') or []) + extra
+                    done.append(f'scene {si}, beat {bi}: it only showed something, so it now shows with the sentence beside it')
+                    continue
+            if isinstance(b, dict) and isinstance(b.get('say'), str) and re.search(r'\s=\s', b['say']):
+                b['say'] = re.sub(r'\s=\s', ' equals ', b['say'])
+                done.append(f'scene {si}, beat {bi}: " = " in the narration now reads "equals"')
+            out.append(b)
+        scene['beats'] = out
+    return done
+
+
 def dump_lesson(lesson):
     """The lesson as JSON in the template's shape: short values on one line, and one claim, calc or beat per line."""
     def fmt(v, ind, one_line_items=False):
@@ -1480,10 +1529,16 @@ def main(argv=None):
     ap.add_argument('--json', action='store_true', help='print the result as JSON')
     a = ap.parse_args(argv)
     lesson, note = read_lesson(a.lesson)
+    sources = load_sources(a.sources) if a.sources else None
+    tidied = tidy(lesson, sources)
+    if tidied:
+        Path(a.lesson).write_text(dump_lesson(lesson))
+        shown = '; '.join(tidied[:8]) + (f'; and {len(tidied) - 8} more' if len(tidied) > 8 else '')
+        note = ((note + ' ') if note else '') + f'Fixed and saved {len(tidied)} slip(s) with one right answer: {shown}.'
     if a.audio_plan:
         print(json.dumps(audio_plan(lesson), indent=1, ensure_ascii=False))
         return 0
-    errors, warnings, summary = check(lesson, load_sources(a.sources) if a.sources else None, a.final)
+    errors, warnings, summary = check(lesson, sources, a.final)
     if a.json:
         print(json.dumps({'errors': errors, 'warnings': warnings, 'summary': summary}, indent=1, ensure_ascii=False))
         return 1 if errors else 0

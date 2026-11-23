@@ -258,6 +258,28 @@ def old_rules():
     r = run(fenced, '--sources', SKY_SRC)
     check(r.returncode == 0 and r.stdout.startswith('NOTE:'), f'main() passes a fenced lesson and prints the note first (exit {r.returncode})')
 
+    # Slips with one right answer are fixed before the check, and named.
+    t = sky()
+    t['claims'][0]['file'] = t['claims'][0]['file'].replace('.md', 'x.md')
+    t['claims'][1]['from'] = t['claims'][1]['file']
+    first = t['scenes'][0]['beats']
+    first.insert(1, {'show': [{'type': 'term', 'word': 'Scatter', 'meaning': 'bounce off in new directions'}]})
+    first[0]['say'] = first[0]['say'].rstrip('.') + ' = done.'
+    srcs = vc.load_sources([SKY_SRC])
+    untidy = copy.deepcopy(t)
+    done = vc.tidy(t, srcs)
+    first = t['scenes'][0]['beats']
+    check(t['claims'][0]['file'] == sky()['claims'][0]['file'] and any('close to' in x for x in done), f'a file name one slip off a given file is corrected ({done})')
+    check(t['claims'][1]['from'] == 'outside', 'a file name in "from" becomes "outside" when "where" is a web address')
+    check(len(first) == len(sky()['scenes'][0]['beats']) and first[0]['show'][-1]['word'] == 'Scatter', 'a beat that only shows joins the sentence before it')
+    check(' equals done.' in first[0]['say'], 'a spaced = in narration reads "equals"')
+    check(vc.tidy(sky(), srcs) == [], 'a clean lesson is left alone')
+    two = sky()
+    two['claims'][0]['file'] = 'nothing-like-it.md'
+    check(vc.tidy(two, srcs) == [] and two['claims'][0]['file'] == 'nothing-like-it.md', 'a file name close to no given file is left for the check to report')
+    r = run(write('tidy.json', untidy), '--sources', SKY_SRC)
+    check('Fixed and saved' in r.stdout and json.loads((WORK / 'tidy.json').read_text())['claims'][1]['from'] == 'outside', f'main() saves the tidied file and says so ({r.stdout.splitlines()[:1]})')
+
     # Header rules.
     for n in (0, 4):
         d = sky()
@@ -580,9 +602,9 @@ def numbers():
     check('"expr"' in fix and 'cite the claim whose quote has it' in fix and '37' in fix, f'with no arithmetic match the fix says to cite or work an example ({fix[:160]})')
     many = sky()
     for c in many['claims']:
-        c['from'] = 'sky-notes.md'
+        c['from'] = 'web'
     r = run(write('many.json', many))
-    check(re.search(r'^1\. Claim c1; Claim c2.*\(\d+ places\): "from" is', r.stdout, re.M) is not None and 'a file or address' in r.stdout,
+    check(re.search(r'^1\. Claim c1; Claim c2.*\(\d+ places\): "from" must be', r.stdout, re.M) is not None,
           f'the same problem in many places is printed once, naming each place ({[l for l in r.stdout.splitlines() if l[:2] == "1."][:1]})')
     lots = sky()
     lots['scenes'][0]['beats'][0]['claims'] = [f'zz{i}' for i in range(15)]
