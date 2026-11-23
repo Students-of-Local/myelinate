@@ -6,6 +6,8 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+- **runs7 recorded.** On 3.2.2 the blind judge preferred the 1.7B skill lesson in all 3 pairs and every skill lesson played, but two taught a false fact the checker had flagged and the model never fixed, so the result is not committed and the floors stay. Details in `evals/verification.md`.
+
 ## [3.2.2] - 2026-11-23
 
 - **Two values for one key are repaired.** On the sixth small-model run (runs6) the osmosis draft wrote `"type":"arrow":{"from": ...}` and resent it four rounds, never valid once. The checker now reads it as `"type": "arrow"` with the inner keys beside it, the fix its own report already named, and refuses when a key would clash or the second value is not an object. runs6 is recorded in `evals/verification.md`: fewer problems left and no false fact, but 0 of 3 blind wins, because its harness predated 3.2.1's keep-the-fuller-draft fix.
