@@ -183,6 +183,8 @@ def main():
     coverage()
     symbols()
     conflicts()
+    short_quotes()
+    reveal_after_pause()
     badges()
     pause_and_length()
     show_types()
@@ -583,6 +585,16 @@ def timestamps():
     d = osmosis()
     d['claims'][3]['where'] = 'Lecture video, 1:03'
     expect('"where" 1:03 is 40 s before the quote at 1:43', d, 'is not within 20 s', 'Claim c5', OSMOSIS_SOURCES)
+    # Regression: YouTube WebVTT kept cue settings and word-timing tags, so no multi-word quote matched.
+    vtt = write('lecture.vtt', 'WEBVTT\nKind: captions\nLanguage: en\n\n'
+                '00:01:40.000 --> 00:01:43.000 align:start position:0%\nWater moves<00:01:41.000><c> across</c><00:01:42.000><c> the membrane.</c>\n\n'
+                '00:01:43.000 --> 00:01:46.000 align:start position:0%\nNormal<00:01:43.560><c> saline</c><00:01:44.000><c> is 0.9 percent salt.</c>\n\n'
+                '00:01:46.000 --> 00:01:49.000 align:start position:0%\nIt is isotonic to red blood cells.\n')
+    vs = vc.load_sources([vtt])
+    q = vc.norm('Normal saline is 0.9 percent salt.')
+    check(vc.has(vs['lecture.vtt'], q), f'a quote is found in a YouTube .vtt ({vs["lecture.vtt"][:90]})')
+    check(vc.quote_near(vs.raw['lecture.vtt'], q, 103) is True and vc.quote_near(vs.raw['lecture.vtt'], q, 200) is False,
+          'a .vtt quote is placed at its cue time')
 
 
 def calcs():
@@ -772,7 +784,32 @@ def conflicts():
     check(any(re.match(r'\d+ possible contradictions? dismissed by the writer', x) for x in lines), f'the badge lines report the dismissal ({lines})')
     d['claims'][-1]['notConflict'] = ['Water leaves the cell and it shrinks.']
     expect('a notConflict that names only one sentence leaves the other flagged', d, 'is contradicted by bio101-slides.md', 'Claim c4', OSMOSIS_SOURCES)
+    # Regression: any substring dismissed a conflict, so "e" or "the" silenced the planted-slide attack.
+    for tiny in ('e', 'the', 'water'):
+        d['claims'][-1]['notConflict'] = [tiny]
+        expect(f'notConflict {tiny!r} is too short', d, 'under 5 words', 'Claim c4', OSMOSIS_SOURCES)
+        expect(f'notConflict {tiny!r} dismisses nothing', d, 'is contradicted by bio101-slides.md', 'Claim c4', OSMOSIS_SOURCES)
     check(not any('dismissed' in x for x in badge(osmosis(), OSMOSIS_SOURCES)['lines']), 'with nothing dismissed the badge says nothing about it')
+
+
+def short_quotes():
+    # Regression: a two-word real fragment backed any claim text and counted as quoted.
+    d = osmosis()
+    d['claims'][0]['quote'] = ' '.join(d['claims'][0]['quote'].split()[:2])
+    expect('a two-word quote', d, 'too short to show the source states the claim', 'Claim c1', OSMOSIS_SOURCES)
+    d = osmosis()
+    d['claims'][0]['text'] = 'Blue light is ultraviolet radiation.'
+    expect('a real quote under an unrelated claim', d, 'shares no key word with the claim', 'Claim c1', OSMOSIS_SOURCES)
+
+
+def reveal_after_pause():
+    # Regression: tidy moved a show-only reveal back into the beat before its pause, so the answer showed first.
+    d = sky()
+    si, bi = next((si, bi) for si, sc in enumerate(d['scenes']) for bi, b in enumerate(sc['beats']) if 'pause' in b)
+    d['scenes'][si]['beats'].insert(bi + 1, {'show': [{'type': 'label', 'text': 'Answer shown'}]})
+    vc.tidy(d)
+    early = [b for b in d['scenes'][si]['beats'][:bi + 1] if any(e.get('text') == 'Answer shown' for e in b.get('show') or [])]
+    check(not early, f'a reveal after a pause stays after it (scene {si + 1}, beat {bi + 1})')
 
 
 def badges():

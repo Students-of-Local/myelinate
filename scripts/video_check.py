@@ -373,6 +373,14 @@ def quote_near(raw, quote_n, t):
     return False if found else None
 
 
+def clean_vtt(text):
+    """A WebVTT file as plain timed lines: no word-timing or style tags, cue settings or header lines."""
+    text = re.sub(r'<(?:\d+:)?\d+:\d+(?:[.,]\d+)?>', '', text)
+    text = re.sub(r'</?(?:c|v|i|b|u|lang|ruby|rt)(?:[.\s][^>]*)?>', '', text)
+    text = re.sub(r'(-->[ \t]*\S+)[ \t]+[^\n]*', r'\1', text)
+    return re.sub(r'(?m)^(?:WEBVTT|Kind:|Language:|NOTE\b|STYLE\b|REGION\b).*$', '', text)
+
+
 def load_sources(paths):
     """Text of each source file, keyed by file name. HTML is reduced to its text."""
     found = Sources()
@@ -383,6 +391,8 @@ def load_sources(paths):
             if f.suffix.lower() not in ('.txt', '.md', '.html', '.htm', '.csv', '.json', '.vtt', '.srt'):
                 continue
             text = f.read_text(errors='replace')
+            if f.suffix.lower() == '.vtt' or text.lstrip().startswith('WEBVTT'):
+                text = clean_vtt(text)
             if f.suffix.lower() in ('.html', '.htm'):
                 text = re.sub(r'(?is)<(script|style)\b.*?</\1>', ' ', text)
                 text = html.unescape(re.sub(r'<[^>]+>', ' ', text))
@@ -742,6 +752,11 @@ def check(lesson, sources=None, final=False, today=None):
         status = c.get('status', 'unchecked')
         if status not in ('unchecked', 'matched', 'conflict'):
             r.error(where, f'has status {status!r}.', 'Use "unchecked", or "conflict" when two sources disagree.')
+        nc = c.get('notConflict')
+        if nc is not None:
+            short = [x for x in (nc if isinstance(nc, list) else [nc]) if not isinstance(x, str) or len(norm(x).split()) < 5]
+            if short:
+                r.error(where, f'"notConflict" has {len(short)} entr{"y" if len(short) == 1 else "ies"} under 5 words.', 'Copy at least 5 words in a row from the flagged sentence, or delete the entry.')
         if status == 'conflict':
             conflicts.add(cid)
             if not str(c.get('note', '')).strip():
@@ -766,6 +781,10 @@ def check(lesson, sources=None, final=False, today=None):
                 r.error(where, f'names file {fname!r}, which was not given to --sources.', 'Give that file to --sources, or fix the file name.')
             elif not has(sources[fname], q):
                 r.error(where, f'quote not found in {fname}.', f'Copy the exact sentence from {fname}, or delete the claim and every sentence that uses it.')
+            elif len(q.split()) < 4:
+                r.error(where, f'quote is only {len(q.split())} word(s), too short to show the source states the claim.', f'Copy the whole sentence from {fname} that states the claim: at least 4 words.')
+            elif str(c.get('text', '')).strip() and not (stems(c['text']) & stems(c['quote'])):
+                r.error(where, 'quote shares no key word with the claim\'s "text", so it does not state it.', 'Copy the sentence that says what "text" says, or rewrite "text" to say only what the quote says.')
             else:
                 t = seconds_of(c.get('where', '')) if re.search(r'\d:\d\d', str(c.get('where', ''))) else None
                 near = quote_near(sources.raw.get(fname, ''), q, t) if t is not None else None
@@ -788,7 +807,8 @@ def check(lesson, sources=None, final=False, today=None):
             c = ids[cid]
             if c.get('status') == 'conflict' or any(o.get('other') == cid for o in ids.values() if isinstance(o, dict)):
                 continue
-            dismiss = [norm(x) for x in c.get('notConflict') or [] if isinstance(x, str)]
+            nc = c.get('notConflict') or []
+            dismiss = [d for d in (norm(x) for x in (nc if isinstance(nc, list) else [nc]) if isinstance(x, str)) if len(d.split()) >= 5]
             qn = norm(c['quote'])
             for name, s, parts in pool:
                 # A sentence that is part of the quote itself (or holds all of it) is the claim's own source.
@@ -796,7 +816,7 @@ def check(lesson, sources=None, final=False, today=None):
                     continue
                 if not disagrees(c['quote'] + ' ' + str(c.get('text', '')), s):
                     continue
-                if any(d and d in norm(s) for d in dismiss):
+                if any(has(norm(s), d) for d in dismiss):
                     dismissed += 1
                     continue
                 flagged.setdefault(cid, (name, s))
@@ -1499,7 +1519,13 @@ def tidy(lesson, sources=None):
         out = []
         for bi, b in enumerate(beats, 1):
             if (isinstance(b, dict) and set(b) <= {'show', 'claims'} and isinstance(b.get('show'), list)):
-                host = next((x for x in reversed(out) if isinstance(x, dict) and 'say' in x), None)
+                host = None
+                for x in reversed(out):  # never back past a pause: a reveal after a question stays after it
+                    if isinstance(x, dict) and 'pause' in x:
+                        break
+                    if isinstance(x, dict) and 'say' in x:
+                        host = x
+                        break
                 if host is None:
                     host = next((x for x in beats[bi:] if isinstance(x, dict) and 'say' in x), None)
                 if host is not None:

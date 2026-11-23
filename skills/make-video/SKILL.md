@@ -63,7 +63,7 @@ Before any narration, list every fact the video will state. For **each claim**:
 1. Keep both as claims, each with its own exact quote and file.
 2. On the claim that disagrees, set `"status": "conflict"`, `"other": "<the other claim's id>"` and a `"note"` saying what each source says.
 3. Add a beat that cites both ids and says it plainly: "Your slides say X. Your textbook says Y. Ask your professor which one the exam uses."
-4. If the checker flags a sentence that does not really disagree (it is about something else), add part of that sentence to the claim's `"notConflict": ["..."]`. The badge counts every one you dismiss.
+4. If the checker flags a sentence that does not really disagree (it is about something else), copy at least 5 words in a row from that sentence into the claim's `"notConflict": ["..."]`. The badge counts every one you dismiss.
 
 ## 4. Every number gets a calc
 
