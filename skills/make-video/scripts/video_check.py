@@ -1385,7 +1385,7 @@ class _Unfixable(Exception):
 class _Loose:
     """A forgiving JSON reader for the slips small models make. It repairs only what has one reading:
     a comma before } or ], a doubled comma, a stray ", after a value, a missing comma between items, a { or [ left open, a doubled
-    closing quote, a line break inside text, a 'single-quoted' value, ... after a number (3.333...), and words or a stray } or ]
+    closing quote, a line break inside text, two values for one key ("type": "arrow": {...}), a 'single-quoted' value, ... after a number (3.333...), and words or a stray } or ]
     before or after the object. Anything else is unfixable."""
 
     NUM = re.compile(r'-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?')
@@ -1507,6 +1507,16 @@ class _Loose:
                 raise _Unfixable
             self.i += 1
             out[key] = self.value()
+            if self.peek() == ':' and isinstance(out[key], str):
+                # "type": "arrow": {"from": ...}: every element in this format is flat, so the one reading
+                # is "type": "arrow" with the inner keys beside it, as the report's own Fix line says.
+                at = self.i
+                self.i += 1
+                inner = self.value()
+                if not isinstance(inner, dict) or set(inner) & set(out):
+                    raise _Unfixable
+                out.update(inner)
+                self.fix(f'"{key}": "{out[key]}": {{...}} became "{key}": "{out[key]}" with the {{...}} keys beside it', at)
             if not self.after_value('}') and self.peek() not in '}]{':
                 raise _Unfixable
 

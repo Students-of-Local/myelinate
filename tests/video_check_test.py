@@ -287,6 +287,12 @@ def old_rules():
           f'an extra }} mid-file is still removed, and both beats stay in one scene ({o}, {f})')
     o, f = fixed('{"scenes": [{"beats": [{"say": "a"}}, {"say": "b"}]}]}\n</parameter>\n}')
     check(o == {'scenes': [{'beats': [{'say': 'a'}, {'say': 'b'}]}]}, f'... also when a wrapper tag and a stray }} follow ({o}, {f})')
+    # runs6: the osmosis draft wrote "type":"arrow":{...} and resent it four rounds, never valid once.
+    o, f = fixed('{"show": [{"type":"arrow":{"from":"solution","to":"cell","label":"water in"}}], "n": 1}')
+    check(o == {'show': [{'type': 'arrow', 'from': 'solution', 'to': 'cell', 'label': 'water in'}], 'n': 1} and 'keys beside it' in f,
+          f'two values for one key become one object with the inner keys beside the first ({o}, {f})')
+    for bad in ('{"type": "a": {"type": "b"}}', '{"type": "a": "b"}', '{"type": "a": [1]}'):
+        check(fixed(bad)[0] is None, f'no guess when the second value clashes or is not an object: {bad}')
     o, f = fixed('{"materials": ["nasa.gov/seasons/", \'nasa.gov/seasons/\'], "n": 1}')
     check(o == {'materials': ['nasa.gov/seasons/', 'nasa.gov/seasons/'], 'n': 1} and 'single quotes' in f, f"a 'single-quoted' value becomes a string ({o}, {f})")
     o, f = fixed('{"calc": [{"id": "k4", "expr": "k3 / 3", "value": 3.333...},\n {"id": "k5", "value": 0.5\u2026}]}')
