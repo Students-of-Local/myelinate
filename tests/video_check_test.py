@@ -284,9 +284,11 @@ def old_rules():
           f'a stray }} after a tool call wrapper, with nothing else after the object, is dropped ({o}, {f})')
     o, f = fixed('{"materials": ["nasa.gov/seasons/", \'nasa.gov/seasons/\'], "n": 1}')
     check(o == {'materials': ['nasa.gov/seasons/', 'nasa.gov/seasons/'], 'n': 1} and 'single quotes' in f, f"a 'single-quoted' value becomes a string ({o}, {f})")
-    o, f = fixed('{"calc": [{"id": "k4", "expr": "k3 / 3", "value": 3.333...},\n {"id": "k5", "value": 2\u2026}]}')
-    check(o == {'calc': [{'id': 'k4', 'expr': 'k3 / 3', 'value': 3.333}, {'id': 'k5', 'value': 2}]} and 'after the number 3.333' in f,
-          f'... after a number is dropped and the digits kept ({o}, {f})')
+    o, f = fixed('{"calc": [{"id": "k4", "expr": "k3 / 3", "value": 3.333...},\n {"id": "k5", "value": 0.5\u2026}]}')
+    check(o == {'calc': [{'id': 'k4', 'expr': 'k3 / 3', 'value': 3.333}, {'id': 'k5', 'value': 0.5}]} and 'after the number 3.333' in f,
+          f'... after a decimal value is dropped and the digits kept ({o}, {f})')
+    for bad in ('{"values": [0.1, 0.2, 0.3...]}', '{"items": [1, 2, 3\u2026]}', '{"value": 2...}'):
+        check(fixed(bad)[0] is None, f'... that may stand in for left-out items is refused: {bad}')
     for bad in ("{\"say\": 'Earth's tilt', \"n\": 1}", "{\"say\": 'two\nlines'}", '{"title": "T"}\n</parameter>\n}, "n": 1}'):
         check(fixed(bad)[0] is None, f'no guess for {bad[:30]!r}')
     r = run(write('elided.json', '{\n "title": "T",\n "claims": [\n  ...\n ],\n "scenes": [{...}]\n}\n'))

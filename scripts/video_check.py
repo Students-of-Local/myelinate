@@ -995,7 +995,7 @@ def check(lesson, sources=None, final=False, today=None):
                     if set(run.split()) & ex_topic - src_words and not any(f' {run} ' in src for src in src_runs_text)), None)
         if hit:
             r.error(where, f'copies the worked example about the sky ("{hit}"), and your materials never say it.',
-                    'Rewrite it about your own topic in words from the learner\'s files. Keep the beat; change its words.')
+                    'Rewrite it about your own topic, citing a claim from the learner\'s files. If their files have nothing for this beat, delete only this beat and keep the rest of the scene.')
 
     def coverage(where, text, refs, role=None, plain=''):
         st = stems(plain + ' ' + text)
@@ -1401,7 +1401,7 @@ class _Loose:
             self.i += 1
         return self.t[self.i] if self.i < len(self.t) else ''
 
-    def value(self):
+    def value(self, in_list=False):
         c = self.peek()
         if c == '{':
             return self.obj()
@@ -1425,8 +1425,10 @@ class _Loose:
         m = self.NUM.match(self.t, self.i)
         if m:
             self.i = m.end()
-            tail = re.match(r'\.\.\.|\u2026', self.t[self.i:])
-            if tail:  # 3.333... : the digits are the value; the check recomputes any calc anyway
+            tail = re.match(r'(?:\.\.\.|\u2026)(?=\s*[,}])', self.t[self.i:])
+            if tail and not in_list and '.' in m.group():
+                # "value": 3.333... reads one way: a repeating decimal. In a list, or after a whole
+                # number, ... stands in for left-out items, and that is refused.
                 self.fix(f'removed the ... after the number {m.group()}')
                 self.i += len(tail.group())
             return json.loads(m.group())
@@ -1520,7 +1522,7 @@ class _Loose:
             if c == '}' or not c:
                 self.fix('closed a [ left open with ]')
                 return out
-            out.append(self.value())
+            out.append(self.value(in_list=True))
             if not self.after_value(']') and self.peek() not in ']}':
                 raise _Unfixable
 

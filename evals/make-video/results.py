@@ -25,6 +25,27 @@ FLOORS = HERE / 'results' / 'floors.json'
 ARMS = ('skill', 'baseline')
 
 
+def say_beats(path):
+    """How many beats in the lesson say something aloud: a draft with none is not a video, however few errors it has."""
+    try:
+        lesson = json.loads(Path(path).read_text())
+    except (OSError, json.JSONDecodeError):
+        return 0
+    scenes = lesson.get('scenes') if isinstance(lesson, dict) else None
+    return sum(1 for sc in scenes if isinstance(sc, dict) and isinstance(sc.get('beats'), list)
+               for b in sc['beats'] if isinstance(b, dict) and str(b.get('say') or '').strip()) if isinstance(scenes, list) else 0
+
+
+
+def better_draft(errors, beats, best_errors, best_beats):
+    """Whether a new valid draft should replace the best one. Content first: a draft with under half the
+    other's spoken beats loses to it, however few errors it has. Fewest errors alone kept a draft with
+    no scenes (33 errors) over one with ten (72) in runs5, and every later round built on the empty one."""
+    if beats * 2 < best_beats or best_beats * 2 < beats:
+        return beats > best_beats
+    return errors <= best_errors
+
+
 def rows_from(rundir):
     runs = json.loads((rundir / 'runs.json').read_text())
     judged = json.loads((rundir / 'judgments.json').read_text())['pairs']
@@ -37,17 +58,30 @@ def rows_from(rundir):
         s = p['scores'][r['arm']]
         rows.append({'id': r['id'], 'arm': r['arm'], 'rep': r['rep'], 'rounds': len(r['rounds']),
                      'valid_drafts': sum(bool(x.get('valid_json')) for x in r['rounds']),
-                     'ready': bool(r['ready']), 'final_errors': r['final_errors'], 'say_beats': r.get('final_beats', 0),
+                     'ready': bool(r['ready']), 'final_errors': r['final_errors'], 'say_beats': beats_of(rundir, r),
                      'won': p['winner'] == r['arm'], 'teaches_false': bool(s.get('teaches_false')),
                      'overall': s['overall'], 'accuracy': s['accuracy']})
     return sorted(rows, key=lambda x: (x['id'], x['arm'], x['rep']))
+
+
+def beats_of(rundir, r):
+    """The best draft's spoken beats: from run.json, or for a run made before it logged them, counted
+    from the lesson.json it kept (an invalid best draft has none)."""
+    if 'final_beats' in r:
+        return r['final_beats']
+    if r['final_errors'] is None:
+        return 0
+    lesson = rundir / f"{r['id']}-{r['arm']}-{r['rep']}" / 'lesson.json'
+    if not lesson.is_file():
+        raise SystemExit(f'{lesson} is missing, and its run.json has no final_beats; the playable count needs one of them')
+    return say_beats(lesson)
 
 
 def summarize(rows):
     out = {}
     for arm in ARMS:
         rs = [r for r in rows if r['arm'] == arm]
-        playable = [r for r in rs if r['final_errors'] is not None and r.get('say_beats', 0) > 0]
+        playable = [r for r in rs if r['final_errors'] is not None and r['say_beats'] > 0]
         out[arm] = {'lessons': len(rs), 'ready': sum(r['ready'] for r in rs), 'playable': len(playable),
                     'problems_left': sum(r['final_errors'] for r in playable),
                     'valid_drafts': sum(r['valid_drafts'] for r in rs), 'drafts': sum(r['rounds'] for r in rs),
@@ -71,6 +105,8 @@ def problems(result, floors):
         errs.append(f'partial run: no row for {sorted(want - have)}')
     if any(not isinstance(r.get('say_beats'), int) for r in rows):
         errs.append('a row has no "say_beats"; rewrite the result with results.py RUNDIR')
+    if errs:
+        return errs  # summarize needs every row's count
     if summarize(rows) != result.get('summary'):
         errs.append('the summary does not match the rows; rewrite the result with results.py RUNDIR')
     s, f = summarize(rows)['skill'], floors['skill']
@@ -126,6 +162,14 @@ def self_test():
     for name, bad in cases.items():
         if not problems(bad, floors):
             fails.append(f'{name} was not caught')
+    # The harness keeps content: (errors, beats) of a new draft against the best so far.
+    for new, best, want, what in (((33, 0), (72, 14), False, 'a draft with no scenes replaced a ten-scene one'),
+                                  ((33, 1), (72, 14), False, 'a draft cut to one beat replaced a fourteen-beat one'),
+                                  ((72, 14), (33, 1), True, 'a full draft did not replace a gutted one'),
+                                  ((10, 12), (20, 14), True, 'a similar draft with fewer errors was not kept'),
+                                  ((20, 14), (10, 12), False, 'a similar draft with more errors was kept')):
+        if better_draft(*new, *best) != want:
+            fails.append(what)
     for f in fails:
         print('FAIL:', f)
     print(f'SELF-TEST {"FAILED" if fails else "PASSED"}: {len(cases) - sum("not caught" in f for f in fails)} of {len(cases)} doctored results caught.')
