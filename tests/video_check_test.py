@@ -228,6 +228,14 @@ def old_rules():
           f'a missing comma is repaired, named and the check goes on (exit {r.returncode}, {r.stdout.splitlines()[:1]})')
     check(json.loads(bcopy.read_text())['wpm'] == 145, 'the repaired file is saved as valid JSON')
     check(BROKEN.read_text().count(',') == 1, 'the broken fixture itself is untouched')
+    # Regression (EBE run 4): a 1.7B echoed the skill inside a made-up tool call and wrote no lesson. The repair
+    # kept the skill's inline "part" example as the lesson, and the eval counted it as its best draft.
+    echo = ('<tool_call>\n<parameter=content>\n4. **Six minutes or less per file.** For more, make several files, each with '
+            '`"part": {"n": 1, "of": 3, "series": "<the whole topic>"}`. Each part is its own video.\n\nSo p = 260/400 = 0.65.\n')
+    path = write('echo.json', echo)
+    r = run(path)
+    check(r.returncode == 2 and r.stdout.startswith('NOT A LESSON') and path.read_text() == echo,
+          f'copied instructions holding one small JSON object are not a lesson, and the file is left alone (exit {r.returncode}, {r.stdout.splitlines()[:1]})')
 
     def fixed(text):
         got = vc.repair_json(text)

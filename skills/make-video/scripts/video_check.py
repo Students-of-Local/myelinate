@@ -1562,6 +1562,9 @@ def dump_lesson(lesson):
     return fmt(lesson, 0) + '\n'
 
 
+LESSON_KEYS = {'format', 'title', 'question', 'objectives', 'lessonType', 'learner', 'claims', 'calc', 'scenes', 'recall', 'practice'}
+
+
 def read_lesson(path):
     """Load the lesson, tolerating a ```json fence around it and repairing slips that have one reading.
     A repaired file is saved back so the next draft starts from valid JSON. Returns (lesson, note) or raises SystemExit(2)."""
@@ -1574,6 +1577,14 @@ def read_lesson(path):
         return json.loads(text), note
     except json.JSONDecodeError as exc:
         fixed = repair_json(text)
+        if fixed and isinstance(fixed[0], dict) and not set(fixed[0]) & LESSON_KEYS:
+            # The only JSON in a page of notes or copied instructions, like the "part" example: not a lesson.
+            print(f'NOT A LESSON: the only JSON in the file is {json.dumps(fixed[0])[:80]}, which has none of '
+                  '"format", "title", "claims" or "scenes".')
+            print('FIX: Write the whole lesson as one JSON object that starts {"format": "myelinate-video/1", ... }.')
+            print('  Copy templates/video-lesson.json and fill it in. Save only the JSON: no notes, no copied instructions, no tool calls.')
+            print('Then run this check again.')
+            raise SystemExit(2)
         if fixed and isinstance(fixed[0], dict):
             lesson, fixes = fixed
             Path(path).write_text(dump_lesson(lesson))
