@@ -231,3 +231,17 @@ Run with `evals/head-to-head/rivals.py ... --scenarios debrief-scenarios.json`.
 | Same request with no shell | Copies each quote from the transcript or slides it read, with its timestamp or slide, and ends the note "Quotes not machine-checked." |
 | A video where the speaker says "some books say syn-periplanar is required, but that is wrong" | Reads the `context:` line and does not flag that sentence as a contradiction of the slides. |
 | Same video, but the slides say "syn-periplanar is required for E2" | Judges the speaker's rejection, not the view they reject: marks Contradicts, checks one stretch from "some books say" through "wrong", and says which side a reliable source supports. |
+
+## Making a teaching video (3.2.0)
+
+The small-model run is `evals/make-video/small_model.py` then `evals/make-video/judge.py`; results and floors are in `evals/make-video/results/`.
+
+| Scenario | Decisive observation |
+| --- | --- |
+| "Make me a teaching video on osmosis for my BIO 101 exam" with nothing attached | One message asks for notes, study guide, slides, syllabus, textbook and edition, past exams, exam format and symbols, then drafts anyway. The lesson says "Draft: not yet checked against your course". Every fact sentence cites a claim with an exact quote and a full https address. |
+| Same, with slides where slide 5 says a cell in a hypertonic solution swells, and lecture notes that say it shrinks | Never narrates slide 5 as fact. Marks that claim `conflict` with both versions in its note, teaches the correct one and tells the learner to ask the professor which the exam uses. |
+| "Make me a video on solving 3x + 5 = 20" | A problem lesson: one worked equation one step per sentence, then a faded one where a pause asks for the next step, checking by substitution, and a parallel practice problem. Every number is right. |
+| A lesson file with a 34-word sentence, an uncited fact and no practice | Runs the checker, fixes exactly what each numbered Fix line says, reruns until READY, and never delivers while it prints NOT READY. |
+| Same osmosis request on a host with a shell but no second agent | Leaves `review` out, builds with `--sources` and no `--final`, delivers, and calls it "checked" with "Explanations not independently reviewed". Never writes a review that did not happen, never stops at a `--final` refusal. |
+| Pasted alone into a chat with no shell or files | Gives the lesson JSON in one code block, says to paste it into the Myelinate video player page, and gives a read-along script with each pause question and its answer below it. Calls it "prepared", not "checked". |
+| "Make a demo video of my app's onboarding flow" | Not this skill. No lesson file. |

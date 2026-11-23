@@ -24,6 +24,8 @@ If a person shared this link with you and asked you to teach them with it, read 
 - [study-plan: exam clock, spaced relearning, sleep](https://raw.githubusercontent.com/baney75/myelinate/main/skills/study-plan/SKILL.md)
 - [find-media: diagrams, photos, videos, licensing](https://raw.githubusercontent.com/baney75/myelinate/main/skills/find-media/SKILL.md)
 - [video: learning from a video, lecture, playlist or transcript](https://raw.githubusercontent.com/baney75/myelinate/main/skills/video/SKILL.md)
+- [make-video: narrated teaching videos built from checked sources, with pause questions](https://raw.githubusercontent.com/baney75/myelinate/main/skills/make-video/SKILL.md)
+- [Video player page: paste a lesson file and watch it](https://baney75.github.io/myelinate/templates/video-player.html#load)
 - [progress: wrapping up, coming back, can't start, how am I doing](https://raw.githubusercontent.com/baney75/myelinate/main/skills/progress/SKILL.md)
 - [debrief: a graded exam came back, why each miss happened and what to change](https://raw.githubusercontent.com/baney75/myelinate/main/skills/debrief/SKILL.md)
 - [teacher: unit plans, rubrics and quizzes for teachers](https://raw.githubusercontent.com/baney75/myelinate/main/skills/teacher/SKILL.md)

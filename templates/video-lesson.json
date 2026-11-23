@@ -1,0 +1,134 @@
+{
+  "format": "myelinate-video/1",
+  "title": "<<the lesson title, 8 words or fewer>>",
+  "subtitle": "<<one short line under the title>>",
+  "lessonType": "<<problem if the learner must solve problems step by step, otherwise concept>>",
+  "wpm": 145,
+  "voice": {"lang": "en-US"},
+  "part": {"n": 1, "of": 1, "series": "<<the whole topic, the same in every part>>"},
+  "learner": {
+    "kind": "<<course or self-study>>",
+    "course": "<<course name and instructor; for self-study leave it empty>>",
+    "tag": "<<course: the exam or unit, 3 words or fewer, like EXAM 4; otherwise leave it empty>>",
+    "purpose": "<<self-study: why they want to learn it; for a course leave it empty>>",
+    "level": "<<their level in plain words>>",
+    "materials": ["<<each thing they gave you: notes, slides, study guide, textbook with edition; use [] if nothing>>"],
+    "target": "<<a question they missed before, if you know one; otherwise leave it empty>>",
+    "notation": "<<symbols or words their course uses, if you know them; otherwise leave it empty>>"
+  },
+  "pronounce": {"<<a word the voice may say wrong, or delete this line and the comma before it>>": "<<how to say it in plain words split by spaces, like hetero zygote>>"},
+  "objectives": [
+    "<<goal 1, starting with a verb such as Explain or Solve>>",
+    "<<goal 2, or delete this line>>"
+  ],
+  "question": "<<the one question the whole video answers>>",
+  "claims": [
+    {
+      "id": "c1",
+      "text": "<<one fact, in one plain sentence>>",
+      "from": "<<course if it comes from their materials, outside otherwise>>",
+      "source": "<<the source: book and edition, slide deck, or website name>>",
+      "file": "<<the name of the text file the quote is in, the same name you give to --sources>>",
+      "where": "<<course: page, slide or section number, or m:ss in a video transcript; outside: the full https:// address>>",
+      "checked": "<<outside only: the date you read it, YYYY-MM-DD>>",
+      "quote": "<<the exact words from that file that say this fact, copied letter for letter>>"
+    }
+  ],
+  "calc": [
+    {"id": "k1", "expr": "<<arithmetic with numbers from your claims, like 2*49 + 42; delete calc if the lesson has no numbers>>", "value": 0, "round": 2}
+  ],
+  "misconception": {
+    "wrong": "<<a common mistaken idea about this topic>>",
+    "right": "<<the correction, in one sentence>>",
+    "claims": ["c1"]
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "title": "<<chapter name, 2 to 5 words>>",
+      "role": "intro",
+      "beats": [
+        {"say": "<<a hook sentence, a question or everyday observation>>", "talk": true,
+         "show": [{"type": "title", "text": "<<the title>>", "sub": "<<the subtitle>>"}]},
+        {"say": "<<the question this video answers>>", "talk": true,
+         "show": [{"type": "question", "text": "<<the question>>"}]}
+      ]
+    },
+    {
+      "id": "s2",
+      "title": "<<chapter name>>",
+      "role": "names",
+      "beats": [
+        {"pause": {"ask": "Predict before you hear it: <<a question about what comes next>>", "choices": ["<<option>>", "<<option>>"], "answer": "<<the right option, exactly as written above>>", "why": "<<why it is right, one sentence>>", "claims": ["c1"]}},
+        {"say": "<<one sentence that names a new word and says what it means>>", "claims": ["c1"],
+         "show": [{"type": "term", "word": "<<the word>>", "meaning": "<<what it means, 10 words or fewer>>", "tier": "<<memorize if they must know it by heart; given if the exam gives it; or delete tier>>"}]}
+      ]
+    },
+    {
+      "id": "s3",
+      "title": "<<chapter name>>",
+      "role": "explain",
+      "beats": [
+        {"say": "<<one step of the idea, in one sentence>>", "claims": ["c1"],
+         "show": [{"type": "arrow", "from": "<<cause>>", "to": "<<effect>>", "label": "<<how, 4 words or fewer>>"}]}
+      ]
+    },
+    {
+      "id": "s4",
+      "title": "<<concept lessons: chapter name for one concrete case; problem lessons: delete this scene>>",
+      "role": "example",
+      "beats": [
+        {"say": "<<apply the idea to one real case>>", "claims": ["c1"],
+         "show": [{"type": "label", "text": "<<the case, 4 words or fewer>>"}]}
+      ]
+    },
+    {
+      "id": "s5",
+      "title": "<<problem lessons: chapter name for the worked example; concept lessons: delete this scene>>",
+      "role": "worked",
+      "beats": [
+        {"say": "<<one step of the worked example, saying its number in words a voice can read>>", "claims": ["k1"],
+         "show": [{"type": "step", "text": "<<the same step written with symbols, like p = (2*49 + 42) / 200 = 0.7>>"}]}
+      ]
+    },
+    {
+      "id": "s6",
+      "title": "<<problem lessons: chapter name for a similar problem; concept lessons: delete this scene>>",
+      "role": "faded",
+      "beats": [
+        {"say": "<<the first step of a similar problem, done for them>>", "claims": ["k1"],
+         "show": [{"type": "step", "text": "<<that step with symbols>>"}]},
+        {"pause": {"ask": "Your turn: <<ask for the next step>>", "answer": "<<the next step's result>>", "why": "<<how to get it, one sentence>>", "claims": ["k1"]}}
+      ]
+    },
+    {
+      "id": "s7",
+      "title": "<<chapter name, like A common slip>>",
+      "role": "misconception",
+      "beats": [
+        {"say": "<<name the common mistake as a mistake>>", "talk": true,
+         "show": [{"type": "compare", "left": "The slip", "right": "What is true", "leftItems": ["<<the wrong idea, 4 words or fewer>>"], "rightItems": ["<<the right idea, 4 words or fewer>>"]}]},
+        {"say": "<<the correction, in one sentence>>", "claims": ["c1"]}
+      ]
+    },
+    {
+      "id": "s8",
+      "title": "<<chapter name, like The whole chain>>",
+      "role": "summary",
+      "beats": [
+        {"say": "<<first link of the chain>>", "claims": ["c1"], "show": [{"type": "step", "text": "<<4 words or fewer>>"}]},
+        {"say": "<<last link of the chain>>", "claims": ["c1"], "show": [{"type": "step", "text": "<<4 words or fewer>>"}]}
+      ]
+    }
+  ],
+  "recall": {
+    "ask": "Look away from the screen. <<ask them to explain the main idea in two or three sentences>>",
+    "points": ["<<key point 1>>", "<<key point 2>>"]
+  },
+  "practice": {
+    "ask": "<<one new problem or case like the one taught>>",
+    "answer": "<<its answer>>",
+    "steps": ["<<step 1>>", "<<step 2>>"],
+    "claims": ["c1"]
+  }
+}

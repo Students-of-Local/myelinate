@@ -24,6 +24,18 @@ jobs:
         run: python3 scripts/check.py
       - name: YouTube finder against a fake yt-dlp (offline)
         run: python3 tests/yt_tool.py
+      - name: Video lesson checker rules, sources, build and audio plan
+        run: python3 tests/video_check_test.py
+      - name: Video checker catches all seven accuracy attacks
+        run: python3 evals/make-video/attacks.py --self-test
+      - name: Small-model make-video result meets its floors
+        run: |
+          python3 evals/make-video/results.py --self-test
+          python3 evals/make-video/results.py --check
+      - name: Narration voice tools against tone clips and fake engines (needs ffmpeg)
+        run: |
+          command -v ffmpeg >/dev/null || { sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg; }
+          python3 tests/voice_check_test.py
       - name: Trigger guard (prompt labels, committed eval results, baseline floors)
         run: |
           python3 evals/triggers/test_check.py
@@ -41,13 +53,14 @@ jobs:
         run: |
           python3 -m pip install --disable-pip-version-check playwright==1.64.1
           python3 -m playwright install --with-deps chromium
-      - name: Browser journeys (flashcard deck, exam game, visual stepper, oxygen lab)
+      - name: Browser journeys (flashcard deck, exam game, visual stepper, oxygen lab, video player)
         run: |
           python3 tests/flashcards_journey.py
           python3 tests/game_journey.py
           python3 tests/visual_journey.py
           python3 tests/lab_journey.py
           python3 tests/inline_journey.py
+          python3 tests/video_journey.py
 
   trigger-eval:
     if: github.event_name == 'workflow_dispatch' && inputs.trigger_eval

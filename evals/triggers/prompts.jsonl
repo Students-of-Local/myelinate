@@ -71,3 +71,9 @@
 {"id": "n43", "prompt": "My average is 84 and the final is worth 25%. What do I need on the final to keep a B?", "accept": ["none"], "kind": "negative"}
 {"id": "n44", "prompt": "Write an email to my professor asking when the exam grades will be posted.", "accept": ["none"], "kind": "negative"}
 {"id": "p71", "prompt": "Current Attempt in Progress. For this question, the \"entropy term\" refers to \"-TΔS.\" Addition reactions are generally favorable at low temperatures because ____. Attempts: unlimited. Submit Answer", "accept": ["assignment"], "kind": "positive"}
+{"id": "p72", "prompt": "I learn way better watching than reading. Make me an animated video that teaches how photosynthesis works.", "accept": ["make-video"], "kind": "positive"}
+{"id": "p73", "prompt": "Can you make a narrated explainer video on supply and demand for my econ midterm?", "accept": ["make-video"], "kind": "positive"}
+{"id": "p74", "prompt": "Turn my anatomy slides on the cranial nerves into a teaching video I can watch before the exam.", "accept": ["make-video"], "kind": "positive"}
+{"id": "n45", "prompt": "Make a demo video of my app's onboarding flow for the App Store listing.", "accept": ["none"], "kind": "negative"}
+{"id": "n46", "prompt": "Edit my vlog footage from the beach trip into a 10 minute video with music.", "accept": ["none"], "kind": "negative"}
+{"id": "n47", "prompt": "Make a YouTube intro for my gaming channel.", "accept": ["none"], "kind": "negative"}

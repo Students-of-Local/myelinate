@@ -23,3 +23,5 @@
 {"id": "h23", "prompt": "My calc midterm grade came back way lower than I expected. Which of my study methods isn't working?", "accept": ["debrief"], "kind": "positive"}
 {"id": "h24", "prompt": "We got our chem exams back today. I missed 9 questions, mostly the mechanism ones.", "accept": ["debrief"], "kind": "positive"}
 {"id": "h25", "prompt": "[screenshot of a Mastering Chemistry question, Part B, 2 attempts remaining] which one is it", "accept": ["assignment"], "kind": "positive"}
+{"id": "h26", "prompt": "I'm a visual learner. Could you make me a short video lesson on the Krebs cycle?", "accept": ["make-video"], "kind": "positive"}
+{"id": "h27", "prompt": "Make a 60 second product explainer video for our SaaS landing page.", "accept": ["none"], "kind": "negative"}

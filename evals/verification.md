@@ -2,6 +2,66 @@
 
 Checked **2026-10-02**, with synthetic learner prompts and locally generated examples. These checks assess instructions and software behavior; they do not measure real student learning.
 
+## 3.2.0: make-video (2026-11-22)
+
+### Accuracy: seven attacks
+
+`python3 evals/make-video/attacks.py --self-test` plants each attack in a small osmosis lesson with made-up course files (`evals/make-video/sources/osmosis/`) and a timed lecture transcript (`tests/fixtures/video/lecture-transcript.txt`), then runs the checker with `--sources`. CI runs it on every pull request.
+
+| # | Attack | Caught | First error the checker printed |
+| --- | --- | --- | --- |
+| 1 | Invented quote | yes | Claim c1: quote not found in bio101-slides.md. |
+| 2 | Arithmetic slip (4.5 written as 4.6) | yes | Calc k1: says 4.6, but 500 * 0.9 / 100 = 4.5. |
+| 3 | Uncited number ("about 37 percent") | yes | The sentence states '37%', which no cited quote or calc gives. |
+| 4 | Citation on an unrelated sentence | yes | cites c5, but shares no key word with it. |
+| 5 | Planted slide error presented silently | yes | Claim c2: is contradicted by bio101-slides.md. |
+| 6 | Self-set "checked" badge | yes | "verification": was not written by the checker for this exact file. |
+| 7 | Misquoted video timestamp (1:43 as 3:13) | yes | quote is not within 20 s of Lecture video, 3:13. |
+
+Each gate was also switched off in a scratch copy of the checker, 38 versions in all; the tests failed on 37. The one that slipped was a redundant normalization step. Review found two loose gates, both fixed with tests that failed first: a timestamp window that stretched three transcript lines past 20 seconds, and a percent match that let 0.8% pass on "0.9 percent" and 75% on 0.7.
+
+### Timing
+
+The checker and player once timed each line by its written words, so "0.4225" took the time of one word instead of five. The Hardy-Weinberg remake checked as 5:40 that way; counted as spoken it is 6:33, over the 6:30 cap, and two repeated sentences were cut to fit (6:06). `video_voice.py` now records each clip's length, the player and checker time lines to it, and a length too short for its sentence is refused. Tests that failed on the old code: `tests/video_check_test.py` (spoken counts, recorded lengths, a faked short length), `tests/voice_check_test.py` (pace on number-heavy clips) and `tests/video_journey.py` (the player's timeline).
+
+### Voices
+
+Engines tried on Parish1 on 2026-11-22 and 23, in the skill's order. Nothing was installed, and nothing was stopped to free the GPU.
+
+| Tier | Result |
+| --- | --- |
+| Qwen3-TTS through parish-media (GPU) | Refused both times: another session's model server held the GPU. It retried for 5 minutes, then stopped and said so. No clips. |
+| Kokoro-82M in headless Chromium, kokoro-js 1.2.1 from the pinned CDN build, wasm | Used. Sky sample: 7 lines, 0.0% word error rate, 144 words a minute, READY. Hardy-Weinberg remake: 55 lines, 0.8% word error rate, 159 words a minute, READY. |
+| The browser's built-in voice | Not needed. The player labels it robotic when it is the only voice. |
+
+The voice check is speech-to-text (voxtype, on the CPU because the GPU was full) and loudness meters. Getting the remake to READY took three runs. The voice speed went from 0.71 to 0.87, a number the check now prints, and two respellings changed. Most of the other problems were in the check, not the voice. It counted words as written, so a 30-word number line looked like 14 words. It judged each line by words a minute, which swung from 104 to 242 with word length, while syllables a second stayed between 3.3 and 4.8 on all 55 clips; the per-line gate is now 2.5 to 6 syllables a second. It also counted speech-to-text's spellings as errors: "2pq", "p2", "ChiSquare" and "hetero zygote". One real fix was to the voice: a respelling with hyphens and capitals ("het-er-oh-ZYE-goat") came back as "Heteroziwai'i goat", and plain spaced words ("hetero zygote") came back right. Each fix has a test that failed first.
+
+A claude.ai artifact blocks the model download, so the browser tier runs on the learner's machine or in the build step, and an artifact gets recorded clips published next to the page. The voices were not checked by ear.
+
+### Small model
+
+`evals/make-video/small_model.py` gives LFM3-1.7B (Q4_K_M on a CPU llama-server, thinking off) three lessons: osmosis for a class, with a planted wrong slide; seasons for a self-learner; two-step equations for a class. The skill arm gets SKILL.md and the template, then up to six rounds with the checker's report pasted back. The baseline arm gets the same request and the template, one draft, no checker. `judge.py` builds each pair, renders four frames of each, and has Opus grade them blind in random order. `results.py` keeps the numbers in `evals/make-video/results/latest.json`, and CI holds them to `results/floors.json`.
+
+The first run (runs1, four rounds) produced no valid JSON in 16 skill drafts. Each later run fixed what the last one showed:
+
+| Run | What it found | Fix |
+| --- | --- | --- |
+| runs1 | A pause beat lost its closing `}`, and the model made the same slip every round because the report only named the line. | Repair of slips with one reading; 16 of 19 failed replies now parse. |
+| runs3 | Rounds that broke the JSON threw away the good draft before them. Extra `]`, `,,` and a closing code fence went unrepaired. | Each round builds on the best valid draft; three more repairs (2 of the 13 remaining failures). |
+| runs4 | The model resent one draft four times unchanged: the slip was at column 1258 and the report showed the first 160 characters. It also copied the sky example's sentences into the equations and seasons lessons, and read "(k1)" aloud. | The report quotes the text around the slip; sentences copied from the example are an error; ids in narration are removed. |
+
+runs4, the last judged run: no skill lesson reached READY. Two of three ended with a playable best draft (25 and 21 problems left; osmosis never wrote valid JSON). The blind judge preferred the skill lesson for seasons, where the baseline could not play, and the baseline for equations and osmosis (overall 2.33 against 3.33 out of 10). One lesson in each arm taught a false fact. The checker held: none of those drafts would show "checked", and the player labels them unverified.
+
+What is left is in the model, not the format. In the drafts that still fail, the model writes its reasoning into the file ("? Wait compute"), splits one object into made-up tool calls, writes `{...}` placeholders, or gives one key two values. None of these has a single reading, so the checker refuses them rather than guess. A host with an edit tool changes one line at a time; this harness asks for the whole file each round, which is harder for a small model.
+
+### Triggers
+
+`evals/triggers/run.py` with gpt-5.6-luna, 3 passes. The branch added three make-video positives, three video-production negatives and a video-production distractor. latest: 94.5% hit (156 of 165), 12.5% false fire (9 of 72), majority vote 100% hit. holdout: 93.3% (56 of 60), 4.8% (1 of 21), majority 100% hit and 0% false fire. A same-day control of main's own 3.1.1 descriptions scored 89.1% and 15.9%, below main's floors, so the floors were lowered with that written reason (`evals/triggers/thresholds.json`).
+
+### Not established
+
+No learner has used these videos. Simulated learners and model judges do not show that anyone learns more from them. The voices were checked by speech-to-text and loudness meters, not by ear. The checker confirms that quoted words are in the named file and that numbers add up; it does not confirm that a source is right, and a second reader judges the explanations.
+
 ## 3.1.3: last quote-checker notes from PR #35 (2026-11-22)
 
 `python3 tests/yt_tool.py`: 43 of 43. Run against the 3.1.2 checker, it fails at a bare `out.txt` in the PDF message and at a panel quote across a stamp line. Checked one at a time, the 3.1.2 checker also exits 6 on an empty file (now 1) and refuses "we meet at 9:45 in the lab" in a pasted panel (now confirmed). The small-model attack run was not rerun: these changes touch empty files, PDF messages and panel stamps, none of which its cases use. No fresh-agent run.

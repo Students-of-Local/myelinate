@@ -38,7 +38,7 @@ The Claude apps, Codex and other assistants: see [Install](#install).
 
 ## What's inside
 
-`SKILL.md` is a router. It reads what you are after and hands the request, with your context, to one of twenty skills. Installed as a plugin, each one loads by itself when the moment fits:
+`SKILL.md` is a router. It reads what you are after and hands the request, with your context, to one of twenty-one skills. Installed as a plugin, each one loads by itself when the moment fits:
 
 | Skill | What it does |
 | --- | --- |
@@ -58,6 +58,7 @@ The Claude apps, Codex and other assistants: see [Install](#install).
 | [study-plan](skills/study-plan/SKILL.md) | Plans study blocks, review and sleep around an exam or study deadline. Creates reminders only with a real, authorized calendar tool. |
 | [find-media](skills/find-media/SKILL.md) | Finds learning diagrams, photos, models and videos, with licenses noted. Gives a real, checked link rather than telling you to go search. |
 | [video](skills/video/SKILL.md) | Turns a video, lecture, playlist or transcript into something you can do: recall before any summary, questions and cards pointed at timestamps. |
+| [make-video](skills/make-video/SKILL.md) | Makes a narrated, animated teaching video from your own course materials: every fact traced to an exact quote, questions that stop the video until you answer, captions, chapters and sources. A checker refuses unbacked facts, wrong arithmetic and invented quotes, and gives a numbered fix for each, so a weaker model's draft cannot pass as checked. [Paste a lesson into the player](https://baney75.github.io/myelinate/templates/video-player.html#load). |
 | [progress](skills/progress/SKILL.md) | The moments around the learning: wrapping up a session, coming back after a gap, not being able to start, "how am I doing?" and "am I ready?", answered from what you did unaided and never with a predicted score. |
 | [debrief](skills/debrief/SKILL.md) | A graded exam, quiz or practical came back. Sorts every miss by its cause (never studied, recognized but not recalled, recalled but not used, mixed up look-alikes, format, lost it, slip, time), checks each with a cold retest, ties the causes to how you studied, and schedules one change for the next exam. Keeps a ledger across exams if you want one. |
 | [teacher](skills/teacher/SKILL.md) | For teachers and trainers: unit and lesson plans built backward from the outcome, rubrics with observable levels, quizzes and differentiation. |

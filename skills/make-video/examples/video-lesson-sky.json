@@ -1,0 +1,556 @@
+{
+ "format": "myelinate-video/1",
+ "title": "Why is the sky blue?",
+ "subtitle": "And why sunsets turn red",
+ "lessonType": "concept",
+ "wpm": 145,
+ "voice": {
+  "lang": "en-US"
+ },
+ "learner": {
+  "kind": "self-study",
+  "purpose": "Understand everyday light and color",
+  "level": "Curious adult, no physics background",
+  "course": "",
+  "materials": [],
+  "target": "",
+  "notation": ""
+ },
+ "objectives": [
+  "Explain why air makes the daytime sky look blue",
+  "Use the same idea to explain red sunsets"
+ ],
+ "question": "If sunlight looks white, why is the sky blue?",
+ "claims": [
+  {
+   "id": "c1",
+   "text": "Sunlight looks white but holds all the colors of the rainbow.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "The light from the Sun looks white. But it is really made up of all the colors of the rainbow.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c2",
+   "text": "A prism separates white light into its colors.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "When white light shines through a prism, the light is separated into all its colors.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c3",
+   "text": "Blue light waves are shorter than red light waves.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "Blue light waves are shorter than red light waves.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c4",
+   "text": "Light travels in a straight line unless something reflects, bends or scatters it.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "All light travels in a straight line unless something gets in the way and does one of these things",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c5",
+   "text": "The gases and particles in air scatter sunlight in all directions.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "Sunlight reaches Earth's atmosphere and is scattered in all directions by all the gases and particles in the air.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c6",
+   "text": "Blue is scattered more than other colors because its waves are shorter.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "Blue is scattered more than other colors because it travels as shorter, smaller waves.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c7",
+   "text": "That scattered blue light is why the sky usually looks blue.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "This is why we see a blue sky most of the time.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c8",
+   "text": "Light from low in the sky has passed through more air than light from overhead.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "The sunlight reaching us from low in the sky has passed through even more air than the sunlight reaching us from overhead.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c9",
+   "text": "Near the horizon the sky fades to a lighter blue or white.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "Closer to the horizon, the sky fades to a lighter blue or white.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c10",
+   "text": "At sunset even more blue is scattered, so reds and yellows pass straight through.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "Even more of the blue light is scattered, allowing the reds and yellows to pass straight through to your eyes.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c11",
+   "text": "Dust, pollution and other aerosols also scatter blue light, which can make the sky look red.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "The sky appears red because small particles of dust, pollution, or other aerosols also scatter blue light, leaving more purely red and yellow light to go through the atmosphere.",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c12",
+   "text": "Near the horizon the air scatters the blue light again and again, in many directions.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "the air molecules have scattered and re scattered the blue light many times in many directions",
+   "file": "video-lesson-sky-source.md"
+  },
+  {
+   "id": "c13",
+   "text": "The ground also reflects and scatters light, and all this scattering mixes the colors back toward white.",
+   "from": "outside",
+   "where": "https://spaceplace.nasa.gov/blue-sky/en/",
+   "source": "NASA Space Place, Why Is the Sky Blue?",
+   "checked": "2026-11-22",
+   "quote": "Also, the surface of Earth has reflected and scattered the light. All this scattering mixes the colors together again so we see more white and less blue.",
+   "file": "video-lesson-sky-source.md"
+  }
+ ],
+ "misconception": {
+  "wrong": "Only blue light gets scattered.",
+  "right": "All colors scatter. Blue scatters far more than red.",
+  "claims": [
+   "c5",
+   "c6"
+  ]
+ },
+ "scenes": [
+  {
+   "id": "s1",
+   "title": "The question",
+   "role": "intro",
+   "beats": [
+    {
+     "say": "Look up on a clear afternoon and the sky is blue.",
+     "talk": true,
+     "show": [
+      {
+       "type": "title",
+       "text": "Why is the sky blue?",
+       "sub": "And why sunsets turn red"
+      }
+     ]
+    },
+    {
+     "say": "Yet the light filling it comes from the Sun, and sunlight looks white.",
+     "claims": [
+      "c1"
+     ]
+    },
+    {
+     "say": "So where does the blue come from?",
+     "talk": true,
+     "show": [
+      {
+       "type": "question",
+       "text": "If sunlight looks white, why is the sky blue?"
+      }
+     ]
+    },
+    {
+     "say": "One idea answers it, and the same idea explains the red sunset.",
+     "talk": true
+    }
+   ]
+  },
+  {
+   "id": "s2",
+   "title": "Three words first",
+   "role": "names",
+   "beats": [
+    {
+     "say": "Before the explanation, learn the three words it uses.",
+     "talk": true
+    },
+    {
+     "say": "White sunlight is really a mix of every color of the rainbow.",
+     "claims": [
+      "c1"
+     ],
+     "show": [
+      {
+       "type": "term",
+       "word": "White light",
+       "meaning": "All the rainbow's colors mixed"
+      }
+     ]
+    },
+    {
+     "say": "A prism shows this by spreading white light into its colors.",
+     "claims": [
+      "c2"
+     ],
+     "show": [
+      {
+       "type": "arrow",
+       "from": "White light",
+       "to": "Band of colors",
+       "label": "prism"
+      }
+     ]
+    },
+    {
+     "pause": {
+      "ask": "Predict before you hear it: which color travels in shorter waves?",
+      "choices": [
+       "Red",
+       "Blue"
+      ],
+      "answer": "Blue",
+      "why": "Blue light waves are shorter than red light waves.",
+      "claims": [
+       "c3"
+      ]
+     }
+    },
+    {
+     "say": "Each color travels as a wave, and blue waves are shorter than red ones.",
+     "claims": [
+      "c3"
+     ],
+     "show": [
+      {
+       "type": "term",
+       "word": "Wavelength",
+       "meaning": "Length of one wave. Blue short, red long."
+      }
+     ]
+    },
+    {
+     "say": "Light goes straight unless something reflects it, bends it, or scatters it.",
+     "claims": [
+      "c4"
+     ],
+     "show": [
+      {
+       "type": "term",
+       "word": "Scatter",
+       "meaning": "Send light off in many directions"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s3",
+   "title": "Air scatters blue more",
+   "role": "explain",
+   "beats": [
+    {
+     "say": "Sunlight enters the atmosphere and runs into gas molecules and tiny particles.",
+     "claims": [
+      "c5"
+     ],
+     "show": [
+      {
+       "type": "arrow",
+       "from": "Sunlight",
+       "to": "Gas molecules and particles",
+       "label": "enters the air"
+      }
+     ]
+    },
+    {
+     "say": "They knock the light off in all directions.",
+     "claims": [
+      "c5"
+     ]
+    },
+    {
+     "say": "Blue gets scattered more than the other colors, because its waves are shorter.",
+     "claims": [
+      "c6"
+     ],
+     "show": [
+      {
+       "type": "label",
+       "text": "Shorter wave, more scattering"
+      }
+     ]
+    },
+    {
+     "say": "So scattered blue reaches your eyes from all over the sky.",
+     "claims": [
+      "c7"
+     ],
+     "show": [
+      {
+       "type": "quote",
+       "text": "This is why we see a blue sky most of the time.",
+       "claim": "c7"
+      }
+     ]
+    },
+    {
+     "say": "That blue was knocked off its straight path, so it reaches you from all over the sky, not just the Sun.",
+     "claims": [
+      "c4",
+      "c5"
+     ]
+    },
+    {
+     "pause": {
+      "ask": "Light from low in the sky crosses more air than light from overhead. Predict: is the sky near the horizon a deeper blue or a paler blue?",
+      "choices": [
+       "Deeper blue",
+       "Paler blue or white"
+      ],
+      "answer": "Paler blue or white",
+      "why": "That light crossed more air, so the blue was scattered again and again, and the ground scattered light too. All that mixing brings the colors back toward white.",
+      "claims": [
+       "c8",
+       "c9",
+       "c12",
+       "c13"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s4",
+   "title": "A common slip",
+   "role": "misconception",
+   "beats": [
+    {
+     "say": "A common slip is saying that only blue light gets scattered.",
+     "talk": true,
+     "show": [
+      {
+       "type": "compare",
+       "left": "The slip",
+       "right": "What the source says",
+       "leftItems": [
+        "Only blue scatters"
+       ],
+       "rightItems": [
+        "All colors scatter",
+        "Blue scatters far more"
+       ]
+      }
+     ]
+    },
+    {
+     "say": "The gases and particles in air scatter sunlight in every direction.",
+     "claims": [
+      "c5"
+     ]
+    },
+    {
+     "say": "Blue simply scatters more than the rest, so it is more, not only.",
+     "claims": [
+      "c6"
+     ],
+     "show": [
+      {
+       "type": "highlight",
+       "target": "Blue scatters far more"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "s5",
+   "title": "The red sunset",
+   "role": "example",
+   "beats": [
+    {
+     "say": "Now use the idea on a sunset.",
+     "talk": true
+    },
+    {
+     "say": "When the Sun is low, its light crosses far more air to reach you.",
+     "claims": [
+      "c8"
+     ],
+     "show": [
+      {
+       "type": "compare",
+       "left": "Sun overhead",
+       "right": "Sun at the horizon",
+       "leftItems": [
+        "Short path",
+        "Blue sky all around"
+       ],
+       "rightItems": [
+        "Long path through air",
+        "Reds and yellows through"
+       ]
+      }
+     ]
+    },
+    {
+     "say": "Along that long path, even more of the blue is scattered away.",
+     "claims": [
+      "c10"
+     ],
+     "show": [
+      {
+       "type": "highlight",
+       "target": "Long path through air"
+      }
+     ]
+    },
+    {
+     "say": "What is left, the reds and yellows, passes straight through to your eyes.",
+     "claims": [
+      "c10"
+     ],
+     "show": [
+      {
+       "type": "arrow",
+       "from": "Low Sun",
+       "to": "Reds and yellows",
+       "label": "blue scattered out"
+      }
+     ]
+    },
+    {
+     "pause": {
+      "ask": "Smoke and dust add more small particles to the air. Predict what they do to a sunset, and why.",
+      "answer": "They can make it redder, because the particles also scatter blue light and leave more red and yellow.",
+      "why": "Dust, pollution and other aerosols also scatter blue light, leaving more red and yellow light.",
+      "claims": [
+       "c11"
+      ]
+     }
+    }
+   ]
+  },
+  {
+   "id": "s6",
+   "title": "One idea, two skies",
+   "role": "summary",
+   "beats": [
+    {
+     "say": "Here is the whole chain.",
+     "talk": true
+    },
+    {
+     "say": "Sunlight carries every color.",
+     "claims": [
+      "c1"
+     ],
+     "show": [
+      {
+       "type": "step",
+       "text": "Sunlight = all colors"
+      }
+     ]
+    },
+    {
+     "say": "Air scatters the short blue waves more than the other colors.",
+     "claims": [
+      "c6"
+     ],
+     "show": [
+      {
+       "type": "step",
+       "text": "Air scatters blue more"
+      }
+     ]
+    },
+    {
+     "say": "Overhead, that scattered blue fills the sky.",
+     "claims": [
+      "c7"
+     ],
+     "show": [
+      {
+       "type": "step",
+       "text": "Scattered light: blue sky"
+      }
+     ]
+    },
+    {
+     "say": "At sunset, the long path scatters the blue away, and red gets through.",
+     "claims": [
+      "c10"
+     ],
+     "show": [
+      {
+       "type": "step",
+       "text": "Leftover light: red sun"
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "recall": {
+  "ask": "Look away from the screen. In two or three sentences, explain why the sky is blue and why sunsets are red.",
+  "points": [
+   "Sunlight holds every color.",
+   "Air scatters short blue waves more than the other colors, so blue reaches you from all over the sky.",
+   "At sunset light crosses much more air, the blue is scattered away, and reds and yellows get through."
+  ]
+ },
+ "practice": {
+  "ask": "At noon the Sun looks white. At sunset it looks red. Explain the difference with this lesson's idea.",
+  "answer": "At sunset the Sun's light crosses far more air, so much more of the blue is scattered away and mostly red and yellow light comes straight through.",
+  "steps": [
+   "Sunlight holds every color, so at noon it looks white.",
+   "At sunset its light takes a long path through the air.",
+   "Along that path the blue is scattered away, and red and yellow get through."
+  ],
+  "claims": [
+   "c1",
+   "c8",
+   "c10"
+  ]
+ },
+ "review": {
+  "by": "independent reviewer agent",
+  "date": "2026-11-22",
+  "result": "pass",
+  "notes": "Reviewer asked to separate scattered skylight from the direct sunbeam, give a real reason on the horizon pause, keep the sunset comparison about light paths, and fix a backwards arrow label. All four were fixed with new quoted claims c12 and c13. A violet caveat was left out because the source does not cover it. A second review (verify skill, fresh agent) asked for physics wording that does not say blue scatters the most, a practice question that does not repeat a pause, and summary steps that name scattered and leftover light; all three were made."
+ }
+}

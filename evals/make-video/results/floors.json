@@ -1,0 +1,6 @@
+{
+ "note": "Set 2026-11-23 from runs4 (3.2.0): LFM3-1.7B wrote 18 skill drafts over 6 rounds on three lessons. None reached READY; 2 of 3 lessons ended with a playable best draft (46 problems left between them), and the blind Opus judge preferred the skill lesson in 1 of 3 pairs. Floors only move up. Lowering one needs a written reason here and in the pull request.",
+ "protocol": {"model": "LFM3-1.7B Q4_K_M (llama-server, CPU)", "rounds": 6},
+ "scenarios": ["equations-class", "osmosis-class", "seasons-self"],
+ "skill": {"min_ready": 0, "min_playable": 2, "max_problems_left": 46, "min_wins": 1, "max_teaches_false": 1}
+}

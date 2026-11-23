@@ -35,9 +35,14 @@ required = ['myelinate.md', 'SKILL.md', 'agents/openai.yaml', 'references/eviden
             'hooks/hooks.json', 'hooks/session-start.sh', '.cursor-plugin/plugin.json', 'gemini-extension.json', 'references/learn-anything.md', 'templates/inline-widgets.html', 'commands/wrap.md', 'tests/inline_journey.py', 'references/learner-record.md', 'skills/myelinate/SKILL.md', 'llms.txt', 'scripts/make_pdf.py',
             'scripts/package.py', 'examples/practice-test-oxygen.html',
             'templates/flashcards-deck.html', 'tests/flashcards_journey.py',
-            'templates/exam-game.html', 'tests/game_journey.py', 'scripts/yt.py', 'tests/yt_tool.py']
+            'templates/exam-game.html', 'tests/game_journey.py', 'scripts/yt.py', 'tests/yt_tool.py',
+            'templates/video-player.html', 'templates/video-lesson.json', 'examples/video-lesson-sky.json',
+            'scripts/video_check.py', 'scripts/video_export.py', 'tests/video_check_test.py', 'tests/video_journey.py',
+            'tests/video_export_test.py', 'evals/make-video/small_model.py', 'evals/make-video/judge.py', 'evals/make-video/attacks.py',
+            'scripts/video_voice.py', 'scripts/voice_check.py', 'tests/voice_check_test.py',
+            'references/narration.md', 'examples/video-lesson-sky-source.md']
 SUBSKILLS = ['teach', 'tutor', 'assignment', 'project', 'code', 'assess', 'course-project', 'notes', 'lab', 'print',
-             'flashcards', 'game', 'memory-hooks', 'study-plan', 'find-media', 'video', 'progress', 'teacher', 'verify', 'debrief']
+             'flashcards', 'game', 'memory-hooks', 'study-plan', 'find-media', 'video', 'make-video', 'progress', 'teacher', 'verify', 'debrief']
 required += [f'skills/{name}/SKILL.md' for name in SUBSKILLS]
 # Claude Code resolves a plugin name to its command before its skill, so a command named like a
 # skill hides the skill: myelinate:video loaded commands/video.md and never the video skill.
@@ -205,6 +210,7 @@ for manifest in ('.claude-plugin/plugin.json', '.codex-plugin/plugin.json'):
 for rel, needles in (('myelinate.md', ('the whole small version', 'Outside your material:', 'Never say you checked, verified, searched or watched')),
                      ('skills/find-media/SKILL.md', ('"Give me the link" gets a link, every time', 'youtube.com/results?search_query=', 'oembed', 'Never say you verified a channel')),
                      ('skills/video/SKILL.md', ('Recall comes before anything you write', 'Timestamps come from the transcript')),
+                     ('skills/make-video/SKILL.md', ('Never narrate a fact that is not in `claims`', 'If no line says it, delete the claim', 'Never write `"verification"`', 'Never show an answer before its pause', 'Never deliver while the checker prints `NOT READY`', 'Say symbols as words')),
                      ('skills/progress/SKILL.md', ('What only looks learned', 'Never predict a grade')),
                      ('skills/teacher/SKILL.md', ('Outcome and evidence come before activities', 'Every level describes what'))):
     text = (ROOT / rel).read_text()
