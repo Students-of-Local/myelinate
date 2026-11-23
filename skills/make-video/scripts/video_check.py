@@ -928,11 +928,11 @@ def check(lesson, sources=None, final=False, today=None):
         """A sentence that cites a calc, or sits in a worked or faded example, says its small numbers as facts."""
         return role in ('worked', 'faded') or any(ref in calc_pool for ref in refs)
 
-    def numbers_ok(where, text, refs, what, role=None):
+    def numbers_ok(where, text, refs, what, role=None, plain=''):
         """One problem per text, listing every number nothing backs, with calc lines to paste where
         two of the text's own numbers (or a cited source's) give it by + - * /."""
         pool = backing(refs)
-        nums = numbers_in(text, small=works_math(refs, role))
+        nums = numbers_in(plain) + numbers_in(text, small=works_math(refs, role))
         bad = [n for n in nums if not backs(n, pool)]
         if not bad:
             return
@@ -990,9 +990,9 @@ def check(lesson, sources=None, final=False, today=None):
             r.error(where, f'copies the worked example about the sky ("{hit}"), and your materials never say it.',
                     'Delete it. Write only about your own topic, from the learner\'s files.')
 
-    def coverage(where, text, refs, role=None):
-        st = stems(text)
-        nums = numbers_in(text, small=works_math(refs, role))
+    def coverage(where, text, refs, role=None, plain=''):
+        st = stems(plain + ' ' + text)
+        nums = numbers_in(plain) + numbers_in(text, small=works_math(refs, role))
         for ref in refs:
             if ref in ids:
                 c = ids[ref]
@@ -1054,9 +1054,12 @@ def check(lesson, sources=None, final=False, today=None):
                     elif p.get('answer') not in ch:
                         r.error(where, 'pause "answer" is not one of its "choices".', 'Make "answer" exactly match one of the choices.')
                 refs = need_claims(where, p.get('claims'), True, 'The pause answer')
-                ptext = ' '.join(str(p.get(k, '')) for k in ('ask', 'answer', 'why')) + ' ' + ' '.join(map(str, ch if isinstance(ch, list) else []))
-                numbers_ok(where, ptext, refs, 'The pause')
-                coverage(where, ptext, refs)
+                # Small spelled numbers in the question often count the task ("add the three terms"); the
+                # answer, the why and the choices carry the arithmetic, so only there are they read as facts.
+                pans = ' '.join(str(p.get(k, '')) for k in ('answer', 'why')) + ' ' + ' '.join(map(str, ch if isinstance(ch, list) else []))
+                ptext = str(p.get('ask', '')) + ' ' + pans
+                numbers_ok(where, pans, refs, 'The pause', role, plain=str(p.get('ask', '')))
+                coverage(where, pans, refs, role, plain=str(p.get('ask', '')))
                 copied(where, ptext)
                 ans = norm(p.get('answer', ''))
                 if ans and (re.search(r'\d', ans) or len(ans.split()) >= 2 or len(ans) >= 4):
