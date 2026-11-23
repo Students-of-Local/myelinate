@@ -113,16 +113,18 @@ def screen_words(text):
 
 
 SUPERSCRIPT = str.maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹⁻', '0123456789-')
-NORM_TOKEN = re.compile(r'(?:(?<![a-z0-9])-)?\d+(?:\.\d+)+(?![a-z0-9])|(?<![a-z0-9])-\d+(?![a-z0-9.])|\^-?\d+|[a-z0-9]+|<=|>=|[<>=%±]')
+NORM_TOKEN = re.compile(r'(?:(?<![a-z0-9])-)?\d+(?:\.\d+)+(?![a-z0-9])|(?<![a-z0-9])-\d+(?![a-z0-9.])|\^-?\d+|[a-z0-9]+|<=|>=|[<>=%±+*/]|(?<=\s)-(?=\s)')
 
 
 def norm(text):
     """Words, numbers and the marks that change meaning, as space-separated tokens. Ligatures, accents, quote
     marks, typographic dashes and PDF line-break hyphens are undone. Kept: a minus sign on a number (-30.5 is not
-    30.5), decimals as one token, exponents (10⁵ is 10 ^5, not 105), < > <= >= = % ±, and Greek letters by name."""
+    30.5), decimals as one token, exponents (10⁵ is 10 ^5, not 105), < > <= >= = % ± + * / (× and ÷ too), a
+    minus with spaces around it (x - y), and Greek letters by name. A hyphen inside a word is not kept."""
     text = str(text).replace('\u00ad', '')
     text = re.sub(r'[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+', lambda m: '^' + m.group(0).translate(SUPERSCRIPT), text)
     text = unicodedata.normalize('NFKC', text).replace('\u2212', '-').replace('≤', '<=').replace('≥', '>=')
+    text = text.replace('×', '*').replace('\u22c5', '*').replace('÷', '/')
     text = re.sub(r'(\w)-[ \t]*\r?\n\s*(\w)', r'\1\2', text)
     text = ''.join(ch for ch in unicodedata.normalize('NFKD', text) if not unicodedata.combining(ch)).lower()
     text = ''.join(f' {unicodedata.name(ch).split()[-1].lower()} ' if '\u0370' <= ch <= '\u03ff' and unicodedata.name(ch, '').startswith('GREEK') else ch
@@ -261,6 +263,9 @@ def numbers_in(text, approx_ok=False, small=False):
         before = ' '.join(toks[max(0, i - 2):i])
         prev = toks[i - 1] if i else ''
         lone_one = j - i == 1 and toks[i] == 'one' and prev not in MATH_BEFORE
+        if toks[j:j + 2] == ['o', 'clock']:  # "four o'clock": a time or the plant's name, not a count
+            i = max(j, i + 1)
+            continue
         if (value >= 11 or seen_point or pct or big or (small and j > i and not lone_one)) and not ORDINAL_BEFORE.search(before):
             neg = prev == 'negative'
             out.append((-float(value) if neg else float(value), len(dec_digits), pct, bool(APPROX_BEFORE.search(before)),
@@ -883,8 +888,8 @@ def check(lesson, sources=None, final=False, today=None):
         for ref in refs:
             if ref in ids:
                 q = str(ids[ref].get('quote', ''))
-                pool += [n[0] for n in numbers_in(q)]
-                pool += [n[0] / 100 for n in numbers_in(q) if n[2]]
+                pool += [n[0] for n in numbers_in(q, small=True)]
+                pool += [n[0] / 100 for n in numbers_in(q, small=True) if n[2]]
                 pool += [float(m) for m in re.findall(r'(?<![\w.])(\d+(?:\.\d+)?)(?=[A-Za-z])', q)]  # "2pq" backs 2
             elif ref in calc_pool:
                 k = calc_pool[ref]
@@ -925,8 +930,10 @@ def check(lesson, sources=None, final=False, today=None):
                     'or cite the claim whose quote states it. Never guess a point.')
 
     def works_math(refs, role=None):
-        """A sentence that cites a calc, or sits in a worked or faded example, says its small numbers as facts."""
-        return role in ('worked', 'faded') or any(ref in calc_pool for ref in refs)
+        """A sentence says its small numbers as facts when it cites a calc, sits in a worked or faded example, or
+        cites a claim whose quote has a number ("three chambers" against a quote saying four)."""
+        return (role in ('worked', 'faded') or any(ref in calc_pool for ref in refs)
+                or any(ref in ids and numbers_in(str(ids[ref].get('quote', '')), small=True) for ref in refs))
 
     def numbers_ok(where, text, refs, what, role=None, plain=''):
         """One problem per text, listing every number nothing backs, with calc lines to paste where

@@ -278,5 +278,19 @@ with sync_playwright() as p:
     check(not pg_errors, f'no page errors on a promoted badge: {pg_errors}')
     ctx.close()
 
+    # Regression (review r2 sol-F1): choices were compared with signs and symbols stripped, so "5" passed for "-5".
+    for choices, answer, wrong in ((['-5', '5'], '-5', '5'), (['p < 0.05', 'p > 0.05'], 'p > 0.05', 'p < 0.05')):
+        sky = json.loads(SKY.read_text())
+        first = next(b['pause'] for s in sky['scenes'] for b in s['beats'] if 'pause' in b)
+        first.update(choices=choices, answer=answer)
+        pg, pg_errors, _, ctx = open_page(browser, variant(sky))
+        pg.click('#go')
+        reach_pause(pg, [i for i in pg.evaluate('__video.timeline()') if i['kind'] == 'pause'][0])
+        pg.keyboard.press(str(choices.index(wrong) + 1))
+        check(pg.locator('#pres .verdict.no').count() == 1, f'choosing {wrong!r} when the answer is {answer!r} is wrong')
+        marked = pg.locator('.choice.right span').all_inner_texts()
+        check(marked == [answer], f'only {answer!r} is marked right ({marked})')
+        ctx.close()
+
     browser.close()
 print('All video journey checks passed.')

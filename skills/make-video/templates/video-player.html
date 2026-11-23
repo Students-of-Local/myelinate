@@ -1066,9 +1066,11 @@ function openPause(pz) {
   const why = `<span>${esc(q.why)}</span>${q.claims && q.claims.length ? `<span class="src">Source: ${claimRefs(q.claims)}</span>` : ''}`;
   if (choices) {
     ov.querySelectorAll('.choice').forEach(b => b.onclick = () => {
-      const pick = choices[+b.dataset.i], ok = norm(pick) === norm(q.answer);
+      // Exact text: the checker makes "answer" one of the choices, and "-5" and "5" or "p < 0.05" and "p > 0.05" must differ.
+      const same = c => String(c).trim() === String(q.answer).trim();
+      const pick = choices[+b.dataset.i], ok = same(pick);
       b.classList.add(ok ? 'right' : 'wrong');
-      if (!ok) ov.querySelectorAll('.choice').forEach(x => { if (norm(choices[+x.dataset.i]) === norm(q.answer)) x.classList.add('right'); });
+      if (!ok) ov.querySelectorAll('.choice').forEach(x => { if (same(choices[+x.dataset.i])) x.classList.add('right'); });
       done(`<div class="verdict ${ok ? 'ok' : 'no'}"><b>${ok ? 'Right.' : 'Not this time. It is: ' + esc(q.answer) + '.'}</b>${why}</div>`, ok ? 'right' : 'wrong');
     });
     ov.querySelector('.choice').focus();

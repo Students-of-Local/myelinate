@@ -481,6 +481,15 @@ def old_rules():
     out = WORK / 'bad.html'
     r = run(write('bad.json', bad), '--build', out)
     check(r.returncode == 1 and not out.exists(), f'--build refuses while there are errors and writes nothing (exit {r.returncode})')
+    # Regression (review r2 first-F1): with no second reader the skill builds without --final, and that must work.
+    alone = sky()
+    out = WORK / 'alone.html'
+    r = run(write('alone.json', alone), '--sources', SKY_SRC, '--build', out)
+    built = out.read_text() if out.exists() else ''
+    check(r.returncode == 0 and out.exists() and 'Explanations not independently reviewed' in built,
+          f'a lesson with no review builds with --sources and says the explanations were not reviewed (exit {r.returncode})')
+    r = run(write('alone.json', alone), '--final', '--sources', SKY_SRC, '--build', WORK / 'alone-final.html')
+    check(r.returncode == 1 and not (WORK / 'alone-final.html').exists(), f'--final still refuses a lesson with no review (exit {r.returncode})')
     good = reviewed(sky())
     good['subtitle'] = 'And why sunsets turn red </script><script>alert(1)</script> <!-- x'
     check(problems(good, SKY_SOURCES, final=True)[0] == [], 'fixture: a subtitle holding </script> is still a clean lesson')
@@ -754,11 +763,18 @@ def exact_marks():
             ('a flipped ≤', 'The dose stays ≤ 10 milligrams per kilogram each day.', 'The dose stays ≥ 10 milligrams per kilogram each day.'),
             ('a swapped Greek letter', 'The α level for this test is set at 0.05 by convention.', 'The β level for this test is set at 0.05 by convention.'),
             ('an exponent read as digits', 'Avogadro gives about 6.02 × 10²³ particles per mole.', 'Avogadro gives about 6.02 × 1023 particles per mole.'),
-            ('a decimal read as thousands', 'The pond held 1.500 liters of water that morning.', 'The pond held 1,500 liters of water that morning.')):
+            ('a decimal read as thousands', 'The pond held 1.500 liters of water that morning.', 'The pond held 1,500 liters of water that morning.'),
+            # Regression (review r2 sol-F2): + * / and a spaced minus were dropped, so x + y matched x / y.
+            ('addition read as division', 'For this rule, x + y = 10 in every case.', 'For this rule, x / y = 10 in every case.'),
+            ('subtraction read as multiplication', 'For this rule, x - y = 10 in every case.', 'For this rule, x * y = 10 in every case.'),
+            ('a times sign dropped', 'The area is 3 \u00d7 4 square meters here.', 'The area is 34 square meters here.'),
+            ('a division sign dropped', 'The ratio is 12 \u00f7 4 for this mix.', 'The ratio is 12 4 for this mix.')):
         check(not vc.has(vc.norm(source), vc.norm(quote)), f'a quote with {name} is not found in the source ({vc.norm(quote)!r} in {vc.norm(source)!r})')
         check(vc.has(vc.norm(source), vc.norm(source.split(' ', 1)[1])), f'the unchanged quote is still found ({name})')
     check(vc.has(vc.norm('A herd of 1,500 frogs lived there.'), vc.norm('A herd of 1500 frogs lived there.')), 'a thousands comma is optional in a quote')
     check(vc.norm('µm') == vc.norm('μm'), 'the micro sign and Greek mu read the same')
+    check(vc.norm('The area is 3 \u00d7 4 here.') == vc.norm('The area is 3 * 4 here.'), 'a times sign reads as *')
+    check(vc.has(vc.norm('A well-known rule of thumb holds.'), vc.norm('A well known rule of thumb holds.')), 'a hyphen inside a word is not a minus')
 
     def nums(text, small=False):
         return [n[0] for n in vc.numbers_in(text, small=small)]
@@ -771,6 +787,7 @@ def exact_marks():
     check(nums('then divide by three') == [], 'small=False leaves "three" to narration')
     check(nums('one of the bags', small=True) == [], 'a lone "one" is not a number')
     check(nums('multiply by one', small=True) == [1.0], '"one" after a math word is a number')
+    check(nums("the four o'clock plants", small=True) == [], "\"four o'clock\" is a name or a time, not a count")
 
     d = osmosis()
     d['claims'][3]['text'] = 'Normal saline is -0.9 percent salt and isotonic to red blood cells.'
@@ -782,6 +799,15 @@ def exact_marks():
     d = osmosis()
     beat(d, 1, 0)['say'] = 'In a hypertonic solution, water leaves the cell and it shrinks, one way only.'
     absent('a small spelled number in a plain sentence is narration', d, "states 'one'", OSMOSIS_SOURCES)
+    # Regression (review r2 second-S1): a fact sentence saying "three" against a quote saying "four" passed.
+    heart = write('heart.md', 'The human heart has four chambers, two atria and two ventricles.')
+    srcs = vc.load_sources([OSMOSIS_DIR, TRANSCRIPT, heart])
+    d = osmosis()
+    d['claims'].append(claim('c6', 'The heart has four chambers.', 'heart.md', 'Notes, heart', 'The human heart has four chambers, two atria and two ventricles.'))
+    d['scenes'][1]['beats'].insert(1, {'say': 'The human heart has three chambers.', 'claims': ['c6']})
+    expect('a small spelled number that contradicts its quote', d, "states 'three', which no cited", 'Scene 2', srcs)
+    d['scenes'][1]['beats'][1]['say'] = 'The human heart has four chambers.'
+    absent('the small spelled number its quote gives', d, 'which no cited', srcs)
     d = osmosis()
     beat(d, 2, 3)['pause']['ask'] = 'Add the salt in the four bags, then say the total. How many grams is that?'
     absent('a small number that counts the task in a pause question', d, 'The pause states', OSMOSIS_SOURCES)

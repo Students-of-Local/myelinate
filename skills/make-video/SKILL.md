@@ -166,7 +166,7 @@ Code can match quotes and numbers. It cannot judge whether an explanation teache
 
 4. Run the checker with `--final`. It fails without `--sources` and without a passing review.
 
-If you are the only reader, you are not a second reader: leave `review` out. The badge then says *Explanations not independently reviewed*. Say so in your reply too. Never write a review that did not happen.
+If you are the only reader, you are not a second reader: leave `review` out and build **without** `--final` (step 9). The badge then says *Explanations not independently reviewed*. Say so in your reply too. Never write a review that did not happen.
 
 ## 8. Narration voice
 
@@ -188,7 +188,7 @@ A changed sentence gets a new clip name, so a stale clip never plays; the checke
 ## 9. Build and deliver
 
 <!-- local-tools -->
-**With a shell:** `python3 scripts/video_check.py lesson.json --sources sources/ --final --build video.html` signs the lesson and writes the finished video (it refuses while there are problems). Open it, play the first minute, answer one pause, and look at it at phone width. Then publish it where the learner can open it, or give them the file.
+**With a shell:** `python3 scripts/video_check.py lesson.json --sources sources/ --build video.html` signs the lesson and writes the finished video (it refuses while there are problems). Add `--final` only when step 7 recorded a real review; without one, `--final` refuses. Open it, play the first minute, answer one pause, and look at it at phone width. Then publish it where the learner can open it, or give them the file.
 <!-- /local-tools -->
 
 **With files but no shell:** copy `templates/video-player.html` and replace only the JSON between `<script type="application/json" id="lesson">` and `</script>`. Write every `<` inside the JSON as `\u003c`. Never edit the rest of the page. It shows *Unverified*, because only the checker can sign it.
@@ -204,7 +204,8 @@ A changed sentence gets a new clip name, so a stale clip never plays; the checke
 End your reply with one line:
 
 - **prepared**: the file is written; the checker did not print READY with `--sources`.
-- **checked**: the checker printed READY with `--sources --final`, so every quote matched and a second reader passed the explanations.
+- **checked**: the checker printed READY with `--sources`, so every quote matched and every number was recomputed. No second reader passed the explanations: say so.
+- **reviewed**: the checker printed READY with `--sources --final`, so a second reader also passed the explanations.
 - **tested**: you also opened the video and played it.
 
 Then: what was checked against the learner's own materials and what was not, and which voice narrates it.
