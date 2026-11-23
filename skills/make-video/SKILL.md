@@ -145,7 +145,7 @@ Things you can `show`:
 python3 scripts/video_check.py lesson.json --sources sources/
 ```
 
-It prints numbered problems, each with a **Fix:** line. Fix exactly what it says, in order, then run it again. Repeat until it prints `READY`. Never stop while it prints `NOT READY`. Always give `--sources` when you have any source files: without it, nothing is matched and the badge says *Unverified*.
+It prints numbered problems, each with a **Fix:** line. Fix exactly what it says, in order, then run it again. Change only the lines it names and keep every other scene and beat: a lesson with fewer scenes is not a better one. Never stand in for a part with `...`. Repeat until it prints `READY`. Never stop while it prints `NOT READY`. Always give `--sources` when you have any source files: without it, nothing is matched and the badge says *Unverified*.
 
 What it checks: every quote is in the file it names; every timestamp is within 20 seconds of its quote; every calc is right; every number said or shown comes from a cited quote or calc; every cited claim shares key words with its sentence; every sentence in the sources that says the opposite of a claim is flagged in the video.
 <!-- /local-tools -->

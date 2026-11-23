@@ -995,7 +995,7 @@ def check(lesson, sources=None, final=False, today=None):
                     if set(run.split()) & ex_topic - src_words and not any(f' {run} ' in src for src in src_runs_text)), None)
         if hit:
             r.error(where, f'copies the worked example about the sky ("{hit}"), and your materials never say it.',
-                    'Delete it. Write only about your own topic, from the learner\'s files.')
+                    'Rewrite it about your own topic, citing a claim from the learner\'s files. If their files have nothing for this beat, delete only this beat and keep the rest of the scene.')
 
     def coverage(where, text, refs, role=None, plain=''):
         st = stems(plain + ' ' + text)
@@ -1385,7 +1385,8 @@ class _Unfixable(Exception):
 class _Loose:
     """A forgiving JSON reader for the slips small models make. It repairs only what has one reading:
     a comma before } or ], a doubled comma, a stray ", after a value, a missing comma between items, a { or [ left open, a doubled
-    closing quote, a line break inside text, and words before or after the object. Anything else is unfixable."""
+    closing quote, a line break inside text, a 'single-quoted' value, ... after a number (3.333...), and words or a stray } or ]
+    before or after the object. Anything else is unfixable."""
 
     NUM = re.compile(r'-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?')
 
@@ -1400,7 +1401,7 @@ class _Loose:
             self.i += 1
         return self.t[self.i] if self.i < len(self.t) else ''
 
-    def value(self):
+    def value(self, in_list=False):
         c = self.peek()
         if c == '{':
             return self.obj()
@@ -1412,9 +1413,24 @@ class _Loose:
             if self.t.startswith(word, self.i):
                 self.i += len(word)
                 return val
+        if c == "'":
+            # A 'single-quoted' value: one reading only when it closes on the same line and the next
+            # character ends the value, so an apostrophe inside it ('Earth's tilt') stays unfixable.
+            j = self.t.find("'", self.i + 1)
+            if j < 0 or '\n' in self.t[self.i:j] or not re.match(r'\s*(?:[,\]}:]|$)', self.t[j + 1:j + 40]):
+                raise _Unfixable
+            self.fix("'single quotes' around a value became \"double quotes\"")
+            val, self.i = self.t[self.i + 1:j], j + 1
+            return val
         m = self.NUM.match(self.t, self.i)
         if m:
             self.i = m.end()
+            tail = re.match(r'(?:\.\.\.|\u2026)(?=\s*[,}])', self.t[self.i:])
+            if tail and not in_list and '.' in m.group():
+                # "value": 3.333... reads one way: a repeating decimal. In a list, or after a whole
+                # number, ... stands in for left-out items, and that is refused.
+                self.fix(f'removed the ... after the number {m.group()}')
+                self.i += len(tail.group())
             return json.loads(m.group())
         raise _Unfixable
 
@@ -1506,7 +1522,7 @@ class _Loose:
             if c == '}' or not c:
                 self.fix('closed a [ left open with ]')
                 return out
-            out.append(self.value())
+            out.append(self.value(in_list=True))
             if not self.after_value(']') and self.peek() not in ']}':
                 raise _Unfixable
 
@@ -1521,7 +1537,12 @@ def _parse_loose(text, a):
     except (_Unfixable, RecursionError):
         return None, None, p.closers, p.i
     rest = re.sub(r'</?[A-Za-z_][^>]*>', '', text[p.i:]).strip()
-    if rest and not re.match(r'[A-Za-z#*>`]', rest):
+    # Only } and ] left over after a tool call's wrapper tag, like "</parameter> }", on a read that closed
+    # nothing left open: they hold no content, so the object already read is the whole lesson. Otherwise
+    # a } or ] closed it too early (an extra } mid-file leaves "]}" behind), and the caller removes it.
+    wrapper_only = (re.search(r'</?[A-Za-z_][^>]*>', text[p.i:]) and re.fullmatch(r'[\]}\s]+', rest)
+                    and not any('left open' in f for f in p.fixes))
+    if rest and not re.match(r'[A-Za-z#*>`]', rest) and not wrapper_only:
         return None, None, p.closers, p.i  # more JSON after the object: a } or ] closed it too early
     if text[:a].strip():
         p.fixes.insert(0, 'removed words before the first {')
@@ -1580,6 +1601,15 @@ def tidy(lesson, sources=None):
             if len(close) == 1:
                 c['file'] = close[0]
                 done.append(f'claim {cid}: "file" {f!r} is now {close[0]!r}, the given file it was close to')
+                f = close[0]
+        q = norm(c.get('quote')) if isinstance(c.get('quote'), str) else ''
+        if names and (f is None or (isinstance(f, str) and f not in names)) and len(q.split()) >= 4:
+            # A web address or no name at all, but the quote is word for word in exactly one given file.
+            inside = [n for n in names if has(sources[n], q)]
+            if len(inside) == 1:
+                c['file'] = inside[0]
+                done.append(f'claim {cid}: "file" ' + (f'{f!r} was not a given file' if f else 'was missing')
+                            + f'; it is now {inside[0]!r}, the one file that holds its quote')
         frm = c.get('from')
         if isinstance(frm, str) and frm not in ('course', 'outside') and re.search(r'\.\w{1,5}$|^https?://', frm.strip()):
             c['from'] = 'outside' if re.match(r'^https?://', str(c.get('where', ''))) else 'course'
@@ -1668,6 +1698,10 @@ def read_lesson(path):
         after = text[exc.pos:exc.pos + 50].replace('\n', ' ')
         print(f'NOT VALID JSON: line {exc.lineno}, column {exc.colno}: {exc.msg}.')
         print(f'  The slip is at >>> : ...{before}>>> {after}...')
+        if re.search(r'^\s*(?:\.\.\.|\u2026)\s*,?\s*$|[{\[]\s*(?:\.\.\.|\u2026)\s*[}\]]', text, re.M):
+            # runs5: five of nine broken replies stood in for parts with "..." and the draft was lost.
+            print('FIRST: the file leaves parts out with ... . JSON cannot skip anything. Write every claim, scene and beat out')
+            print('  in full; copy the parts you are not changing word for word from your last draft.')
         print('FIX: change the text at >>> . The usual causes:')
         print('  1. A missing comma between two items or two "key": value pairs.')
         print('  2. A comma right before ] or }. Delete it.')
