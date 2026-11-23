@@ -147,7 +147,8 @@ def judge_pair(scen, a, b, materials, rundir):
     prompt = JUDGE.format(message=scen['message'], materials=materials, rubric=scen['rubric'],
                           blocks=block('A', a) + '\n\n' + block('B', b))
     for _ in range(2):
-        r = subprocess.run(CLAUDE + ['--add-dir', str(rundir.resolve()), prompt], capture_output=True, text=True, timeout=900, cwd=HERE)
+        # The prompt goes on stdin: --add-dir takes several values and would swallow a prompt argument.
+        r = subprocess.run(CLAUDE + ['--add-dir', str(rundir.resolve())], input=prompt, capture_output=True, text=True, timeout=900, cwd=HERE)
         out = r.stdout
         try:
             return json.loads(out[out.find('{'): out.rfind('}') + 1])
