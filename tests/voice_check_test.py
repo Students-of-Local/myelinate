@@ -169,8 +169,14 @@ def test_numbers_and_wer():
     check(n('forty percent') == n('40%'), 'normalize: spoken and written numbers match')
     check(n('Carriers are 2pq times') == n('Carriers are 2 p q times') == 'carriers are two p q times'.split(), 'normalize: letters run together (2pq) match letters said apart')
     check(vk.wer('Carriers are 2 p q times 50,000, about 990.', 'Carriers are 2pq times 50,000, about 990.') == 0, 'WER: 2pq heard for 2 p q is not an error')
+    check(vk.wer('Step 2: p squared is 0.4225, and q squared is 0.1225.', 'Step 2, p2 is 0.4225, and q² is 0.1225.') == 0, 'WER: p2 and q² heard for p squared and q squared are not errors')
+    check(vk.wer('Chi-square compares observed counts.', 'ChiSquare compares observed counts.') == 0, 'WER: words run together (ChiSquare) are not errors')
+    check(vk.wer('Add it up: chi-square equals 2.92.', 'Add it up: kai square equals 2.92.') > 0, 'WER: a real mishearing still counts')
+    check(vk.wer('A heterozygote carries one of each allele.', 'A hetero zygote carries one of each allele.') == 0, 'WER: one word heard as two (hetero zygote) is not an error')
+    check(vk.wer('A heterozygote carries one.', 'A Heterozi goat carries one.') > 0, 'WER: a wrong split still counts')
+    check(n('Use CO2 and H2O at step 2.') == 'use co two and h two o at step two'.split(), f'normalize: only a lone letter before 2 reads as squared ({n("Use CO2 and H2O at step 2.")})')
     check(vk.wer('The sky is blue.', 'the sky is blue') == 0, 'WER: case and punctuation do not count')
-    check(abs(vk.wer('the sky is blue today', 'the sky blue to day') - 0.6) < 1e-9, 'WER: 1 deletion + 1 substitution + 1 insertion over 5 words is 60%')
+    check(abs(vk.wer('the sky is blue today', 'the sky blue too day') - 0.6) < 1e-9, 'WER: 1 deletion + 1 substitution + 1 insertion over 5 words is 60%')
     edits, missed = vk.align('rayleigh scattering makes blue'.split(), 'raleigh scattering blue'.split())
     check(edits == 2 and missed == [('rayleigh', 'raleigh'), ('makes', '')], f'align: reports the substituted and dropped words ({missed})')
     check(vk.is_technical('scattering', {}) and not vk.is_technical('because', {}) and vk.is_technical('dna', {'dna': None}),
@@ -190,6 +196,11 @@ def test_voxtype_parse():
     check(vk.parse_voxtype(VOXTYPE_SAMPLE) == 'Look up on a clear afternoon and the sky is blue.', 'voxtype: header lines are dropped')
     silent = 'Loading audio file: "a.wav"\nAudio format: 16000 Hz, 1 channel(s), Int\nProcessing 16000 samples (1.00s)...\nVAD: 0.00s speech (0.0% of audio)\nNo speech detected, skipping transcription.\n'
     check(vk.parse_voxtype(silent) == '', 'voxtype: no speech gives an empty transcript')
+
+
+def test_syllables():
+    got = [vk.syllables(w) for w in ('big', 'frequencies', 'hardy', 'weinberg', 'phenotype', 'table', 'free')]
+    check(got == [1, 3, 2, 2, 3, 2, 1], f'syllables: vowel groups less a silent e ({got})')
 
 
 def test_sample_lines():
@@ -219,7 +230,11 @@ def test_pace_counts_spoken_words():
     beats[0]['say'], beats[1]['say'], beats[3]['say'] = lines
     d, path = build('numbers', lesson=lesson, lines=lines, secs=lambda x: len(vk.normalize(x)) * 60 / 150)
     p, notes, summary = problems_of(path)
-    check(not has(p, 'words a minute'), f'pace: numbers count as the words spoken, so 150 spoken wpm passes ({p[:2]})')
+    check(not has(p, 'words a minute') and not has(p, 'syllables a second'), f'pace: numbers count as the words spoken, so 150 spoken wpm passes ({p[:2]})')
+    rushed = lambda x: (len(vk.normalize(x)) * 60 / 135) * (0.45 if x == lines[2] else 1)  # overall stays near 155 wpm
+    d, path = build('rushed', lesson=lesson, lines=lines, secs=rushed)
+    p, _, _ = problems_of(path)
+    check(has(p, 'Line 3') and has(p, 'syllables a second'), f'pace: a clip squeezed to 45% of its time is caught by syllables a second ({p[:2]})')
     check(140 <= summary['pace'] <= 160, f'pace: the summary counts spoken words ({summary["pace"]} wpm)')
 
     d, path = build('slow', secs=lambda x: len(vk.normalize(x)) * 60 / 100)
@@ -454,7 +469,7 @@ def main():
     if not (shutil.which('ffmpeg') and shutil.which('ffprobe')):
         print('FAIL: these tests need ffmpeg and ffprobe')
         return 1
-    tests = [test_pronounce, test_numbers_and_wer, test_voxtype_parse, test_sample_lines, test_clean, test_pace_counts_spoken_words, test_stale_and_missing,
+    tests = [test_pronounce, test_numbers_and_wer, test_syllables, test_voxtype_parse, test_sample_lines, test_clean, test_pace_counts_spoken_words, test_stale_and_missing,
              test_loudness_clipping_dead_air, test_one_voice_and_disclose, test_no_asr, test_asr_round_trip, test_engine_cmd_and_cache,
              test_busy_gpu_falls_through, test_engine_none]
     for t in tests:

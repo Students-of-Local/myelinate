@@ -2,6 +2,54 @@
 
 Checked **2026-10-02**, with synthetic learner prompts and locally generated examples. These checks assess instructions and software behavior; they do not measure real student learning.
 
+## 3.2.0: make-video (2026-11-22)
+
+### Accuracy: seven attacks
+
+`python3 evals/make-video/attacks.py --self-test` plants each attack in a small osmosis lesson with made-up course files (`evals/make-video/sources/osmosis/`) and a timed lecture transcript (`tests/fixtures/video/lecture-transcript.txt`), then runs the checker with `--sources`. CI runs it on every pull request.
+
+| # | Attack | Caught | First error the checker printed |
+| --- | --- | --- | --- |
+| 1 | Invented quote | yes | Claim c1: quote not found in bio101-slides.md. |
+| 2 | Arithmetic slip (4.5 written as 4.6) | yes | Calc k1: says 4.6, but 500 * 0.9 / 100 = 4.5. |
+| 3 | Uncited number ("about 37 percent") | yes | The sentence states '37%', which no cited quote or calc gives. |
+| 4 | Citation on an unrelated sentence | yes | cites c5, but shares no key word with it. |
+| 5 | Planted slide error presented silently | yes | Claim c2: is contradicted by bio101-slides.md. |
+| 6 | Self-set "checked" badge | yes | "verification": was not written by the checker for this exact file. |
+| 7 | Misquoted video timestamp (1:43 as 3:13) | yes | quote is not within 20 s of Lecture video, 3:13. |
+
+Each gate was also switched off in a scratch copy of the checker, 38 versions in all; the tests failed on 37. The one that slipped was a redundant normalization step. Review found two loose gates, both fixed with tests that failed first: a timestamp window that stretched three transcript lines past 20 seconds, and a percent match that let 0.8% pass on "0.9 percent" and 75% on 0.7.
+
+### Timing
+
+The checker and player once timed each line by its written words, so "0.4225" took the time of one word instead of five. The Hardy-Weinberg remake checked as 5:40 that way; counted as spoken it is 6:33, over the 6:30 cap, and two repeated sentences were cut to fit (6:06). `video_voice.py` now records each clip's length, the player and checker time lines to it, and a length too short for its sentence is refused. Tests that failed on the old code: `tests/video_check_test.py` (spoken counts, recorded lengths, a faked short length), `tests/voice_check_test.py` (pace on number-heavy clips) and `tests/video_journey.py` (the player's timeline).
+
+### Voices
+
+Engines tried on Parish1 on 2026-11-22 and 23, in the skill's order. Nothing was installed, and nothing was stopped to free the GPU.
+
+| Tier | Result |
+| --- | --- |
+| Qwen3-TTS through parish-media (GPU) | Refused both times: another session's model server held the GPU. It retried for 5 minutes, then stopped and said so. No clips. |
+| Kokoro-82M in headless Chromium, kokoro-js 1.2.1 from the pinned CDN build, wasm | Used. Sky sample: 7 lines, 0.0% word error rate, 144 words a minute, READY. Hardy-Weinberg remake: 55 lines, 0.8% word error rate, 159 words a minute, READY. |
+| The browser's built-in voice | Not needed. The player labels it robotic when it is the only voice. |
+
+The voice check is speech-to-text (voxtype, on the CPU because the GPU was full) and loudness meters. Getting the remake to READY took three runs. The voice speed went from 0.71 to 0.87, a number the check now prints, and two respellings changed. Most of the other problems were in the check, not the voice. It counted words as written, so a 30-word number line looked like 14 words. It judged each line by words a minute, which swung from 104 to 242 with word length, while syllables a second stayed between 3.3 and 4.8 on all 55 clips; the per-line gate is now 2.5 to 6 syllables a second. It also counted speech-to-text's spellings as errors: "2pq", "p2", "ChiSquare" and "hetero zygote". One real fix was to the voice: a respelling with hyphens and capitals ("het-er-oh-ZYE-goat") came back as "Heteroziwai'i goat", and plain spaced words ("hetero zygote") came back right. Each fix has a test that failed first.
+
+A claude.ai artifact blocks the model download, so the browser tier runs on the learner's machine or in the build step, and an artifact gets recorded clips published next to the page. The voices were not checked by ear.
+
+### Small model
+
+SMALL_MODEL_RESULTS
+
+### Triggers
+
+`evals/triggers/run.py` with gpt-5.6-luna, 3 passes. The branch added three make-video positives, three video-production negatives and a video-production distractor. latest: 94.5% hit (156 of 165), 12.5% false fire (9 of 72), majority vote 100% hit. holdout: 93.3% (56 of 60), 4.8% (1 of 21), majority 100% hit and 0% false fire. A same-day control of main's own 3.1.1 descriptions scored 89.1% and 15.9%, below main's floors, so the floors were lowered with that written reason (`evals/triggers/thresholds.json`).
+
+### Not established
+
+No learner has used these videos. Simulated learners and model judges do not show that anyone learns more from them. The voices were checked by speech-to-text and loudness meters, not by ear. The checker confirms that quoted words are in the named file and that numbers add up; it does not confirm that a source is right, and a second reader judges the explanations.
+
 ## 3.1.1: quotes checked by code (2026-11-22)
 
 **Offline tests** (`python3 tests/yt_tool.py`, 38 checks, fixture transcripts and a fake `yt-dlp`). Real quotes confirm, with a one-letter typo, a plural, a copied `[m:ss]` stamp, "isn't" written as "is not", and the window edge at exactly 20 seconds. Refused, exit 6:

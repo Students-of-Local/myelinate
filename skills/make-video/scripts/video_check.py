@@ -566,7 +566,7 @@ def check(lesson, sources=None, final=False, today=None):
     pron = lesson.get('pronounce')
     if pron is not None:
         if not isinstance(pron, dict) or not all(isinstance(k, str) and isinstance(v, str) and k.strip() and v.strip() for k, v in pron.items()):
-            r.error('"pronounce"', 'must map words to respellings.', 'Write it like "pronounce": {"allele": "uh-LEEL", "chi-square": "KYE-square"}.')
+            r.error('"pronounce"', 'must map words to respellings.', 'Write it like "pronounce": {"heterozygote": "hetero zygote", "allele": "a leel"}.')
 
     # Who it is for.
     learner = lesson.get('learner') if isinstance(lesson.get('learner'), dict) else {}

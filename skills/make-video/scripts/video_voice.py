@@ -26,7 +26,7 @@ Engines, best first (auto takes the first one that works and says why it skipped
     cmd, endpoint, kokoro (Python package), kokoro-onnx, piper, browser (Kokoro-82M in headless Chromium
     through kokoro-js; needs Python playwright, or Node with playwright or playwright-core on NODE_PATH), none.
 
-The lesson may carry "pronounce": {"allele": "uh-LEEL"}. It changes only what the engine reads, never the
+The lesson may carry "pronounce": {"heterozygote": "hetero zygote"}. It changes only what the engine reads, never the
 captions or the clip names. Each clip is trimmed, leveled to -19 LUFS and saved as OUT/<clip name>.mp3,
 then the lesson gets "audio": {"clips": {...}, "voice": {...}} with a credit line for the AI voice.
 OUT/voice.json remembers what was made, so a rerun only remakes clips whose text, voice or engine changed.

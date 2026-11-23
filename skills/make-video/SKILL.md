@@ -112,7 +112,7 @@ Rules (the checker enforces 1 to 6; check 7 and the predict-first part of 2 your
 6. End with `recall` (look away and explain it) and `practice` (one new problem like the one taught).
 7. Something appears on screen when the narration names it, in the same beat.
 
-**A word the voice may say wrong** (a name, a technical term) goes in `"pronounce": {"allele": "uh-LEEL"}`. It changes only what the voice reads; the captions keep the real word.
+**A word the voice may say wrong** (a name, a technical term) goes in `"pronounce": {"heterozygote": "hetero zygote"}`. Respell with plain words or word parts split by spaces, like "a leel" for allele. Hyphens and capitals made one voice break a word apart. It changes only what the voice reads; the captions keep the real word.
 
 **Mark what to memorize.** A `term`, `equation`, `label` or `step` can carry `"tier": "memorize"` (not given on the exam) or `"tier": "given"` (on the formula sheet). Use it only when their materials say so.
 

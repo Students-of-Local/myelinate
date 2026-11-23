@@ -9,7 +9,7 @@ Checks, in order:
     1. every narration line has a clip, and no clip is left from a sentence that changed
     2. ASR round trip: speech-to-text of each clip matches its caption (word error rate 5% or less overall,
        15% or less per clip, and technical words heard right)
-    3. pace: 130 to 165 words a minute overall, 110 to 190 per clip
+    3. pace: 130 to 165 words a minute overall, 2.5 to 6 syllables a second per clip
     4. loudness: -19 LUFS (within 1.5 LU) for mono, true peak -1.5 dBTP or lower, no clipped samples
     5. dead air: no silence over 1.5 s inside a clip (the player adds the pauses between clips)
     6. one voice: one engine and voice in voice.json, one sample rate and channel count
@@ -38,8 +38,12 @@ import video_check as vc  # noqa: E402
 
 WER_MAX, CLIP_WER_MAX = 0.05, 0.15
 PACE_MIN, PACE_MAX = 130, 165
-CLIP_PACE_MIN, CLIP_PACE_MAX = 110, 190
-CLIP_PACE_WORDS = 8  # a short line like "So where does the blue come from?" runs fast by nature, and 0.1 s of trim moves its pace by 10; only the overall pace counts them
+# Per clip, pace is syllables a second: words a minute swings with word length. On 55 Kokoro clips of a
+# Hardy-Weinberg lesson (2026-11-22) it ran from 104 ("Hardy-Weinberg connects allele frequencies ...") to 242
+# ("Big A big A and big A little A ..."), all heard right, while syllables a second stayed within 3.3 to 4.8.
+# Outside 2.5 to 6 a clip is stretched or rushed.
+CLIP_SYL_MIN, CLIP_SYL_MAX = 2.5, 6.0
+CLIP_PACE_WORDS = 5  # under 5 words, 0.1 s of trim moves the rate too much; only the overall pace counts them
 GARBLED = 0.5  # a clip this wrong is one problem; listing each of its words would bury the fix
 LUFS_MONO, LUFS_STEREO, LUFS_TOL = -19.0, -16.0, 1.5
 TP_MAX, SAMPLE_PEAK_MAX = -1.5, -0.1
@@ -124,9 +128,19 @@ def spell_numbers(text):
     return re.sub(r'\d+', lambda m: ' ' + number_words(m.group(0)) + ' ', text)
 
 
+def syllables(word):
+    """Vowel groups, less a silent final e: close enough to compare clips of one voice."""
+    n = len(re.findall(r'[aeiouy]+', word))
+    if n > 1 and word.endswith('e') and not word.endswith(('le', 'ee')):
+        n -= 1
+    return max(1, n)
+
+
 def normalize(text):
     """Lowercase words with numbers spelled out, hyphens as spaces and no punctuation."""
     text = str(text).lower().replace('’', "'").replace('‘', "'")
+    # Speech-to-text writes "p squared" as p2, p² or p^2.
+    text = re.sub(r'\b([a-z])\s?(?:\^2|²|2)(?![\w.])', r'\1 squared', text)
     text = spell_numbers(text)
     text = re.sub(r"'", '', text)
     text = re.sub(r'[-\u2010-\u2015]', ' ', text)  # hyphen and the Unicode dashes
@@ -162,8 +176,28 @@ def align(ref, hyp):
     return d[n][m], list(reversed(missed))
 
 
+def resplit(ref, hyp):
+    """Speech-to-text joins words it knows as one ("ChiSquare" for "chi-square"): split a heard word that is two
+    neighboring caption words run together, and join two heard words that make one caption word."""
+    pairs = {ref[i] + ref[i + 1]: ref[i:i + 2] for i in range(len(ref) - 1)}
+    known, out = set(ref), []
+    for w in hyp:
+        out.extend(pairs[w] if w not in known and w in pairs else [w])
+    # And the reverse: "hetero zygote" heard for "heterozygote".
+    joined, i = [], 0
+    while i < len(out):
+        if i + 1 < len(out) and out[i] + out[i + 1] in known and not (out[i] in known and out[i + 1] in known):
+            joined.append(out[i] + out[i + 1])
+            i += 2
+        else:
+            joined.append(out[i])
+            i += 1
+    return joined
+
+
 def wer(ref_text, hyp_text):
-    ref, hyp = normalize(ref_text), normalize(hyp_text)
+    ref = normalize(ref_text)
+    hyp = resplit(ref, normalize(hyp_text))
     edits, _ = align(ref, hyp)
     return edits / max(1, len(ref))
 
@@ -470,8 +504,9 @@ def check(lesson_path, audio_dir=None, asr='auto', download=False, partial=False
         total_words += wc
         total_secs += secs
         wpm = wc * 60 / secs
-        if wc >= CLIP_PACE_WORDS and not CLIP_PACE_MIN <= wpm <= CLIP_PACE_MAX:
-            clip_pace.append((f'Line {n} ({key})', f'is spoken at {wpm:.0f} words a minute; keep each clip within {CLIP_PACE_MIN} to {CLIP_PACE_MAX}.',
+        rate = sum(syllables(w) for w in normalize(text)) / secs
+        if wc >= CLIP_PACE_WORDS and not CLIP_SYL_MIN <= rate <= CLIP_SYL_MAX:
+            clip_pace.append((f'Line {n} ({key})', f'is spoken at {rate:.1f} syllables a second; keep each clip within {CLIP_SYL_MIN:g} to {CLIP_SYL_MAX:g}.',
                              'Check the clip for a stretched or rushed word, then ' + RERUN.lower()))
     pace = total_words * 60 / total_secs if total_secs else 0
     if total_secs and not PACE_MIN <= pace <= PACE_MAX:
@@ -510,7 +545,8 @@ def check(lesson_path, audio_dir=None, asr='auto', download=False, partial=False
                         problems.append((f'Line {n} ({key})', f'could not be transcribed: {engine.name} failed ({engine.why or "no output"}).',
                                          'Run the check again. If it fails again, pass --asr with another engine, or --asr none to skip the round trip on purpose.'))
                         continue
-                    ref, hyp = normalize(text), normalize(heard)
+                    ref = normalize(text)
+                    hyp = resplit(ref, normalize(heard))
                     edits, missed = align(ref, hyp)
                     edits_total += edits
                     ref_total += len(ref)
@@ -526,7 +562,7 @@ def check(lesson_path, audio_dir=None, asr='auto', download=False, partial=False
                             if owner and owner in pron:
                                 fix = f'Change the respelling of "{owner}" in "pronounce" (now "{pron[owner]}") to one that sounds right, then ' + RERUN.lower()
                             else:
-                                fix = f'Add "{word}": "<respelling>" to "pronounce", where <respelling> spells how it sounds (like "uh-LEEL"), then ' + RERUN.lower()
+                                fix = f'Add "{word}": "<respelling>" to "pronounce", where <respelling> spells how it sounds in plain words split by spaces (like "hetero zygote"), then ' + RERUN.lower()
                             problems.append((f'Line {n} ({key})', f'the technical word "{word}" was heard as {heard_as}.', fix))
             round_trip = edits_total / ref_total if ref_total else None
             if round_trip is not None and round_trip > WER_MAX:

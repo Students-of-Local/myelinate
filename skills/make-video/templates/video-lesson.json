@@ -16,7 +16,7 @@
     "target": "<<a question they missed before, if you know one; otherwise leave it empty>>",
     "notation": "<<symbols or words their course uses, if you know them; otherwise leave it empty>>"
   },
-  "pronounce": {"<<a word the voice may say wrong, or delete this line and the comma before it>>": "<<how to say it, like uh-LEEL>>"},
+  "pronounce": {"<<a word the voice may say wrong, or delete this line and the comma before it>>": "<<how to say it in plain words split by spaces, like hetero zygote>>"},
   "objectives": [
     "<<goal 1, starting with a verb such as Explain or Solve>>",
     "<<goal 2, or delete this line>>"
