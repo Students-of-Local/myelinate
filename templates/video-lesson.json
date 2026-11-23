@@ -5,16 +5,18 @@
   "lessonType": "<<problem if the learner must solve problems step by step, otherwise concept>>",
   "wpm": 145,
   "voice": {"lang": "en-US"},
+  "part": {"n": 1, "of": 1, "series": "<<the whole topic, the same in every part>>"},
   "learner": {
     "kind": "<<course or self-study>>",
     "course": "<<course name and instructor; for self-study write nothing between the quotes>>",
+    "tag": "<<course: the exam or unit, 3 words or fewer, like EXAM 4; otherwise nothing>>",
     "purpose": "<<self-study: why they want to learn it; for a course write nothing>>",
     "level": "<<their level in plain words>>",
     "materials": ["<<each thing they gave you: notes, slides, study guide, textbook with edition; use [] if nothing>>"],
-    "checked": "<<course: not-yet until every course claim is matched to their materials; self-study: not-a-course>>",
     "target": "<<a question they missed before, if you know one; otherwise nothing>>",
     "notation": "<<symbols or words their course uses, if you know them; otherwise nothing>>"
   },
+  "pronounce": {"<<a word the voice may say wrong, or delete this line and the comma before it>>": "<<how to say it, like uh-LEEL>>"},
   "objectives": [
     "<<goal 1, starting with a verb such as Explain or Solve>>",
     "<<goal 2, or delete this line>>"
@@ -26,11 +28,14 @@
       "text": "<<one fact, in one plain sentence>>",
       "from": "<<course if it comes from their materials, outside otherwise>>",
       "source": "<<the source: book and edition, slide deck, or website name>>",
-      "where": "<<course: page, slide or section number; outside: the full https:// address>>",
+      "file": "<<the name of the text file the quote is in, the same name you give to --sources>>",
+      "where": "<<course: page, slide or section number, or m:ss in a video transcript; outside: the full https:// address>>",
       "checked": "<<outside only: the date you read it, YYYY-MM-DD>>",
-      "quote": "<<the exact words from the source that say this fact, copied letter for letter>>",
-      "status": "unchecked"
+      "quote": "<<the exact words from that file that say this fact, copied letter for letter>>"
     }
+  ],
+  "calc": [
+    {"id": "k1", "expr": "<<arithmetic with numbers from your claims, like 2*49 + 42; delete calc if the lesson has no numbers>>", "value": 0, "round": 2}
   ],
   "misconception": {
     "wrong": "<<a common mistaken idea about this topic>>",
@@ -54,9 +59,18 @@
       "title": "<<chapter name>>",
       "role": "names",
       "beats": [
+        {"pause": {"ask": "Predict before you hear it: <<a question about what comes next>>", "choices": ["<<option>>", "<<option>>"], "answer": "<<the right option, exactly as written above>>", "why": "<<why it is right, one sentence>>", "claims": ["c1"]}},
         {"say": "<<one sentence that names a new word and says what it means>>", "claims": ["c1"],
-         "show": [{"type": "term", "word": "<<the word>>", "meaning": "<<what it means, 10 words or fewer>>"}]},
-        {"pause": {"ask": "<<a question the learner can answer from what was just said>>", "choices": ["<<option>>", "<<option>>"], "answer": "<<the right option, exactly as written above>>", "why": "<<why it is right, one sentence>>", "claims": ["c1"]}}
+         "show": [{"type": "term", "word": "<<the word>>", "meaning": "<<what it means, 10 words or fewer>>", "tier": "<<memorize if they must know it by heart; given if the exam gives it; or delete tier>>"}]}
+      ]
+    },
+    {
+      "id": "s3",
+      "title": "<<chapter name for the worked example, or delete this scene>>",
+      "role": "worked",
+      "beats": [
+        {"say": "<<one step of the worked example, saying its number in words a voice can read>>", "claims": ["k1"],
+         "show": [{"type": "step", "text": "<<the same step written with symbols, like p = (2*49 + 42) / 200 = 0.7>>"}]}
       ]
     }
   ],

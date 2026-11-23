@@ -5,8 +5,8 @@
  "harness": "codex exec, isolated HOME, skills in ~/.agents/skills",
  "prompt_set": "holdout.jsonl",
  "partial": false,
- "descriptions_sha256": "7a08b99b568ee93d2ab22bb1abc365ec7d70d42e11f5cf9130b556d9d2e229be",
- "inputs_sha256": "cb1b4073d6f63a6699df972d27d64aaa485ff6d111560885f1fc49d6662bef33",
+ "descriptions_sha256": "ca8880cfddbe3f0505d282c2cd84d075b115aedb92855745fb98a053ede2177f",
+ "inputs_sha256": "095ec232fa9f9e11b54a6261b02069f515980433728f8d4fda4c1c205c2f76e9",
  "skills": [
   "assess",
   "assignment",
@@ -17,6 +17,7 @@
   "flashcards",
   "game",
   "lab",
+  "make-video",
   "memory-hooks",
   "myelinate",
   "notes",
@@ -30,10 +31,10 @@
   "verify",
   "video"
  ],
- "positives": 19,
- "negatives": 6,
- "hit_rate": 1.0,
- "false_fire_rate": 0.0,
+ "positives": 20,
+ "negatives": 7,
+ "hit_rate": 0.9333,
+ "false_fire_rate": 0.0476,
  "errors": 0,
  "majority_hit_rate": 1.0,
  "majority_false_fire_rate": 0.0,
@@ -43,17 +44,20 @@
    "false_fire": 0
   },
   {
-   "hit": 19,
+   "hit": 18,
    "false_fire": 0
   },
   {
    "hit": 19,
-   "false_fire": 0
+   "false_fire": 1
   }
  ],
  "unstable": [
-  "h02",
-  "h18"
+  "h03",
+  "h04",
+  "h12",
+  "h17",
+  "h26"
  ],
  "rows": [
   {
@@ -81,7 +85,7 @@
    "choices": [
     "tutor",
     "tutor",
-    "myelinate"
+    "tutor"
    ],
    "ok": 3
   },
@@ -93,10 +97,10 @@
    ],
    "choices": [
     "assignment",
-    "assignment",
+    "none",
     "assignment"
    ],
-   "ok": 3
+   "ok": 2
   },
   {
    "id": "h04",
@@ -108,9 +112,9 @@
    "choices": [
     "teach",
     "teach",
-    "teach"
+    "tutor"
    ],
-   "ok": 3
+   "ok": 2
   },
   {
    "id": "h05",
@@ -215,10 +219,10 @@
    ],
    "choices": [
     "print",
-    "print",
+    "visualize",
     "print"
    ],
-   "ok": 3
+   "ok": 2
   },
   {
    "id": "h13",
@@ -283,9 +287,9 @@
    "choices": [
     "none",
     "none",
-    "none"
+    "find-media"
    ],
-   "ok": 3
+   "ok": 2
   },
   {
    "id": "h18",
@@ -295,9 +299,9 @@
     "writing-editor"
    ],
    "choices": [
-    "writing-editor",
     "none",
-    "writing-editor"
+    "none",
+    "none"
    ],
    "ok": 3
   },
@@ -392,6 +396,32 @@
     "assignment",
     "assignment",
     "assignment"
+   ],
+   "ok": 3
+  },
+  {
+   "id": "h26",
+   "kind": "positive",
+   "accept": [
+    "make-video"
+   ],
+   "choices": [
+    "video",
+    "make-video",
+    "make-video"
+   ],
+   "ok": 2
+  },
+  {
+   "id": "h27",
+   "kind": "negative",
+   "accept": [
+    "none"
+   ],
+   "choices": [
+    "video-production",
+    "video-production",
+    "video-production"
    ],
    "ok": 3
   }

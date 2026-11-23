@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Tests for scripts/video_check.py: the sky example is clean, the template is not, and each rule fires on a bad lesson.
 
-Fixtures are the sky example with one thing broken, built in code. Only the broken JSON file lives on disk.
+Fixtures are built in code: the sky example (checked against its NASA source text) and a small course lesson on
+osmosis (checked against evals/make-video/sources/osmosis and a timed lecture transcript), each with one thing broken.
+Only the broken JSON file and the synthetic transcript live on disk, in tests/fixtures/video/.
 
 usage: python3 tests/video_check_test.py
 """
@@ -18,15 +20,23 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CHECKER = ROOT / 'scripts' / 'video_check.py'
 SKY = ROOT / 'examples' / 'video-lesson-sky.json'
+SKY_SRC = ROOT / 'examples' / 'video-lesson-sky-source.md'
 TEMPLATE = ROOT / 'templates' / 'video-lesson.json'
-BROKEN = ROOT / 'tests' / 'fixtures' / 'video' / 'broken.json'
+FIXTURES = ROOT / 'tests' / 'fixtures' / 'video'
+BROKEN = FIXTURES / 'broken.json'
+TRANSCRIPT = FIXTURES / 'lecture-transcript.txt'
+OSMOSIS_DIR = ROOT / 'evals' / 'make-video' / 'sources' / 'osmosis'
+SLIDE5 = 'In a hypertonic solution, the cell gains water and swells.'
 WORK = Path(tempfile.mkdtemp(prefix='video-check-test-'))
+REVIEW = {'by': 'test', 'date': '2026-11-22', 'result': 'pass'}
 
 spec = importlib.util.spec_from_file_location('video_check', CHECKER)
 vc = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(vc)
 
 SKY_LESSON = json.loads(SKY.read_text())
+SKY_SOURCES = vc.load_sources([SKY_SRC])
+OSMOSIS_SOURCES = vc.load_sources([OSMOSIS_DIR, TRANSCRIPT])
 failures = []
 
 
@@ -39,12 +49,82 @@ def check(condition, message):
 
 
 def sky():
-    return copy.deepcopy(SKY_LESSON)
+    """The sky example without its recorded review, so each test adds only what it checks."""
+    lesson = copy.deepcopy(SKY_LESSON)
+    lesson.pop('review', None)
+    return lesson
+
+
+def reviewed(lesson):
+    lesson['review'] = dict(REVIEW)
+    return lesson
+
+
+def claim(cid, text, file, where, quote, **extra):
+    return {'id': cid, 'text': text, 'from': 'course', 'where': where, 'source': file, 'file': file, 'quote': quote, **extra}
+
+
+def osmosis():
+    """A small course lesson: slides, notes and a timed lecture transcript, with slide 5's planted error flagged."""
+    return {
+        'format': 'myelinate-video/1', 'title': 'Osmosis and the three beakers', 'lessonType': 'concept', 'wpm': 145,
+        'learner': {'kind': 'course', 'course': 'BIO 101', 'materials': ['slides', 'notes', 'lecture video']},
+        'objectives': ['Explain which way water moves in each solution'],
+        'question': 'Which way does water move in each beaker?',
+        'calc': [{'id': 'k1', 'expr': '500 * 0.9 / 100', 'value': 4.5},
+                 {'id': 'k2', 'expr': 'k1 * 4', 'value': 18}],
+        'claims': [
+            claim('c1', 'Osmosis is the diffusion of water across a selectively permeable membrane.', 'bio101-slides.md', 'Slide 1',
+                  'Osmosis is the diffusion of water across a selectively permeable membrane.'),
+            claim('c2', 'In a hypertonic solution water leaves the cell and it shrinks.', 'my-notes.md', 'Notes, Sept 18, line 1',
+                  'Hypertonic = more solute OUTSIDE the cell. Water leaves the cell and it shrinks.'),
+            claim('c3', 'Slide 5 says a cell in a hypertonic solution gains water and swells.', 'bio101-slides.md', 'Slide 5', SLIDE5,
+                  status='conflict', other='c2',
+                  note='Slide 5 says the cell swells; the notes and the lecture say it loses water. Ask the professor which the exam uses.'),
+            claim('c5', 'Normal saline is 0.9 percent salt and isotonic to red blood cells.', 'lecture-transcript.txt', 'Lecture video, 1:43',
+                  'Normal saline is 0.9 percent salt, and it is isotonic to red blood cells.'),
+        ],
+        'scenes': [
+            {'id': 's1', 'title': 'The question', 'role': 'intro', 'beats': [
+                {'say': 'Your exam shows three red blood cells in three beakers.', 'talk': True,
+                 'show': [{'type': 'title', 'text': 'Osmosis and tonicity'}]},
+                {'say': 'Osmosis is the diffusion of water across a selectively permeable membrane.', 'claims': ['c1'],
+                 'show': [{'type': 'term', 'word': 'Osmosis', 'meaning': 'Water diffusing across a membrane'}]}]},
+            {'id': 's2', 'title': 'Hypertonic', 'role': 'explain', 'beats': [
+                {'say': 'In a hypertonic solution, water leaves the cell and it shrinks.', 'claims': ['c2'],
+                 'show': [{'type': 'term', 'word': 'Hypertonic', 'meaning': 'More solute outside'}]},
+                {'say': 'Careful: your slide five says the cell gains water and swells, but your notes say water leaves and it shrinks.',
+                 'claims': ['c2', 'c3']},
+                {'pause': {'ask': 'Water leaves a cell in a hypertonic beaker. What happens to its size?', 'choices': ['It shrinks', 'It swells'],
+                           'answer': 'It shrinks', 'why': 'Water leaves the cell and it shrinks.', 'claims': ['c2']}}]},
+            {'id': 's3', 'title': 'Normal saline', 'role': 'example', 'beats': [
+                {'say': 'Normal saline is zero point nine percent salt, and it is isotonic to red blood cells.', 'claims': ['c5'],
+                 'show': [{'type': 'table', 'columns': ['Bag', 'Salt'], 'rows': []},
+                          {'type': 'row', 'cells': ['Saline', '0.9%'], 'claims': ['c5']}]},
+                {'say': 'A five hundred milliliter bag of it holds four point five grams of salt.', 'claims': ['k1'],
+                 'show': [{'type': 'equation', 'text': '500 × 0.9 / 100 = 4.5 g', 'claims': ['k1']}]},
+                {'say': 'Four of those bags hold eighteen grams.', 'claims': ['k2']},
+                {'pause': {'ask': 'How many grams of salt are in two liters of normal saline?', 'answer': '18 grams',
+                           'why': 'Two liters is four bags of five hundred milliliters, each with four point five grams.', 'claims': ['k1', 'k2']}}]},
+        ],
+        'recall': {'ask': 'Look away and name what happens in each beaker.',
+                   'points': ['Hypertonic: water leaves, the cell shrinks.', 'Hypotonic: water enters.']},
+        'practice': {'ask': 'A cell sits in a beaker with more solute outside. Which way does water move?',
+                     'answer': 'Out of the cell, so it shrinks.', 'claims': ['c2']},
+    }
+
+
+def beat(lesson, scene, index):
+    return lesson['scenes'][scene]['beats'][index]
 
 
 def problems(lesson, sources=None, final=False):
     errors, warnings, _ = vc.check(lesson, sources, final)
     return errors, warnings
+
+
+def badge(lesson, sources=None):
+    return vc.check(lesson, sources)[2]['verification']
 
 
 def text_of(items):
@@ -57,6 +137,19 @@ def expect(name, lesson, substring, where=None, sources=None, final=False):
     hit = [e for e in errors if substring in e[1] and (where is None or where in e[0])]
     detail = f'{len(errors)} error(s)' if hit else f'not found in {text_of(errors)[:4]}'
     check(len(errors) > 0 and bool(hit), f'{name}: error "{substring}" ({detail})')
+    return hit
+
+
+def clean(name, lesson, sources=None, final=False):
+    errors = problems(lesson, sources, final)[0]
+    check(errors == [], f'{name}: no errors ({text_of(errors)[:4]})')
+
+
+def absent(name, lesson, substring, sources=None, final=False):
+    """No error contains substring."""
+    errors = problems(lesson, sources, final)[0]
+    hit = [e for e in errors if substring in e[1]]
+    check(not hit, f'{name}: no error "{substring}" ({text_of(hit)[:2]})')
 
 
 def write(name, data):
@@ -73,10 +166,6 @@ def say_beats(lesson):
     return [b for s in lesson['scenes'] for b in s['beats'] if 'say' in b]
 
 
-def quotes_file(lesson):
-    return write('quotes.txt', '\n\n'.join(c['quote'] for c in lesson['claims']))
-
-
 def stretch(lesson, si, bi, seconds):
     """Insert plain talk sentences after beat bi of scene si until about `seconds` of narration is added."""
     filler = {'say': 'Keep that picture in mind as we go on to the next part of the story.', 'talk': True}
@@ -86,14 +175,42 @@ def stretch(lesson, si, bi, seconds):
 
 
 def main():
+    old_rules()
+    quote_match()
+    timestamps()
+    calcs()
+    numbers()
+    coverage()
+    symbols()
+    conflicts()
+    badges()
+    pause_and_length()
+    show_types()
+    if failures:
+        print(f'\n{len(failures)} check(s) failed:')
+        for f in failures:
+            print(' -', f)
+        return 1
+    print('\nAll video checker tests passed.')
+    return 0
+
+
+def old_rules():
     # Clean and template.
-    errors, warnings = problems(sky(), final=True)
-    check(errors == [], f'the sky example has 0 errors with --final ({text_of(errors)})')
-    errors, warnings = problems(sky(), vc.load_sources([quotes_file(SKY_LESSON)]), final=True)
-    check(errors == [], f'the sky example has 0 errors with --sources holding its quotes ({text_of(errors)})')
-    check(not [w for w in warnings if 'quote was not found' in w[1]], 'every outside quote is found in the --sources file, so no quote warning')
-    r = run(SKY, '--final', '--sources', quotes_file(SKY_LESSON))
-    check(r.returncode == 0 and 'READY' in r.stdout, f'main() exits 0 and says READY for the sky example (exit {r.returncode})')
+    clean('the sky example without --sources', sky())
+    clean('the sky example with --sources holding its NASA text', sky(), SKY_SOURCES)
+    clean('the sky example with a recorded review and --final', reviewed(sky()), SKY_SOURCES, final=True)
+    expect('--final with no review', sky(), 'is missing.', '"review"', SKY_SOURCES, final=True)
+    expect('--final with no --sources', reviewed(sky()), 'needs --sources.', '--final', final=True)
+    d = reviewed(sky())
+    d['review']['result'] = 'fail'
+    expect('a failed review', d, 'failed.', '"review"', SKY_SOURCES)
+    d['review'] = {'by': 'test', 'result': 'pass'}
+    expect('a review with no date', d, 'must be {"by"', '"review"', SKY_SOURCES)
+    r = run(SKY, '--sources', SKY_SRC)
+    check(r.returncode == 0 and 'READY' in r.stdout, f'main() exits 0 and says READY for the sky example with its sources (exit {r.returncode})')
+    r = run(write('sky-reviewed.json', reviewed(sky())), '--final', '--sources', SKY_SRC)
+    check(r.returncode == 0 and 'READY' in r.stdout, f'main() --final exits 0 for the reviewed sky example (exit {r.returncode})')
 
     template = json.loads(TEMPLATE.read_text())
     expect('template', template, 'blank(s) from the template')
@@ -106,7 +223,7 @@ def main():
     fenced = write('fenced.json', '```json\n' + SKY.read_text().strip() + '\n```\n')
     lesson, note = vc.read_lesson(fenced)
     check(lesson == SKY_LESSON and note and '```' in note, 'a ```json fence is tolerated and noted by read_lesson')
-    r = run(fenced, '--final')
+    r = run(fenced, '--sources', SKY_SRC)
     check(r.returncode == 0 and r.stdout.startswith('NOTE:'), f'main() passes a fenced lesson and prints the note first (exit {r.returncode})')
 
     # Header rules.
@@ -122,6 +239,13 @@ def main():
         d = sky()
         d['wpm'] = wpm
         check(not [e for e in problems(d)[0] if e[0] == '"wpm"'], f'wpm {wpm} is allowed')
+    for bad in ({'allele': 5}, ['allele'], {'allele': ''}, 'uh-LEEL'):
+        d = sky()
+        d['pronounce'] = bad
+        expect(f'pronounce {bad!r}', d, 'must map words to respellings', '"pronounce"')
+    d = sky()
+    d['pronounce'] = {'Rayleigh': 'RAY-lee'}
+    clean('pronounce as a map of strings', d)
 
     # Sentence rules.
     d = sky()
@@ -136,15 +260,15 @@ def main():
     expect('fact sentence with no claims', d, 'has no claim ids', 'Scene 3 (Air scatters blue the most), beat 2')
 
     d = sky()
-    beat = d['scenes'][0]['beats'][0]
-    check(beat.get('talk') is True, 'fixture: the first beat is a talk beat')
-    beat['say'] = 'Look up on a clear afternoon at 3 and the sky is blue.'
+    b = d['scenes'][0]['beats'][0]
+    check(b.get('talk') is True, 'fixture: the first beat is a talk beat')
+    b['say'] = 'Look up on a clear afternoon at 3 and the sky is blue.'
     expect('talk beat with a digit', d, 'is marked "talk" but has a number in it', 'Scene 1')
 
     d = sky()
-    beat = d['scenes'][2]['beats'][1]
-    beat.setdefault('show', []).append({'type': 'label', 'text': 'knock the light off in all'})
-    check(vc.norm('knock the light off in all') in vc.norm(beat['say']), 'fixture: the label text is inside the narration')
+    b = d['scenes'][2]['beats'][1]
+    b.setdefault('show', []).append({'type': 'label', 'text': 'knock the light off in all'})
+    check(vc.norm('knock the light off in all') in vc.norm(b['say']), 'fixture: the label text is inside the narration')
     expect('screen repeats narration', d, 'repeats the narration word for word', 'Scene 3')
 
     d = sky()
@@ -158,7 +282,8 @@ def main():
     stretch(d, 2, 1, 130)
     expect('no pause for over 120 s', d, 'with no pause question', 'Scene 3')
     d = sky()
-    stretch(d, 2, 1, 90)
+    check('pause' in beat(d, 4, 4), 'fixture: scene 5 ends with a pause')
+    stretch(d, 4, 4, 90)
     check(not [e for e in problems(d)[0] if 'no pause question' in e[1]], '90 s of narration right after a pause stays under the 120 s gap')
 
     d = sky()
@@ -220,23 +345,21 @@ def main():
                     b['show'][i] = {'type': 'label', 'text': el['word']}
     expect('no term in scenes 1 and 2', d, 'name no terms', 'Scenes 1 and 2')
 
-    # --sources: a course quote must be in the learner's files; outside quotes only warn.
-    d = sky()
-    d['claims'][0].update({'from': 'course', 'where': 'Lecture 2, slide 4'})
+    # --sources: every quote, course or outside, must be in the file its claim names.
     other = write('notes.txt', 'These notes talk about clouds and rain, not about sunlight.')
-    expect('course quote missing from --sources', d, "quote was not found in the learner's materials", 'Claim c1', sources=vc.load_sources([other]))
-    errors, warnings = problems(sky(), vc.load_sources([other]))
-    check(errors == [] and any('quote was not found in the files given' in w[1] for w in warnings), 'outside quotes missing from --sources are warnings, not errors')
-    d['claims'][0]['file'] = 'missing.txt'
-    expect('claim names a file not given', d, "names file 'missing.txt'", 'Claim c1', sources=vc.load_sources([other]))
-    r = run(write('course.json', sky() | {'claims': [dict(SKY_LESSON['claims'][0], **{'from': 'course', 'where': 'Lecture 2, slide 4'})] + SKY_LESSON['claims'][1:]}), '--sources', other)
-    check(r.returncode == 1 and "quote was not found in the learner's materials" in r.stdout, f'main() with --sources exits 1 on a missing course quote (exit {r.returncode})')
-
-    # --final.
+    both = vc.load_sources([other, SKY_SRC])
     d = sky()
-    d['claims'][3]['status'] = 'unchecked'
-    expect('--final with an unchecked claim', d, 'is not checked yet', 'Claim c4', final=True)
-    check(problems(d, final=False)[0] == [], 'without --final an unchecked claim is not an error')
+    d['claims'][0].update({'from': 'course', 'where': 'Lecture 2, slide 4', 'file': 'notes.txt'})
+    expect('course quote missing from its file', d, 'quote not found in notes.txt', 'Claim c1', sources=both)
+    d = sky()
+    d['claims'][0]['file'] = 'notes.txt'
+    expect('outside quote missing from its file is an error too', d, 'quote not found in notes.txt', 'Claim c1', sources=both)
+    d['claims'][0]['file'] = 'missing.txt'
+    expect('claim names a file not given', d, "names file 'missing.txt'", 'Claim c1', sources=both)
+    course = sky()
+    course['claims'][0].update({'from': 'course', 'where': 'Lecture 2, slide 4', 'file': 'notes.txt'})
+    r = run(write('course.json', course), '--sources', other, '--sources', SKY_SRC)
+    check(r.returncode == 1 and 'quote not found in notes.txt' in r.stdout, f'main() with --sources exits 1 on a missing course quote (exit {r.returncode})')
 
     # --build.
     bad = sky()
@@ -244,23 +367,27 @@ def main():
     out = WORK / 'bad.html'
     r = run(write('bad.json', bad), '--build', out)
     check(r.returncode == 1 and not out.exists(), f'--build refuses while there are errors and writes nothing (exit {r.returncode})')
-    good = sky()
+    good = reviewed(sky())
     good['subtitle'] = 'And why sunsets turn red </script><script>alert(1)</script> <!-- x'
-    check(problems(good, final=True)[0] == [], 'fixture: a subtitle holding </script> is still a clean lesson')
+    check(problems(good, SKY_SOURCES, final=True)[0] == [], 'fixture: a subtitle holding </script> is still a clean lesson')
     out = WORK / 'good.html'
-    r = run(write('good.json', good), '--final', '--build', out)
+    r = run(write('good.json', good), '--final', '--sources', SKY_SRC, '--build', out)
     check(r.returncode == 0 and out.exists(), f'--build writes the page for a clean lesson (exit {r.returncode})')
-    page = out.read_text()
+    page = out.read_text() if out.exists() else ''
     blocks = re.findall(r'<script type="application/json" id="lesson">(.*?)</script>', page, re.S)
     check(len(blocks) == 1, 'the built page has exactly one lesson block')
     try:
-        back = json.loads(blocks[0]) if blocks else None
+        back = json.loads(blocks[0]) if blocks else {}
     except json.JSONDecodeError as exc:
-        back = f'not JSON: {exc}'
-    check(back == good, 'the embedded JSON parses back to the same lesson' + ('' if back == good else f' ({str(back)[:80]})'))
+        back = {'error': f'not JSON: {exc}'}
+    body = {k: v for k, v in back.items() if k != 'verification'}
+    check(body == good, 'the embedded JSON parses back to the same lesson plus its verification block')
+    v = back.get('verification') or {}
+    check(v.get('by') == 'video_check.py' and v.get('sha256') == vc.sha256_of(good) and v.get('level') == 'checked',
+          f'the built page carries the checker\'s signed badge ({v.get("level")}, {str(v.get("sha256"))[:12]})')
     check(blocks and '</script' not in blocks[0].lower() and '<!--' not in blocks[0], 'the embedded JSON holds no raw </script or <!--')
     check(page.count('<script') == (vc.TEMPLATE.read_text().count('<script')), 'the build adds no script tags')
-    check(page.replace(blocks[0], '') == re.sub(r'(<script type="application/json" id="lesson">)(.*?)(</script>)', r'\1\3', vc.TEMPLATE.read_text(), count=1, flags=re.S),
+    check(blocks and page.replace(blocks[0], '') == re.sub(r'(<script type="application/json" id="lesson">)(.*?)(</script>)', r'\1\3', vc.TEMPLATE.read_text(), count=1, flags=re.S),
           'the build changes nothing outside the lesson block')
 
     # --audio-plan.
@@ -276,28 +403,354 @@ def main():
     expect('stale audio clip', d, "clip(s) for sentences that changed: deadbeef", '"audio.clips"')
 
     # Malformed values a small model writes must give a numbered fix, never a traceback.
-    d = sky(); d['scenes'][2]['beats'][1]['claims'] = [{'id': 'c5'}]
+    d = sky()
+    d['scenes'][2]['beats'][1]['claims'] = [{'id': 'c5'}]
     expect('claim id written as an object', d, 'not an id')
     d = sky()
     qi = next((si, bi, k) for si, s in enumerate(d['scenes']) for bi, b in enumerate(s['beats']) for k, e in enumerate(b.get('show') or []) if e.get('type') == 'quote')
     d['scenes'][qi[0]]['beats'][qi[1]]['show'][qi[2]]['claim'] = ['c7']
     expect('quote claim written as a list', d, 'quote cites')
-    d = sky(); d['claims'][0]['file'] = ['a']
+    d = sky()
+    d['claims'][0]['file'] = ['a']
     expect('claim file written as a list', d, '"file" must be one file name', sources={'a': 'x'})
     for bad in ('long', -500, 31, True):
-        d = sky(); d['scenes'][2]['beats'][1]['hold'] = bad
+        d = sky()
+        d['scenes'][2]['beats'][1]['hold'] = bad
         expect(f'hold {bad!r}', d, '"hold" is')
     for bad in ('[]', json.dumps({**SKY_LESSON, 'scenes': ['oops']})):
         r = run(write('plan-bad.json', bad), '--audio-plan')
         check(r.returncode == 0 and 'Traceback' not in r.stderr, f'--audio-plan does not crash on {bad[:20]!r}')
 
-    if failures:
-        print(f'\n{len(failures)} check(s) failed:')
-        for f in failures:
-            print(' -', f)
-        return 1
-    print('\nAll video checker tests passed.')
-    return 0
+
+def quote_match():
+    """A quote is matched after undoing PDF and typography noise, and only in the file its claim names."""
+    variants = {
+        'curly quotes': 'A prism makes a “band” of colors from the Sun’s white light.',
+        'a ligature (U+FB01)': 'A prism makes a band of colors from ﬁltered white light.',
+        'a soft hyphen': 'A prism makes a band of col­ors from white light.',
+        'a PDF line-break hyphen': 'A prism makes a band of colors and an equi-\nlibrium of white light.',
+    }
+    quotes = {
+        'curly quotes': 'A prism makes a "band" of colors from the Sun\'s white light.',
+        'a ligature (U+FB01)': 'A prism makes a band of colors from filtered white light.',
+        'a soft hyphen': 'A prism makes a band of colors from white light.',
+        'a PDF line-break hyphen': 'A prism makes a band of colors and an equilibrium of white light.',
+    }
+    for name, raw in variants.items():
+        book = write('book.txt', 'Chapter 3, page 41.\n\n' + raw + '\n')
+        sources = vc.load_sources([SKY_SRC, book])
+        d = sky()
+        d['claims'][1].update({'quote': quotes[name], 'file': 'book.txt'})
+        check(quotes[name] not in raw, f'fixture: the {name} source does not hold the quote character for character')
+        clean(f'a quote found only after normalizing {name}', d, sources)
+        d['claims'][1]['quote'] = quotes[name].replace('white', 'yellow')
+        expect(f'a quote with one word changed ({name})', d, 'quote not found in book.txt', 'Claim c2', sources)
+    d = sky()
+    del d['claims'][2]['file']
+    expect('a claim with no "file" when --sources is given', d, 'does not name its file', 'Claim c3', SKY_SOURCES)
+    absent('a claim with no "file" without --sources', d, 'does not name its file')
+
+
+def timestamps():
+    """A "where" timestamp must be within 20 s of the line in a timed transcript that holds the quote."""
+    lines = [x for x in TRANSCRIPT.read_text().splitlines() if x.strip()]
+    check(len(lines) >= 10 and all(re.match(r'^\[\d+:\d\d\] ', x) for x in lines), f'fixture: the transcript has {len(lines)} timed lines')
+    check(len(vc.timed_segments(TRANSCRIPT.read_text())) == len(lines), 'the checker reads every line of the transcript as timed')
+    clean('the osmosis lesson with the quote at its own timestamp (1:43)', osmosis(), OSMOSIS_SOURCES)
+    for where in ('Lecture video, 1:55', 'Lecture video, 1:30'):
+        d = osmosis()
+        d['claims'][3]['where'] = where
+        clean(f'"where" {where[-4:]} is within 20 s of the quote at 1:43', d, OSMOSIS_SOURCES)
+    for where in ('Lecture video, 3:13', 'Lecture video, 0:13'):
+        d = osmosis()
+        d['claims'][3]['where'] = where
+        expect(f'"where" {where[-4:]} is 90 s off the quote at 1:43', d, 'is not within 20 s', 'Claim c5', OSMOSIS_SOURCES)
+    # Checker bug, left failing on purpose: quote_near() adds 3 segments past the window, so on a transcript with
+    # 13 s lines a "where" up to 46 s before the quoted line still passes (and up to 80 s on 30 s lines).
+    d = osmosis()
+    d['claims'][3]['where'] = 'Lecture video, 1:03'
+    expect('"where" 1:03 is 40 s before the quote at 1:43', d, 'is not within 20 s', 'Claim c5', OSMOSIS_SOURCES)
+
+
+def calcs():
+    clean('a calc chain (k1 from literals, k2 from k1)', osmosis(), OSMOSIS_SOURCES)
+    d = osmosis()
+    d['calc'][0]['value'] = 4.6
+    hit = expect('a calc with a wrong value', d, 'says 4.6, but 500 * 0.9 / 100 = 4.5', 'Calc k1', OSMOSIS_SOURCES)
+    check(hit and '"value": 4.5' in hit[0][2], 'the fix names the right value')
+    d = osmosis()
+    d['calc'][1]['value'] = 20
+    expect('a wrong value later in the chain', d, 'says 20, but k1 * 4 = 18', 'Calc k2', OSMOSIS_SOURCES)
+
+    def with_calc(**k):
+        d = osmosis()
+        d['calc'].append({'id': 'k3', **k})
+        return d
+    absent('"round": 3 with value 0.667 for 2/3', with_calc(expr='2/3', value=0.667, round=3), 'k3', OSMOSIS_SOURCES)
+    absent('no "round" with value 0.7 for 2/3 (one decimal written)', with_calc(expr='2/3', value=0.7), 'says 0.7', OSMOSIS_SOURCES)
+    expect('"round": 3 is honored: 0.7 is wrong to 3 places', with_calc(expr='2/3', value=0.7, round=3), 'says 0.7, but 2/3 = 0.667', 'Calc k3', OSMOSIS_SOURCES)
+    for bad in (9, 'two', -1, True):
+        expect(f'"round": {bad!r}', with_calc(expr='2/3', value=0.667, round=bad), '"round" must be a whole number', 'Calc k3', OSMOSIS_SOURCES)
+    expect('a bare literal expr', with_calc(expr='42', value=42), 'only restates a number', 'Calc k3', OSMOSIS_SOURCES)
+    expect('a negative bare literal expr', with_calc(expr='-42', value=-42), 'only restates a number', 'Calc k3', OSMOSIS_SOURCES)
+    marker = WORK / 'pwned'
+    attacks = {
+        'an __import__ call': (f"__import__('os').system('touch {marker}')", 'something other than numbers'),
+        "__import__('os')": ("__import__('os')", 'something other than numbers'),
+        'attribute access': ('(1).real', 'something other than numbers'),
+        'attribute access on a calc id': ('k1.real', 'something other than numbers'),
+        'a lambda': ('(lambda: 1)()', 'something other than numbers'),
+        'a string': ("'a' * 3", 'something other than numbers'),
+        '2**999': ('2**999', 'a power is too large'),
+        'a caret power 10^400': ('10^400', 'a power is too large'),
+        'a division by zero': ('1/0', 'divides by zero'),
+        'an unknown name': ('zz + 1', "it uses 'zz'"),
+        'a later calc id': ('k4 + 1', "it uses 'k4'"),
+        'a list comprehension': ('[1 for x in ()]', 'something other than numbers'),
+        'unbalanced brackets': ('(1 + 2', 'not arithmetic Python can read'),
+    }
+    for name, (expr, why) in attacks.items():
+        try:
+            errors = problems(with_calc(expr=expr, value=1), OSMOSIS_SOURCES)[0]
+            crashed = None
+        except Exception as exc:  # a traceback is a failure
+            errors, crashed = [], exc
+        hit = [e for e in errors if e[0] == 'Calc k3' and '"expr" cannot be computed' in e[1] and why in e[1]]
+        check(crashed is None and bool(hit), f'expr with {name} is a clean error "{why}" ({crashed or text_of(errors)[:2]})')
+    check(not marker.exists(), 'no expr ran code (the marker file was never created)')
+    check(vc.safe_eval('sqrt(16) + abs(-2) + 2^3', {}) == 14.0, 'safe_eval does sqrt, abs and ^ as a power')
+
+
+def numbers():
+    def nums(text):
+        return [(n[0], n[2]) for n in vc.numbers_in(text)]
+    check(nums('eighty four point five') == [(84.5, False)], f'a spelled-out number is read: {nums("eighty four point five")}')
+    check(nums('Step 2 and slide 5') == [], f'"Step 2" and "slide 5" are not numbers: {nums("Step 2 and slide 5")}')
+    check(nums('x^2') == [], f'the exponent in x^2 is not a number: {nums("x^2")}')
+    check(nums('70% of them') == [(70.0, True)], '70% is read as a percent')
+
+    d = osmosis()
+    clean('a number in "say" backed by its cited calc', d, OSMOSIS_SOURCES)
+    d['scenes'][2]['beats'][1]['claims'] = ['c5']
+    expect('the same number with nothing cited behind it', d, "states 'four point five'", 'Scene 3', OSMOSIS_SOURCES)
+
+    d = osmosis()
+    beat(d, 0, 1)['say'] = 'Osmosis moves eighty four point five percent of the water across a selectively permeable membrane.'
+    expect('an unbacked spelled-out number', d, "states 'eighty four point five'", 'Scene 1', OSMOSIS_SOURCES)
+
+    d = osmosis()
+    beat(d, 0, 0)['say'] = 'Look at slide 5 and Step 2 of your notes again.'
+    absent('"slide 5" and "Step 2" in a talk beat are not numbers', d, 'has a number in it', OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 1, 0)['show'].append({'type': 'equation', 'text': 'x^2 + y^2'})
+    absent('an exponent on screen is not a number', d, 'The screen states', OSMOSIS_SOURCES)
+
+    d = osmosis()
+    beat(d, 2, 1)['show'][0]['text'] = '500 × 0.9 / 100 = 4.6 g'
+    expect('an unbacked number in an equation', d, "The screen states '4.6'", 'Scene 3 (Normal saline), beat 2, show 1', OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 2, 0)['show'][1]['cells'] = ['Saline', '7 g']
+    expect('an unbacked number in a table row', d, "The screen states '7'", 'Scene 3 (Normal saline), beat 1, show 2', OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 2, 0)['show'] = [{'type': 'table', 'columns': ['Bag', 'Salt'], 'rows': [['Saline', '7 g']]}]
+    expect('an unbacked number in a table cell', d, "The screen states '7'", 'Scene 3 (Normal saline), beat 1, show 1', OSMOSIS_SOURCES)
+    # Checker bug, left failing on purpose: backs() checks a percent's fraction (0.8% -> 0.008) to the percent's own
+    # decimals and lets any non-whole pool number within 0.5 back a whole percent, so 0.8% is "backed" by the
+    # 0.009 that c5's "0.9 percent" adds to the pool, and 37% by any 0.5.
+    d = osmosis()
+    beat(d, 2, 0)['show'][1]['cells'] = ['Saline', '0.8%']
+    expect('0.8% in a table row backed only by "0.9 percent"', d, "The screen states '0.8%'", 'Scene 3', OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 2, 1)['show'].append({'type': 'bars', 'title': 'Salt per bag', 'items': [{'label': 'one', 'value': 4.5}, {'label': 'four', 'value': 19}]})
+    expect('an unbacked bars value', d, "The screen states '19'", 'Scene 3 (Normal saline), beat 2, show 2', OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 2, 2)['show'] = [{'type': 'bars', 'title': 'Salt per bag', 'items': [{'label': 'one', 'value': 4.5}, {'label': 'four', 'value': 18}]}]
+    absent('bars values backed by the beat\'s calc', d, 'The screen states', OSMOSIS_SOURCES)
+
+    def with_fraction(say, expr='14 / 20', value=0.7):
+        d = osmosis()
+        d['calc'].append({'id': 'k3', 'expr': expr, 'value': value})
+        d['scenes'][2]['beats'].insert(3, {'say': say, 'claims': ['k3']})
+        return d
+    clean('70% backed by a calc of 0.7', with_fraction('Fourteen of twenty cells shrank, so 70% shrank.'), OSMOSIS_SOURCES)
+    expect('7% is not backed by 0.7', with_fraction('Fourteen of twenty cells shrank, so 7% shrank.'), "states '7%'", 'Scene 3', OSMOSIS_SOURCES)
+    expect('75% is not backed by 0.7', with_fraction('Fourteen of twenty cells shrank, so 75% shrank.'),
+           "states '75%'", 'Scene 3', OSMOSIS_SOURCES)
+    clean('0.844 said for 0.84439', with_fraction('The share of cells that shrank is 0.844.', '84.439 / 100', 0.84439), OSMOSIS_SOURCES)
+    expect('0.85 said for 0.84439', with_fraction('The share of cells that shrank is 0.85.', '84.439 / 100', 0.84439), "states '0.85'", 'Scene 3', OSMOSIS_SOURCES)
+
+
+def coverage():
+    d = osmosis()
+    beat(d, 0, 1)['claims'] = ['c5']
+    expect('a claim cited on a sentence that shares none of its key words', d, 'cites c5, but shares no key word', 'Scene 1', OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 0, 1)['claims'] = ['c1', 'k1']
+    expect('a calc cited on a sentence with none of its numbers', d, 'cites calc k1, but says none of its numbers', 'Scene 1', OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 2, 3)['pause']['claims'] = ['k1', 'k2', 'c1']
+    expect('a claim cited on a pause it has nothing to do with', d, 'cites c1, but shares no key word', 'Scene 3', OSMOSIS_SOURCES)
+
+
+def symbols():
+    for sym, say in (('^', 'The area of the cell grows as p^2 grows.'), ('=', 'Hypertonic = more solute outside the cell.')):
+        d = osmosis()
+        beat(d, 1, 0)['say'] = say
+        hit = expect(f'"say" holding {sym!r}', d, f'asks the voice to read the symbol {sym!r}', 'Scene 2', OSMOSIS_SOURCES)
+        check(hit and 'Write it the way you would say it' in hit[0][2], f'the fix for {sym!r} says "Write it the way you would say it"')
+
+
+def conflicts():
+    d = osmosis()
+    d['claims'] = [c for c in d['claims'] if c['id'] != 'c3']
+    beat(d, 1, 1)['claims'] = ['c2']
+    beat(d, 1, 1)['say'] = 'So in a hypertonic solution, water leaves the cell and it shrinks.'
+    hit = expect('the notes\' sentence used without flagging slide 5', d, 'is contradicted by bio101-slides.md', 'Claim c2', OSMOSIS_SOURCES)
+    check(hit and 'gains water and swells' in hit[0][1], 'the conflict error quotes the slide 5 sentence')
+    clean('slide 5 recorded as a conflict and a beat citing both', osmosis(), OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 1, 1)['claims'] = ['c3']
+    expect('a conflict pair that no beat cites together', d, 'disagrees with c2, but no beat cites both', 'Claim c3', OSMOSIS_SOURCES)
+    d = osmosis()
+    del d['claims'][2]['note']
+    expect('a conflict with no note', d, 'is marked conflict with no note', 'Claim c3', OSMOSIS_SOURCES)
+    d = osmosis()
+    d['claims'][2]['other'] = 'c9'
+    expect('a conflict naming a claim that does not exist', d, "\"other\" names 'c9'", 'Claim c3', OSMOSIS_SOURCES)
+    # The hypotonic slide reads as the opposite of the wrong slide 5. notConflict lets the writer dismiss it, visibly.
+    d = osmosis()
+    d['claims'].append(claim('c4', 'In a hypotonic solution, water enters the cell.', 'bio101-slides.md', 'Slide 6',
+                             'In a hypotonic solution, water enters the cell.'))
+    d['scenes'][1]['beats'].append({'say': 'In a hypotonic solution, water enters the cell.', 'claims': ['c4']})
+    expect('the hypotonic slide against the wrong slide 5', d, 'is contradicted by bio101-slides.md', 'Claim c4', OSMOSIS_SOURCES)
+    # It also reads as the opposite of the notes' "Water leaves the cell and it shrinks." taken alone (a false alarm).
+    d['claims'][-1]['notConflict'] = [SLIDE5, 'Water leaves the cell and it shrinks.']
+    clean('notConflict dismisses both', d, OSMOSIS_SOURCES)
+    lines = badge(d, OSMOSIS_SOURCES)['lines']
+    check(any(re.match(r'\d+ possible contradictions? dismissed by the writer', x) for x in lines), f'the badge lines report the dismissal ({lines})')
+    d['claims'][-1]['notConflict'] = ['Water leaves the cell and it shrinks.']
+    expect('a notConflict that names only one sentence leaves the other flagged', d, 'is contradicted by bio101-slides.md', 'Claim c4', OSMOSIS_SOURCES)
+    check(not any('dismissed' in x for x in badge(osmosis(), OSMOSIS_SOURCES)['lines']), 'with nothing dismissed the badge says nothing about it')
+
+
+def badges():
+    v = badge(sky())
+    check(v['level'] == 'unverified' and v['label'].startswith('Unverified'), f'(a) no sources: unverified ({v["level"]}: {v["label"]})')
+    v = badge(osmosis(), OSMOSIS_SOURCES)
+    check(v['level'] == 'checked' and v['label'] == 'Checked against your course: 4 of 4 claims quoted', f'(b) course lesson, all quoted ({v["level"]}: {v["label"]})')
+    check('Explanations not independently reviewed' in v['lines'], '(d) no review: "Explanations not independently reviewed"')
+    check(all(x == 'quoted' for x in v['claims'].values()) and len(v['claims']) == 4, 'every claim is listed as quoted')
+
+    d = osmosis()
+    openstax = write('openstax.txt', 'Red blood cells have no cell wall, so they can burst in pure water.')
+    d['claims'].append({'id': 'c6', 'text': 'Red blood cells have no cell wall, so they can burst.', 'from': 'outside',
+                        'where': 'https://openstax.org/books/biology-2e/pages/5-2-passive-transport', 'source': 'OpenStax Biology 2e',
+                        'checked': '2026-11-22', 'file': 'openstax.txt',
+                        'quote': 'Red blood cells have no cell wall, so they can burst in pure water.'})
+    d['scenes'][1]['beats'].insert(1, {'say': 'A red blood cell has no cell wall, so it can burst.', 'claims': ['c6']})
+    srcs = vc.load_sources([OSMOSIS_DIR, TRANSCRIPT, openstax])
+    clean('fixture: the course lesson with one outside claim', d, srcs)
+    v = badge(d, srcs)
+    check(v['level'] == 'partial' and v['label'] == 'Checked against your course: 4 of 4 course claims quoted', f'(c) an outside claim makes it partial ({v["level"]}: {v["label"]})')
+    check('Not checked against your course: 1 claim from outside sources' in v['lines'], f'(c) the "Not checked against your course" line ({v["lines"]})')
+
+    d = reviewed(osmosis())
+    v = badge(d, OSMOSIS_SOURCES)
+    check('Explanations reviewed by test (as recorded)' in v['lines'] and 'Explanations not independently reviewed' not in v['lines'],
+          f'(d) a recorded review: "Explanations reviewed by" ({v["lines"]})')
+    clean('the reviewed osmosis lesson with --final', d, OSMOSIS_SOURCES, final=True)
+
+    # --write signs the file; the signature covers every byte of the lesson.
+    path = write('osmosis.json', d)
+    r = run(path, '--sources', OSMOSIS_DIR, '--sources', TRANSCRIPT, '--write')
+    signed = json.loads(path.read_text())
+    sv = signed.get('verification') or {}
+    check(r.returncode == 0 and sv.get('by') == 'video_check.py' and sv.get('sha256') == vc.sha256_of(d),
+          f'--write signs the file in place (exit {r.returncode}, {sv.get("level")})')
+    check(sv.get('label') == 'Checked against your course: 4 of 4 claims quoted', f'the signed label is the checker\'s ({sv.get("label")})')
+    absent('rerunning the checker on the signed file', signed, '"verification"', OSMOSIS_SOURCES)
+    r = run(path, '--sources', OSMOSIS_DIR, '--sources', TRANSCRIPT, '--final')
+    check(r.returncode == 0, f'main() passes the signed file (exit {r.returncode})')
+    edited = copy.deepcopy(signed)
+    beat(edited, 0, 1)['say'] = beat(edited, 0, 1)['say'].replace('water', 'wafer', 1)
+    expect('one character of "say" edited after signing', edited, 'was not written by the checker for this exact file', '"verification"', OSMOSIS_SOURCES)
+    forged = osmosis()
+    forged['verification'] = {'by': 'video_check.py', 'level': 'checked', 'label': 'Checked', 'sha256': '0' * 64}
+    expect('a hand-written verification block', forged, 'was not written by the checker', '"verification"', OSMOSIS_SOURCES)
+    forged['verification']['sha256'] = vc.sha256_of(forged)
+    forged['verification']['by'] = 'claude'
+    expect('a verification block with the right hash but another signer', forged, 'was not written by the checker', '"verification"', OSMOSIS_SOURCES)
+    d = osmosis()
+    d['learner']['checked'] = 'yes'
+    expect('learner.checked "yes"', d, 'a lesson cannot mark itself checked', 'learner.checked', OSMOSIS_SOURCES)
+
+    a = osmosis()
+    b = copy.deepcopy(a)
+    b['verification'] = {'by': 'anyone', 'sha256': 'x'}
+    check(vc.sha256_of(a) == vc.sha256_of(b), 'sha256_of ignores the verification block')
+    b = copy.deepcopy(a)
+    b['calc'][1]['value'] = 18.0
+    b['wpm'] = 145.0
+    check(vc.sha256_of(a) == vc.sha256_of(b), 'sha256_of treats 18.0 and 18 the same')
+    b['wpm'] = 146
+    check(vc.sha256_of(a) != vc.sha256_of(b), 'sha256_of changes when a value changes')
+
+
+def pause_and_length():
+    d = osmosis()
+    beat(d, 2, 2)['show'] = [{'type': 'label', 'text': '18 grams'}]
+    expect('the pause answer on screen earlier in the scene', d, 'which is already on screen in this scene', 'Scene 3 (Normal saline), beat 4', OSMOSIS_SOURCES)
+    d = osmosis()
+    d['scenes'][2]['beats'].append({'say': 'So two liters hold eighteen grams of salt.', 'claims': ['k2'],
+                                     'show': [{'type': 'label', 'text': '18 grams'}]})
+    clean('the same answer shown after the pause', d, OSMOSIS_SOURCES)
+
+    d = sky()
+    stretch(d, 2, 1, 200)
+    stretch(d, 4, 1, 200)
+    hit = expect('over 6.5 minutes of narration', d, 'minutes of narration', 'The video')
+    check(hit and '"part"' in hit[0][2], 'the length fix says to split it into parts with "part"')
+    d = sky()
+    stretch(d, 4, 1, 60)
+    absent('a video under 6.5 minutes', d, 'minutes of narration')
+    for bad in ({'n': 3, 'of': 2, 'series': 'Sky'}, {'n': 0, 'of': 2}, {'n': 1, 'of': 13}, {'n': '1', 'of': 2}, [1, 2]):
+        d = sky()
+        d['part'] = bad
+        expect(f'"part" {bad!r}', d, 'must be {"n": 1', '"part"')
+    d = sky()
+    d['part'] = {'n': 1, 'of': 2, 'series': 'Light and color'}
+    clean('"part" 1 of 2', d)
+
+
+def show_types():
+    def add(lesson, el, si=1, bi=0):
+        beat(lesson, si, bi).setdefault('show', []).append(el)
+        return lesson
+    expect('a table with a short row', add(osmosis(), {'type': 'table', 'columns': ['Beaker', 'Cell'], 'rows': [['Hypertonic']]}),
+           'table "rows" must be up to 6 rows of 2 cells each', 'Scene 2', OSMOSIS_SOURCES)
+    expect('a table with one column', add(osmosis(), {'type': 'table', 'columns': ['Beaker'], 'rows': []}),
+           'table "columns" must list 2 to 5 headings', 'Scene 2', OSMOSIS_SOURCES)
+    expect('a row with no table before it in the scene', add(osmosis(), {'type': 'row', 'cells': ['Hypertonic', 'shrinks']}),
+           'no table is on screen in this scene', 'Scene 2', OSMOSIS_SOURCES)
+    d = osmosis()
+    d['scenes'][2]['beats'].append({'say': 'Normal saline is isotonic to red blood cells.', 'claims': ['c5'],
+                                     'show': [{'type': 'row', 'cells': ['Saline', 'isotonic', 'extra']}]})
+    expect('a row wider than its table', d, 'row must have 2 cells', 'Scene 3', OSMOSIS_SOURCES)
+    d = osmosis()
+    d['scenes'][2]['beats'].append({'say': 'Normal saline is isotonic to red blood cells.', 'claims': ['c5'],
+                                     'show': [{'type': 'row', 'cells': ['Red cell', 'keeps shape']}]})
+    clean('a valid table plus two rows', d, OSMOSIS_SOURCES)
+    for bad in (-2, 'lots', True):
+        expect(f'bars with value {bad!r}', add(osmosis(), {'type': 'bars', 'items': [{'label': 'a', 'value': 1}, {'label': 'b', 'value': bad}], 'claims': ['c2']}),
+               'bars "items" must be 2 to 6', 'Scene 2', OSMOSIS_SOURCES)
+    expect('bars with one item', add(osmosis(), {'type': 'bars', 'items': [{'label': 'a', 'value': 0}], 'claims': ['c2']}),
+           'bars "items" must be 2 to 6', 'Scene 2', OSMOSIS_SOURCES)
+    expect('a term with tier "core"', add(osmosis(), {'type': 'term', 'word': 'Solute', 'meaning': 'What is dissolved', 'tier': 'core'}),
+           '"tier" is \'core\'', 'Scene 2', OSMOSIS_SOURCES)
+    expect('tier on a compare', add(osmosis(), {'type': 'compare', 'left': 'Hyper', 'right': 'Hypo', 'leftItems': ['shrinks'], 'rightItems': ['swells'], 'tier': 'given'}),
+           'a compare cannot have "tier"', 'Scene 2', OSMOSIS_SOURCES)
+    for tier in ('memorize', 'given'):
+        absent(f'a term with tier {tier!r}', add(osmosis(), {'type': 'term', 'word': 'Solute', 'meaning': 'What is dissolved', 'tier': tier}), 'tier', OSMOSIS_SOURCES)
 
 
 if __name__ == '__main__':
