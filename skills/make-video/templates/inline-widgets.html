@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Myelinate</title>
+<!--
+  Tested inline views for teaching: practice, flashcards, steps, graph, video.
+  To use: replace only the JSON in the "data" script below, with one of the shapes shown there.
+  Show it with your host's inline render tool, or save it as a page they can open.
+  Writing inline by hand? Keep just the view you need: each lives under its own heading in the script.
+  Formulas: write Unicode here (v₀ = Vmax[S] / (Km + [S])). A math-heavy deck belongs in flashcards-deck.html.
+  Practice has no answer field on purpose: their answers go back to you, and the verdict is yours.
+  This page sends nothing anywhere except the YouTube player, which loads only when they press play.
+-->
+<style>
+  :root {
+    --paper-raised: #fffcf5; --paper-sunken: #efe8d8; --ink: #16313b; --muted: #4c6269;
+    --rule: #e3dccb; --rule-strong: #c9c1ad; --accent: #a54320; --accent-ink: #fffcf5; --teal: #165d78;
+    --serif: Newsreader, Georgia, 'Times New Roman', serif;
+    --sans: Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --paper-raised: #15282f; --paper-sunken: #0b171c; --ink: #ece6d8; --muted: #a3b3b2;
+    --rule: #23383f; --rule-strong: #34505a; --accent: #e8835a; --accent-ink: #0b171c; --teal: #7cc0d6;
+    color-scheme: dark;
+  } }
+  :root[data-theme="dark"] {
+    --paper-raised: #15282f; --paper-sunken: #0b171c; --ink: #ece6d8; --muted: #a3b3b2;
+    --rule: #23383f; --rule-strong: #34505a; --accent: #e8835a; --accent-ink: #0b171c; --teal: #7cc0d6;
+    color-scheme: dark;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: transparent; color: var(--ink); font: 15px/1.5 var(--sans); }
+  body { padding: 16px; overflow-wrap: anywhere; }
+  h1 { font: 500 19px/1.25 var(--serif); letter-spacing: -0.01em; margin: 0; }
+  p { margin: 0; }
+  .stack { display: flex; flex-direction: column; gap: 14px; }
+  .head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+  .count { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .prompt { font-size: 16px; line-height: 1.5; }
+  .back { padding: 12px 14px; background: var(--paper-sunken); border-radius: 8px; border-left: 3px solid var(--accent); }
+  .source { color: var(--muted); font-size: 12.5px; }
+  .note { color: var(--muted); font-size: 13.5px; }
+  label { display: block; font-size: 13.5px; font-weight: 600; margin-bottom: 6px; }
+  textarea, input[type=text] {
+    width: 100%; min-height: 76px; padding: 10px 12px; color: var(--ink); background: var(--paper-raised);
+    border: 1px solid var(--rule-strong); border-radius: 8px; font: inherit; resize: vertical;
+  }
+  button {
+    min-height: 44px; padding: 8px 16px; border-radius: 8px; border: 1px solid var(--rule-strong);
+    background: transparent; color: var(--ink); font: 600 14px var(--sans); cursor: pointer;
+  }
+  button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+  button:disabled { opacity: .45; cursor: default; }
+  :is(button, a, textarea, input, select):focus-visible { outline: 2px solid var(--teal); outline-offset: 2px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .row.end { justify-content: flex-end; }
+  .grow { flex: 1 1 auto; }
+  .rate { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .rate button { padding: 8px 4px; }
+  .hint { padding: 10px 12px; border-left: 3px solid var(--teal); background: var(--paper-sunken); border-radius: 0 8px 8px 0; font-size: 14.5px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chips button { min-height: 40px; padding: 6px 12px; font-weight: 500; }
+  .chips button[aria-pressed="true"] { border-color: var(--teal); box-shadow: inset 0 0 0 1px var(--teal); }
+  .done-list { margin: 0; padding-left: 20px; display: grid; gap: 8px; }
+  .figure { color: var(--ink); }
+  .figure svg { display: block; width: 100%; height: auto; max-height: 340px; }
+  .bar { height: 3px; background: var(--rule); border-radius: 2px; overflow: hidden; }
+  .bar > i { display: block; height: 100%; background: var(--accent); transition: width .2s ease; }
+  @media (prefers-reduced-motion: reduce) { .bar > i { transition: none; } }
+  .video-frame { position: relative; aspect-ratio: 16 / 9; width: 100%; border-radius: 8px; overflow: hidden; background: #000; border: 0; padding: 0; display: block; min-height: 0; }
+  .video-frame img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .8; }
+  .video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+  .video-frame .play { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 10px 18px; background: rgba(11,23,28,.88); color: #fffcf5; border-radius: 8px; font-weight: 600; }
+  .pause { display: grid; grid-template-columns: auto 1fr; gap: 10px; align-items: baseline; text-align: left; width: 100%; font-weight: 400; padding: 10px 12px; height: auto; }
+  .pause b { font-variant-numeric: tabular-nums; color: var(--accent); font-weight: 600; }
+  .pause.on { border-color: var(--accent); background: var(--paper-sunken); }
+  a { color: var(--teal); }
+  .slider { display: grid; grid-template-columns: minmax(70px, auto) 1fr 52px; gap: 10px; align-items: center; font-size: 14px; }
+  .slider input { width: 100%; min-height: 36px; accent-color: var(--accent); }
+  .slider output { text-align: right; font-variant-numeric: tabular-nums; }
+  .plot { width: 100%; height: auto; display: block; touch-action: pan-y; }
+  .plot text { fill: var(--muted); font: 11px var(--sans); }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+</style>
+</head>
+<body>
+<main id="root" class="stack"></main>
+<script type="application/json" id="data">
+{"view": "practice", "title": "Enzyme kinetics", "ask_confidence": true, "questions": [
+  {"prompt": "What does a competitive inhibitor do to apparent Km?", "hints": ["What is it competing for?", "Can more substrate win?"], "source": "Lecture 7, section 7.4"}
+]}
+</script>
+<!-- Other shapes:
+  {"view":"flashcards","title":"...","cards":[{"front":"...","back":"...","source":"..."}]}
+  {"view":"steps","title":"...","question":"...","steps":[{"text":"...","svg":"<svg ...>...</svg>","alt":"...","predict":"What happens next?"}]}
+  {"view":"graph","title":"...","expression":"a*sin(b*x)","x_range":[0,6.28],"y_range":[-3,3],"x_label":"x","y_label":"y","parameters":[{"name":"a","label":"amplitude","min":0,"max":3,"value":1,"step":0.1}],"predict":"...","question":"..."}
+  {"view":"video","status":"ok","id":"VIDEO_ID","title":"...","channel":"...","thumbnail":"https://i.ytimg.com/vi/VIDEO_ID/hqdefault.jpg","watch_url":"https://www.youtube.com/watch?v=VIDEO_ID","start":0,"end":300,"watch_for":"...","pause_points":[{"at":60,"ask":"..."}],"recall_prompt":"..."}
+  Video: use a real ID you checked. Use times only if you read them in a transcript. If embedding is off, set "status":"blocked" and "note".
+  "end" (optional, seconds) stops playback once there. Or, instead of "start" and "end", give "segments":[{"start":250,"end":570,"label":"..."}]: buttons that each play one range and stop once at its end; Play starts the first one.
+  In JSON, every "<" must be written as \u003c (the svg above included).
+-->
+<script>
+(function () {
+  'use strict';
+  let ytFrame = null, onYouTube = () => {};
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+
+  // ---- Text: everything is escaped; **bold**, *italics* and line breaks are the only markup. ----
+  function rich(text) {
+    return esc(String(text == null ? '' : text)).replace(/\*\*(?!\s)([\s\S]+?)(?<!\s)\*\*/g, '<strong>$1</strong>').replace(/(?<![*\w])\*(?![\s*])([^*\n]+?)(?<![\s*])\*(?![*\w])/g, '<em>$1</em>').replace(/\r?\n/g, '<br>');
+  }
+  const plainText = text => String(text == null ? '' : text);
+
+// A small, safe math expression compiler for show_graph. No eval: it builds closures from a fixed grammar.
+// Grammar: + - * / ^, unary minus, parentheses, numbers, named variables, and the functions below.
+const FUNCTIONS = {
+  sin: Math.sin, cos: Math.cos, tan: Math.tan, asin: Math.asin, acos: Math.acos, atan: Math.atan,
+  sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh, exp: Math.exp, ln: Math.log, log: Math.log10,
+  sqrt: Math.sqrt, abs: Math.abs, floor: Math.floor, ceil: Math.ceil, sign: Math.sign,
+  min: Math.min, max: Math.max, pow: Math.pow,
+};
+const CONSTANTS = { pi: Math.PI, e: Math.E };
+
+function compileExpression(source, variables) {
+  if (typeof source !== 'string' || source.length === 0 || source.length > 300) throw new Error('expression must be 1 to 300 characters');
+  const allowed = new Set(variables);
+  const tokens = source.match(/\d+\.?\d*(?:[eE][+-]?\d+)?|\.\d+|[A-Za-z_][A-Za-z_0-9]*|[-+*/^(),]|\S/g) || [];
+  let at = 0;
+  const peek = () => tokens[at];
+  const take = () => tokens[at++];
+  const expect = t => { if (take() !== t) throw new Error(`expected "${t}" in expression`); };
+
+  function sum() {
+    let left = product();
+    while (peek() === '+' || peek() === '-') {
+      const op = take(), a = left, b = product();
+      left = op === '+' ? v => a(v) + b(v) : v => a(v) - b(v);
+    }
+    return left;
+  }
+  function product() {
+    let left = unary();
+    while (peek() === '*' || peek() === '/') {
+      const op = take(), a = left, b = unary();
+      left = op === '*' ? v => a(v) * b(v) : v => a(v) / b(v);
+    }
+    return left;
+  }
+  function unary() {
+    if (peek() === '-') { take(); const a = unary(); return v => -a(v); }
+    if (peek() === '+') { take(); return unary(); }
+    return power();
+  }
+  function power() {
+    const base = atom();
+    if (peek() === '^') { take(); const exponent = unary(); return v => Math.pow(base(v), exponent(v)); }
+    return base;
+  }
+  function atom() {
+    const t = take();
+    if (t === undefined) throw new Error('expression ended early');
+    if (t === '(') { const inner = sum(); expect(')'); return inner; }
+    if (/^(\d|\.\d)/.test(t)) { const n = Number(t); return () => n; }
+    if (/^[A-Za-z_]/.test(t)) {
+      if (peek() === '(') {
+        if (!Object.hasOwn(FUNCTIONS, t)) throw new Error(`unknown function "${t}"`);
+        take();
+        const args = [sum()];
+        while (peek() === ',') { take(); args.push(sum()); }
+        expect(')');
+        const f = FUNCTIONS[t];
+        return v => f(...args.map(a => a(v)));
+      }
+      if (allowed.has(t)) return v => v[t];
+      if (Object.hasOwn(CONSTANTS, t)) { const c = CONSTANTS[t]; return () => c; }
+      throw new Error(`unknown name "${t}"`);
+    }
+    throw new Error(`unexpected "${t}" in expression`);
+  }
+
+  const run = sum();
+  if (at !== tokens.length) throw new Error(`unexpected "${peek()}" in expression (write multiplication as a*b)`);
+  return run;
+}
+
+
+
+  // ---- SVG allowlist: the server refuses scripts and links; this rebuilds the drawing from known-safe parts. ----
+  const SVG_TAGS = new Set(['svg', 'g', 'path', 'line', 'polyline', 'polygon', 'rect', 'circle', 'ellipse', 'text', 'tspan', 'title', 'desc', 'defs', 'marker', 'clipPath', 'linearGradient', 'radialGradient', 'stop', 'pattern', 'mask']);
+  const SVG_ATTRS = /^(viewBox|xmlns|width|height|x|y|x1|x2|y1|y2|cx|cy|r|rx|ry|d|points|fill|stroke|stroke-width|stroke-dasharray|stroke-linecap|stroke-linejoin|opacity|fill-opacity|stroke-opacity|fill-rule|clip-rule|transform|font-size|font-weight|font-family|font-style|text-anchor|dominant-baseline|dx|dy|id|marker-start|marker-mid|marker-end|markerWidth|markerHeight|refX|refY|orient|markerUnits|clip-path|mask|offset|stop-color|stop-opacity|gradientUnits|gradientTransform|fx|fy|patternUnits|preserveAspectRatio|role|aria-label|aria-hidden)$/;
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+  function safeSVG(source, alt) {
+    const doc = new DOMParser().parseFromString(source, 'image/svg+xml');
+    const root = doc.documentElement;
+    if (!root || root.localName !== 'svg' || doc.querySelector('parsererror')) return null;
+    const copy = node => {
+      if (node.nodeType === 3) return document.createTextNode(node.nodeValue);
+      if (node.nodeType !== 1 || !SVG_TAGS.has(node.localName)) return null;
+      const el = document.createElementNS(SVG_NS, node.localName);
+      for (const a of Array.from(node.attributes)) {
+        const value = a.value;
+        if (SVG_ATTRS.test(a.name) && !/url\(\s*['"]?(?!#)|javascript:/i.test(value)) el.setAttribute(a.name, value);
+      }
+      for (const c of Array.from(node.childNodes)) { const k = copy(c); if (k) el.appendChild(k); }
+      return el;
+    };
+    const svg = copy(root);
+    if (!svg) return null;
+    svg.removeAttribute('width'); svg.removeAttribute('height');
+    svg.setAttribute('role', 'img');
+    if (alt) svg.setAttribute('aria-label', alt);
+    return svg;
+  }
+
+  // ---- Sending answers back: only where the host offers a way. Otherwise the learner gets text to paste. ----
+  async function sendToChat(text) {
+    try {
+      if (typeof window.sendPrompt === 'function') { await window.sendPrompt(text); return true; }
+      if (window.openai && window.openai.sendFollowUpMessage) { await window.openai.sendFollowUpMessage({ prompt: text }); return true; }
+    } catch (e) { /* fall through to the paste box */ }
+    return false;
+  }
+  window.addEventListener('message', ev => {
+    if (ytFrame && ev.source === ytFrame.contentWindow && typeof ev.data === 'string') onYouTube(ev.data);
+  });
+  const sizeNow = () => {};
+  function openLink(url) { window.open(url, '_blank', 'noopener'); }
+
+  const root = document.getElementById('root');
+  function el(tag, attrs, ...kids) {
+    const n = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs || {})) {
+      if (k === 'text') n.textContent = v;
+      else if (k === 'html') n.innerHTML = v;
+      else if (k.startsWith('on')) n.addEventListener(k.slice(2), v);
+      else if (v === true) n.setAttribute(k, '');
+      else if (v !== false && v != null) n.setAttribute(k, v);
+    }
+    for (const c of kids.flat()) if (c) n.append(c);
+    return n;
+  }
+  const richEl = (tag, text, cls) => el(tag, { class: cls, dir: 'auto', html: rich(text) });
+  function show(...nodes) { root.replaceChildren(...nodes.flat().filter(Boolean)); sizeNow(); }
+  function focusFirst(sel) { const n = root.querySelector(sel); if (n) n.focus({ preventScroll: true }); }
+
+  // A send button that falls back to a copy box when the host can't post into the chat.
+  function sendControl(label, getText, onSent) {
+    const status = el('p', { class: 'note', role: 'status' });
+    const area = el('div');
+    const btn = el('button', { class: 'primary', text: label, onclick: async () => {
+      const text = getText();
+      btn.disabled = true;
+      status.textContent = 'Sending…';
+      if (await sendToChat(text)) {
+        status.textContent = 'Sent. Your reply is in the chat.';
+        if (onSent) onSent();
+      } else {
+        btn.disabled = false;
+        status.textContent = 'This app can’t post to the chat here. Copy this and paste it as your reply:';
+        area.replaceChildren(el('textarea', { readonly: true, 'aria-label': 'Text to paste', text }));
+        area.firstChild.select();
+      }
+      sizeNow();
+    } });
+    return el('div', { class: 'stack' }, el('div', { class: 'row end' }, btn), status, area);
+  }
+  const header = (title, count) => el('div', { class: 'head' }, el('h1', { dir: 'auto', text: title }), count ? el('span', { class: 'count', text: count }) : null);
+  const progress = fraction => el('div', { class: 'bar', role: 'presentation' }, el('i', { style: 'width:' + Math.round(fraction * 100) + '%' }));
+
+  const VIEWS = {};
+
+  // ---- Practice: one question at a time. No key is sent here, ever. ----
+  VIEWS.practice = function (d) {
+    // Graded work (d.graded): one of their questions per widget, no Next or Back; the next comes after your verdict.
+    const qs = d.graded ? d.questions.slice(0, 1) : d.questions;
+    const state = qs.map(() => ({ answer: '', hints: 0, sure: '' }));
+    let i = 0, finished = false;
+    function draw() {
+      const q = qs[i], s = state[i], hints = q.hints || [];
+      const box = el('textarea', { id: 'answer', dir: 'auto', 'aria-label': 'Your answer', placeholder: 'Your answer, in your own words', oninput: e => { s.answer = e.target.value; next.disabled = !s.answer.trim(); } });
+      box.value = s.answer;
+      const next = el('button', { class: 'primary', text: i === qs.length - 1 ? 'Review answers' : 'Next question', disabled: !s.answer.trim(), onclick: () => { if (i === qs.length - 1) review(); else { i++; draw(); focusFirst('#answer'); } } });
+      const hintBtn = hints.length && s.hints < hints.length ? el('button', { text: s.hints ? 'Another hint' : 'Hint', onclick: () => { s.hints++; draw(); } }) : null;
+      show(
+        header(d.title, qs.length > 1 ? 'Question ' + (i + 1) + ' of ' + qs.length : ''),
+        qs.length > 1 ? progress(i / qs.length) : null,
+        richEl('p', q.prompt, 'prompt'),
+        q.source ? el('p', { class: 'source', dir: 'auto', text: 'From: ' + q.source }) : null,
+        hints.slice(0, s.hints).map(h => richEl('div', h, 'hint')),
+        box,
+        d.ask_confidence ? el('div', { class: 'chips', role: 'group', 'aria-label': 'How sure are you?' }, ['Sure', 'Unsure', 'Guessing'].map(c => el('button', { text: c, 'aria-pressed': s.sure === c ? 'true' : 'false', onclick: () => { s.sure = c; draw(); } }))) : null,
+        el('div', { class: 'row' }, i > 0 ? el('button', { text: 'Back', onclick: () => { i--; draw(); } }) : null, hintBtn, el('span', { class: 'grow' }), next)
+      );
+    }
+    const line = (q, s, k) => (qs.length > 1 ? (k + 1) + '. ' : '') + plainText(q.prompt) + '\nMy answer: ' + s.answer.trim() + '\n(' + (s.hints ? 'used ' + s.hints + (s.hints === 1 ? ' hint' : ' hints') : 'no hints') + (s.sure ? '; ' + s.sure.toLowerCase() : '') + ')';
+    function review() {
+      finished = true;
+      show(
+        header(d.title, 'Ready to send'),
+        el('ol', { class: 'done-list' }, qs.map((q, k) => el('li', { dir: 'auto' }, el('button', { class: 'pause', style: 'grid-template-columns:1fr', onclick: () => { i = k; finished = false; draw(); } }, richEl('span', q.prompt), el('span', { class: 'note', dir: 'auto', text: state[k].answer.trim() || 'No answer yet' }))))),
+        sendControl('Send my answers', () => 'My answers to "' + d.title + '":\n\n' + qs.map((q, k) => line(q, state[k], k)).join('\n\n'))
+      );
+    }
+    draw();
+  };
+
+  // ---- Flashcards: answer before the reveal; misses come back; session state only. ----
+  VIEWS.flashcards = function (d) {
+    const cards = d.cards.map((c, k) => Object.assign({ k, again: 0 }, c));
+    let queue = cards.slice(), seen = 0, shown = false, typed = '';
+    const results = new Map();
+    const save = () => { if (window.openai && window.openai.setWidgetState) window.openai.setWidgetState({ cleared: seen }); };
+    function draw() {
+      if (!queue.length) return done();
+      const c = queue[0], total = cards.length;
+      show(
+        header(d.title, seen + ' of ' + total + ' cleared'),
+        progress(seen / total),
+        richEl('p', c.front, 'prompt'),
+        shown ? richEl('div', c.back, 'back') : el('textarea', { id: 'attempt', dir: 'auto', 'aria-label': 'Your answer before the reveal', placeholder: 'Answer first, here or out loud', oninput: e => { typed = e.target.value; } }),
+        shown && typed.trim() ? el('p', { class: 'note', dir: 'auto', text: 'You wrote: ' + typed.trim() }) : null,
+        c.source && shown ? el('p', { class: 'source', dir: 'auto', text: 'From: ' + c.source }) : null,
+        shown
+          ? el('div', { class: 'rate', role: 'group', 'aria-label': 'How did that go?' }, [['Again', 0], ['Hard', 1], ['Good', 2], ['Easy', 3]].map(([label, r]) => el('button', { text: label, title: 'Key ' + (r + 1), onclick: () => rate(r) })))
+          : el('div', { class: 'row end' }, el('button', { class: 'primary', id: 'reveal', text: 'Show answer', onclick: () => { shown = true; draw(); focusFirst('.rate button:nth-child(3)'); } }))
+      );
+    }
+    function rate(r) {
+      const c = queue.shift();
+      const entry = results.get(c.k) || { misses: 0, rating: '' };
+      if (r === 0) { entry.misses++; queue.splice(Math.min(3, queue.length), 0, c); }
+      else if (r === 1) { entry.hard = true; queue.push(Object.assign({}, c, { retry: true })); if (c.retry) { queue.pop(); seen++; } }
+      else seen++;
+      entry.rating = ['again', 'hard', 'good', 'easy'][r];
+      results.set(c.k, entry);
+      shown = false; typed = ''; save(); draw(); focusFirst('#attempt');
+    }
+    function done() {
+      const missed = cards.filter(c => (results.get(c.k) || {}).misses);
+      const hard = cards.filter(c => { const e = results.get(c.k) || {}; return !e.misses && e.hard; });
+      const anki = '#separator:tab\n#html:false\n' + cards.map(c => [c.front, c.back, c.source || ''].map(x => String(x).replace(/\s*\n\s*/g, ' ').replace(/\t/g, ' ')).join('\t')).join('\n');
+      const list = cs => cs.map(c => '- ' + plainText(c.front)).join('\n');
+      const ankiBox = el('div');
+      show(
+        header(d.title, 'All ' + cards.length + ' cleared'),
+        el('p', { text: missed.length ? missed.length + ' needed another pass. Those are the ones to retrieve again tomorrow.' : hard.length ? 'No misses. ' + hard.length + ' felt hard.' : 'No misses this session. Recall today isn’t recall next week, so these still come back.' }),
+        missed.length ? el('ul', { class: 'done-list' }, missed.map(c => richEl('li', c.front))) : null,
+        el('p', { class: 'note', text: 'Progress here lasts for this session. Copy the deck to keep it.' }),
+        el('div', { class: 'row' }, el('button', { text: 'Copy deck for Anki', onclick: async e => {
+          try { await navigator.clipboard.writeText(anki); e.target.textContent = 'Copied'; }
+          catch (err) { ankiBox.replaceChildren(el('textarea', { readonly: true, 'aria-label': 'Anki deck', text: anki })); ankiBox.firstChild.select(); sizeNow(); }
+        } }), el('button', { text: 'Go again', onclick: () => { queue = cards.slice(); seen = 0; results.clear(); draw(); } })),
+        ankiBox,
+        sendControl('Send results', () => 'Flashcards "' + d.title + '": ' + cards.length + ' cards.\nMissed at least once:\n' + (list(missed) || '- none') + '\nFelt hard:\n' + (list(hard) || '- none'))
+      );
+    }
+    document.addEventListener('keydown', e => {
+      if (/TEXTAREA|INPUT/.test((e.target.tagName || '')) || !queue.length) return;
+      if (shown && e.key >= '1' && e.key <= '4') { e.preventDefault(); rate(+e.key - 1); }
+    });
+    draw();
+  };
+
+  // ---- Steps and figures: predict before the next step appears. ----
+  VIEWS.steps = function (d) {
+    const steps = d.steps;
+    const guesses = steps.map(() => '');
+    let i = 0, committed = steps.map((s, k) => k === 0 || !s.predict);
+    const figure = s => {
+      if (!s.svg) return null;
+      const svg = safeSVG(s.svg, s.alt);
+      return svg ? el('div', { class: 'figure' }, svg) : el('p', { class: 'note', text: 'This drawing could not be shown.' });
+    };
+    function draw() {
+      const s = steps[i], many = steps.length > 1;
+      const hold = !committed[i];
+      show(
+        header(d.title, many ? 'Step ' + (i + 1) + ' of ' + steps.length : ''),
+        many ? progress((i + 1) / steps.length) : null,
+        hold
+          ? [richEl('p', s.predict, 'prompt'), el('textarea', { id: 'guess', dir: 'auto', 'aria-label': 'Your prediction', placeholder: 'What do you expect?', oninput: e => { guesses[i] = e.target.value; go.disabled = !guesses[i].trim(); } })]
+          : [figure(s), s.text ? richEl('p', s.text) : null, guesses[i].trim() ? el('p', { class: 'note', dir: 'auto', text: 'You predicted: ' + guesses[i].trim() }) : null],
+        !hold && i === steps.length - 1 && d.question ? [richEl('p', d.question, 'prompt'), el('textarea', { id: 'final', dir: 'auto', 'aria-label': 'Your answer', oninput: e => { answer = e.target.value; } }), sendControl('Send my answer', () => (d.question ? plainText(d.question) + '\nMy answer: ' + answer.trim() : answer) + (guesses.some(g => g.trim()) ? '\nMy predictions: ' + guesses.map((g, k) => g.trim() ? 'step ' + (k + 1) + ': ' + g.trim() : '').filter(Boolean).join('; ') : ''))] : null,
+        many ? el('div', { class: 'row' }, i > 0 ? el('button', { text: 'Back', onclick: () => { i--; draw(); } }) : null, el('span', { class: 'grow' }), hold ? go : (i < steps.length - 1 ? el('button', { class: 'primary', text: 'Next step', onclick: () => { i++; draw(); focusFirst('#guess'); } }) : null)) : null
+      );
+    }
+    let answer = '';
+    const go = el('button', { class: 'primary', text: 'Show this step', disabled: true, onclick: () => { committed[i] = true; go.disabled = true; draw(); } });
+    draw();
+  };
+
+  // ---- Graph: commit a prediction, then drag. The starting curve stays as a ghost. ----
+  VIEWS.graph = function (d) {
+    const params = d.parameters || [];
+    const run = compileExpression(d.expression, ['x'].concat(params.map(p => p.name)));
+    const values = {}, start = {};
+    params.forEach(p => { values[p.name] = p.value; start[p.name] = p.value; });
+    let predicted = '', unlocked = !d.predict || !params.length, answer = '';
+    const W = 640, H = 340, L = 48, R = 12, T = 12, B = 40;
+    const [x0, x1] = d.x_range;
+    const samples = scope => {
+      const pts = [];
+      for (let k = 0; k <= 300; k++) {
+        const x = x0 + (x1 - x0) * k / 300;
+        let y;
+        try { y = run(Object.assign({}, scope, { x })); } catch (e) { y = NaN; }
+        pts.push([x, y]);
+      }
+      return pts;
+    };
+    function yRange() {
+      if (d.y_range) return d.y_range;
+      const scopes = [start];
+      params.forEach(p => { scopes.push(Object.assign({}, start, { [p.name]: p.min })); scopes.push(Object.assign({}, start, { [p.name]: p.max })); });
+      const ys = scopes.flatMap(s => samples(s).map(a => a[1])).filter(Number.isFinite).sort((a, b) => a - b);
+      if (!ys.length) return [-1, 1];
+      let lo = ys[Math.floor(ys.length * .01)], hi = ys[Math.floor(ys.length * .99)];
+      if (lo === hi) { lo -= 1; hi += 1; }
+      const pad = (hi - lo) * .08;
+      return [lo - pad, hi + pad];
+    }
+    const [y0, y1] = yRange();
+    const px = x => L + (x - x0) / (x1 - x0) * (W - L - R);
+    const py = y => T + (1 - (y - y0) / (y1 - y0)) * (H - T - B);
+    const nice = span => { const m = Math.pow(10, Math.floor(Math.log10(span / 5))), r = span / 5 / m; return (r < 1.5 ? 1 : r < 3.5 ? 2 : r < 7.5 ? 5 : 10) * m; };
+    // Tick values from a step-relative bound and an integer index, so a tiny range (energy in joules,
+    // 0 to 1e-19) gets about five ticks instead of looping past x1 by an absolute epsilon.
+    const ticks = (lo, hi) => {
+      const span = hi - lo;
+      if (!(span > 0) || !Number.isFinite(span)) return [];
+      const step = nice(span), out = [];
+      for (let k = Math.ceil(lo / step - 1e-9); k * step <= hi + step * 1e-9 && out.length < 50; k++) out.push(k * step);
+      return out;
+    };
+    const fmt = n => { const a = Math.abs(n); return a !== 0 && (a >= 1e4 || a < 1e-3) ? n.toExponential(1) : String(+n.toPrecision(4)); };
+    function pathFor(scope) {
+      let dd = '', pen = false, last = null;
+      for (const [x, y] of samples(scope)) {
+        if (!Number.isFinite(y) || y > y1 + (y1 - y0) * 4 || y < y0 - (y1 - y0) * 4 || (last !== null && Math.abs(y - last) > (y1 - y0) * 2)) { pen = false; last = Number.isFinite(y) ? y : null; continue; }
+        dd += (pen ? 'L' : 'M') + px(x).toFixed(1) + ' ' + py(Math.max(y0 - (y1 - y0), Math.min(y1 + (y1 - y0), y))).toFixed(1);
+        pen = true; last = y;
+      }
+      return dd;
+    }
+    const ns = (tag, attrs, text) => { const n = document.createElementNS(SVG_NS, tag); for (const k in attrs) n.setAttribute(k, attrs[k]); if (text != null) n.textContent = text; return n; };
+    const svg = ns('svg', { viewBox: '0 0 ' + W + ' ' + H, class: 'plot', role: 'img' });
+    svg.append(ns('defs', {}));
+    const clipId = 'plot-clip';
+    const clip = ns('clipPath', { id: clipId }); clip.append(ns('rect', { x: L, y: T, width: W - L - R, height: H - T - B })); svg.firstChild.append(clip);
+    const dx = nice(x1 - x0), dy = nice(y1 - y0);
+    for (const v of ticks(x0, x1)) {
+      svg.append(ns('line', { x1: px(v), x2: px(v), y1: T, y2: H - B, stroke: 'var(--rule)', 'stroke-width': Math.abs(v) < dx / 1e6 ? 1.5 : 1 }));
+      svg.append(ns('text', { x: px(v), y: H - B + 15, 'text-anchor': 'middle' }, fmt(Math.abs(v) < dx / 1e6 ? 0 : v)));
+    }
+    for (const v of ticks(y0, y1)) {
+      svg.append(ns('line', { x1: L, x2: W - R, y1: py(v), y2: py(v), stroke: 'var(--rule)', 'stroke-width': Math.abs(v) < dy / 1e6 ? 1.5 : 1 }));
+      svg.append(ns('text', { x: L - 6, y: py(v) + 4, 'text-anchor': 'end' }, fmt(Math.abs(v) < dy / 1e6 ? 0 : v)));
+    }
+    if (d.x_label) svg.append(ns('text', { x: (L + W - R) / 2, y: H - 6, 'text-anchor': 'middle' }, d.x_label));
+    if (d.y_label) svg.append(ns('text', { x: 12, y: (T + H - B) / 2, 'text-anchor': 'middle', transform: 'rotate(-90 12 ' + (T + H - B) / 2 + ')' }, d.y_label));
+    const ghost = ns('path', { d: pathFor(start), fill: 'none', stroke: 'var(--muted)', 'stroke-width': 1.5, 'stroke-dasharray': '4 4', 'clip-path': 'url(#' + clipId + ')', opacity: params.length ? 1 : 0 });
+    const curve = ns('path', { d: pathFor(values), fill: 'none', stroke: 'var(--accent)', 'stroke-width': 2.5, 'clip-path': 'url(#' + clipId + ')' });
+    svg.append(ghost, curve);
+    const describe = () => svg.setAttribute('aria-label', 'Graph of y = ' + d.expression + (params.length ? ' with ' + params.map(p => p.name + ' = ' + fmt(values[p.name])).join(', ') : ''));
+    describe();
+    const sliders = params.map(p => {
+      const out = el('output', { text: fmt(p.value) });
+      const input = el('input', { type: 'range', min: p.min, max: p.max, step: p.step || (p.max - p.min) / 100, value: p.value, 'aria-label': (p.label || p.name), oninput: e => {
+        values[p.name] = +e.target.value; out.textContent = fmt(values[p.name]);
+        curve.setAttribute('d', pathFor(values)); describe();
+      } });
+      return { row: el('div', { class: 'slider' }, el('span', { dir: 'auto', text: p.label ? p.label + ' (' + p.name + ')' : p.name }), input, out), input };
+    });
+    function draw() {
+      sliders.forEach(s => { s.input.disabled = !unlocked; });
+      show(
+        header(d.title, ''),
+        svg,
+        unlocked ? null : [richEl('p', d.predict, 'prompt'), el('textarea', { id: 'predict', dir: 'auto', 'aria-label': 'Your prediction', placeholder: 'What do you expect?', oninput: e => { predicted = e.target.value; lock.disabled = !predicted.trim(); } }), el('div', { class: 'row end' }, lock)],
+        sliders.map(s => s.row),
+        unlocked && params.length ? el('p', { class: 'note', text: 'Dashed line: where it started.' }) : null,
+        unlocked && predicted.trim() ? el('p', { class: 'note', dir: 'auto', text: 'You predicted: ' + predicted.trim() }) : null,
+        unlocked && d.question ? [richEl('p', d.question, 'prompt'), el('textarea', { dir: 'auto', 'aria-label': 'Your answer', oninput: e => { answer = e.target.value; } }), sendControl('Send my answer', () => plainText(d.question) + '\nMy answer: ' + answer.trim() + (predicted.trim() ? '\nMy prediction before moving it: ' + predicted.trim() : '') + (params.length ? '\nSliders ended at: ' + params.map(p => p.name + ' = ' + fmt(values[p.name])).join(', ') : ''))] : null
+      );
+    }
+    const lock = el('button', { class: 'primary', text: 'Lock in and unlock sliders', disabled: true, onclick: () => { unlocked = true; draw(); } });
+    draw();
+  };
+
+  // ---- Video: nothing loads from YouTube's player until they press play. ----
+  VIEWS.video = function (d) {
+    const clock = s => { s = Math.max(0, Math.floor(s)); const h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60), r = String(s % 60).padStart(2, '0'); return h ? h + ':' + String(m).padStart(2, '0') + ':' + r : m + ':' + r; };
+    const seconds = v => { const n = Number(v); return v !== null && v !== '' && isFinite(n) && n >= 0 ? n : null; };
+    const minutes = s => s < 60 ? 'under 1 min' : 'about ' + Math.round(s / 60) + ' min';
+    const pauses = d.pause_points || [];
+    // Segments and a plain "end": play from the start, stop once at the end, then point them at the question.
+    const segs = (Array.isArray(d.segments) ? d.segments : []).map(g => ({ start: seconds(g && g.start), end: seconds(g && g.end), label: g && g.label }))
+      .filter(g => g.start != null && g.end != null && g.end > g.start);
+    const segBtns = [];
+    const over = el('p', { class: 'note', role: 'status' });
+    let range = null, stopped = false, armed = false;
+    const canEmbed = d.status === 'ok';
+    const watchAt = t => d.watch_url + (t ? '&t=' + t + 's' : '');
+    const stage = canEmbed ? el('div', { class: 'video-frame' }) : null;
+    const pauseBtns = [];
+    let passed = -1, recall = '';
+    const openBtn = at => el('a', { href: watchAt(at), target: '_blank', rel: 'noopener', onclick: e => { e.preventDefault(); openLink(watchAt(at)); }, text: 'Open on YouTube' + (at ? ' at ' + clock(at) : '') });
+
+    function loadPlayer(at, stop) {
+      const q = new URLSearchParams({ rel: '0', playsinline: '1', enablejsapi: '1', autoplay: '1' });
+      if (at) q.set('start', String(Math.floor(at)));
+      if (stop) q.set('end', String(Math.ceil(stop)));
+      if (location.origin && location.origin !== 'null') q.set('origin', location.origin);
+      ytFrame = el('iframe', { src: 'https://www.youtube-nocookie.com/embed/' + d.id + '?' + q, title: d.title || 'Video', allow: 'autoplay; encrypted-media; picture-in-picture; fullscreen', allowfullscreen: true, referrerpolicy: 'strict-origin-when-cross-origin' });
+      ytFrame.addEventListener('load', () => { command('listening'); });
+      stage.replaceChildren(ytFrame);
+      sizeNow();
+    }
+    function command(func, args) {
+      if (!ytFrame) return;
+      const body = func === 'listening' ? { event: 'listening', id: 1, channel: 'widget' } : { event: 'command', func, args: args || [], id: 1, channel: 'widget' };
+      ytFrame.contentWindow.postMessage(JSON.stringify(body), '*');
+    }
+    onYouTube = raw => {
+      let m; try { m = JSON.parse(raw); } catch (e) { return; }
+      const info = m && m.info;
+      if (!info) return;
+      const t = info.currentTime;
+      // Act on the end only after a report from inside this range: a stale report from the last range must not stop it.
+      if (range && typeof t === 'number' && t >= range.start - 1 && t <= range.end + 1) armed = true;
+      if (range && armed && !stopped && ((typeof t === 'number' && t >= range.end - 0.5) || info.playerState === 0)) {
+        stopped = true;
+        command('pauseVideo');
+        over.textContent = 'Segment over. Answer the question below before moving on.';
+      }
+      if (typeof t !== 'number') return;
+      pauses.forEach((p, k) => {
+        if (k > passed && t >= p.at && t < p.at + 3) { passed = k; command('pauseVideo'); mark(k); }
+      });
+    };
+    function mark(k) { pauseBtns.forEach((b, j) => b.classList.toggle('on', j === k)); if (pauseBtns[k]) pauseBtns[k].scrollIntoView({ block: 'nearest' }); }
+    function jump(k) {
+      const at = pauses[k].at;
+      passed = k; mark(k);
+      if (!stage) { openLink(watchAt(at)); return; }
+      if (ytFrame) { command('seekTo', [at, true]); command('pauseVideo'); return; }
+      const seg = segs.find(g => at >= g.start && at < g.end);
+      const end = range ? range.end : seg ? seg.end : seconds(d.end);
+      if (end && !range) { range = { start: at, end }; stopped = false; armed = false; }
+      loadPlayer(at, end);
+    }
+    function play(start, end) {
+      range = end ? { start, end } : null;
+      stopped = false; armed = false;
+      over.textContent = '';
+      if (!stage) { openLink(watchAt(Math.floor(start))); return; }
+      if (!ytFrame) { loadPlayer(start, end); return; }
+      const load = { videoId: d.id, startSeconds: start };
+      if (end) load.endSeconds = end;
+      command('loadVideoById', [load]);
+    }
+    if (stage) {
+      const startPlayer = el('button', { class: 'video-frame', 'aria-label': 'Play ' + (d.title || 'video'), onclick: () => segs.length ? playSeg(0) : play(d.start || 0, seconds(d.end)) },
+        el('img', { src: d.thumbnail, alt: '', onerror: e => e.target.remove() }), el('span', { class: 'play', text: 'Play here' }));
+      stage.append(startPlayer);
+    }
+    pauses.forEach((p, k) => pauseBtns.push(el('button', { class: 'pause', onclick: () => jump(k) }, el('b', { text: clock(p.at) }), richEl('span', p.ask))));
+    function playSeg(k) { segBtns.forEach((b, j) => b.classList.toggle('on', j === k)); play(segs[k].start, segs[k].end); }
+    segs.forEach((g, k) => segBtns.push(el('button', { class: 'pause seg', onclick: () => playSeg(k) },
+      el('b', { text: clock(g.start) + ' to ' + clock(g.end) }), el('span', { dir: 'auto', text: (g.label ? g.label + ' ' : '') + '(' + minutes(g.end - g.start) + ')' }))));
+    const segTotal = segs.reduce((sum, g) => sum + g.end - g.start, 0);
+    show(
+      header(d.title || 'Video', ''),
+      d.channel ? el('p', { class: 'source', dir: 'auto', text: d.channel }) : null,
+      d.watch_for ? richEl('p', 'Before you press play: ' + d.watch_for) : null,
+      stage,
+      over,
+      segs.length ? el('div', { class: 'stack', style: 'gap:6px' }, el('label', { text: segs.length > 1 ? 'Watch these parts in order, ' + minutes(segTotal) + ' in all' : 'Watch this part, ' + minutes(segTotal) }), segBtns) : null,
+      canEmbed ? null : el('p', { class: 'note', text: d.note || 'This one has to be watched on YouTube.' }),
+      el('p', { class: 'note' }, canEmbed ? 'Player blank? ' : '', openBtn(d.start || 0)),
+      pauses.length ? el('div', { class: 'stack', style: 'gap:6px' }, el('label', { text: 'Stop and answer before moving on' }), pauseBtns) : null,
+      d.recall_prompt ? [richEl('p', 'After: close the video. ' + d.recall_prompt, 'prompt'), el('textarea', { dir: 'auto', 'aria-label': 'What you remember', placeholder: 'From memory', oninput: e => { recall = e.target.value; } }), sendControl('Send what I remember', () => 'From memory, after watching "' + (d.title || 'the video') + '":\n' + recall.trim())] : null
+    );
+  };
+
+  // ---- Start ----
+  const data = JSON.parse(document.getElementById('data').textContent);
+  const view = VIEWS[data.view];
+  view(data);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+{
+  "format": "myelinate-video/1",
+  "title": "<<the lesson title, 8 words or fewer>>",
+  "subtitle": "<<one short line under the title>>",
+  "lessonType": "<<problem if the learner must solve problems step by step, otherwise concept>>",
+  "wpm": 145,
+  "voice": {"lang": "en-US"},
+  "learner": {
+    "kind": "<<course or self-study>>",
+    "course": "<<course name and instructor; for self-study write nothing between the quotes>>",
+    "purpose": "<<self-study: why they want to learn it; for a course write nothing>>",
+    "level": "<<their level in plain words>>",
+    "materials": ["<<each thing they gave you: notes, slides, study guide, textbook with edition; use [] if nothing>>"],
+    "checked": "<<course: not-yet until every course claim is matched to their materials; self-study: not-a-course>>",
+    "target": "<<a question they missed before, if you know one; otherwise nothing>>",
+    "notation": "<<symbols or words their course uses, if you know them; otherwise nothing>>"
+  },
+  "objectives": [
+    "<<goal 1, starting with a verb such as Explain or Solve>>",
+    "<<goal 2, or delete this line>>"
+  ],
+  "question": "<<the one question the whole video answers>>",
+  "claims": [
+    {
+      "id": "c1",
+      "text": "<<one fact, in one plain sentence>>",
+      "from": "<<course if it comes from their materials, outside otherwise>>",
+      "source": "<<the source: book and edition, slide deck, or website name>>",
+      "where": "<<course: page, slide or section number; outside: the full https:// address>>",
+      "checked": "<<outside only: the date you read it, YYYY-MM-DD>>",
+      "quote": "<<the exact words from the source that say this fact, copied letter for letter>>",
+      "status": "unchecked"
+    }
+  ],
+  "misconception": {
+    "wrong": "<<a common mistaken idea about this topic>>",
+    "right": "<<the correction, in one sentence>>",
+    "claims": ["c1"]
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "title": "<<chapter name, 2 to 5 words>>",
+      "role": "intro",
+      "beats": [
+        {"say": "<<a hook sentence, a question or everyday observation>>", "talk": true,
+         "show": [{"type": "title", "text": "<<the title>>", "sub": "<<the subtitle>>"}]},
+        {"say": "<<the question this video answers>>", "talk": true,
+         "show": [{"type": "question", "text": "<<the question>>"}]}
+      ]
+    },
+    {
+      "id": "s2",
+      "title": "<<chapter name>>",
+      "role": "names",
+      "beats": [
+        {"say": "<<one sentence that names a new word and says what it means>>", "claims": ["c1"],
+         "show": [{"type": "term", "word": "<<the word>>", "meaning": "<<what it means, 10 words or fewer>>"}]},
+        {"pause": {"ask": "<<a question the learner can answer from what was just said>>", "choices": ["<<option>>", "<<option>>"], "answer": "<<the right option, exactly as written above>>", "why": "<<why it is right, one sentence>>", "claims": ["c1"]}}
+      ]
+    }
+  ],
+  "recall": {
+    "ask": "Look away from the screen. <<ask them to explain the main idea in two or three sentences>>",
+    "points": ["<<key point 1>>", "<<key point 2>>"]
+  },
+  "practice": {
+    "ask": "<<one new problem or case like the one taught>>",
+    "answer": "<<its answer>>",
+    "steps": ["<<step 1>>", "<<step 2>>"],
+    "claims": ["c1"]
+  }
+}

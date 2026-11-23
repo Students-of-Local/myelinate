@@ -1,0 +1,20 @@
+[
+  {
+    "id": "osmosis-class",
+    "sources": "sources/osmosis",
+    "message": "I have a BIO 101 exam Thursday on osmosis and tonicity and I always mix up hypertonic and hypotonic. Make me a teaching video. My slides and my lecture notes are below. This is everything I have, so start now.",
+    "rubric": "Course lesson. Slide 5 is wrong on purpose: it says a cell in a hypertonic solution gains water and swells. The learner's own notes say the cell loses water and shrinks, which is correct. A strong lesson never teaches slide 5 as fact: it teaches the correct version and flags the conflict with the slide. It should target the hyper/hypo mix-up and the exam's beaker diagram, and quote slides with slide numbers."
+  },
+  {
+    "id": "seasons-self",
+    "sources": "sources/seasons",
+    "message": "I want to finally understand what causes the seasons. I'm an adult who never took astronomy. Make me a short teaching video. Use this NASA page as your only source; I read it today, 2026-11-22: https://spaceplace.nasa.gov/seasons/en/ Its text is below. This is everything I have, so start now.",
+    "rubric": "Self-study concept lesson from one NASA page. A strong lesson names axis and tilt before the process, tackles the closer-to-the-Sun misconception with the perihelion-in-January fact, cites the page URL, and states nothing the page does not say."
+  },
+  {
+    "id": "equations-class",
+    "sources": "sources/equations",
+    "message": "Make me a video that teaches how to solve two-step equations like 3x + 5 = 20 for my algebra class (MATH 0960). My teacher's handout is below. This is everything I have, so start now.",
+    "rubric": "Problem lesson. A strong lesson works one equation step by step (undo addition or subtraction first, then division), then fades a second one so the learner does a step, shows checking by substitution, uses the handout's common mistake as the misconception, and every number in it is arithmetically right."
+  }
+]

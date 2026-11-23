@@ -6,6 +6,16 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+## [3.2.0] - 2026-11-22
+
+Myelinate makes teaching videos: narrated, animated lessons built from the learner's own course materials, with questions that stop the video until they answer.
+
+- **`make-video`, a new sub-skill.** It asks once for everything a class has (notes, study guide, slides, syllabus, textbook and edition, past exams, exam format, symbols) and drafts anyway, labeled "Draft: not yet checked against your course" until it is. Every fact the narration states is a claim first, with the exact words from a page, slide or dated web address; a claim with no line that says it is deleted. Where the course and a reliable source disagree it keeps the course's version, marks the conflict and tells the learner to ask. A second reader (`key-worker` or `verify`) checks every claim and worked answer before delivery. Written as numbered steps, a fill-in file and one worked example so a small model can follow it, and usable pasted alone with no shell (the lesson JSON plus a read-along script).
+- **A fixed video player, `templates/video-player.html`.** The model writes no animation code. The player narrates with the browser's voice (or pre-made clips keyed by a hash of each sentence, so a changed sentence never plays a stale clip), shows few words on screen, draws each element as it is named, and stops at each pause question until the learner answers, then shows the answer and why. Synced captions, chapters, a transcript, a sources panel with every quote, keyboard control, light and dark, reduced motion, and layouts for phone and desktop. Ends with recall from memory and one practice problem. Paste any lesson into it at `#load`.
+- **`scripts/video_check.py`** checks a lesson and prints numbered problems with a plain fix for each: 1 to 3 objectives, sentences of 30 words or fewer, a pause every 60 to 120 seconds, no fact without a claim, no screen text that repeats the voice, at most 40 screen words a scene, 130 to 160 words a minute, names before process, worked then faded examples for problem lessons, recall and practice. With `--sources` it confirms each course quote really is in the learner's files; `--final` fails while any claim is unchecked; `--build` writes the player only when the lesson is clean.
+- **`scripts/video_export.py`** renders an MP4 when Playwright and ffmpeg are already installed (it never installs them), checks it with ffprobe and writes a contact sheet to look at before sending.
+- **Small-model eval.** `evals/make-video/` runs a 1.7B model with and without the skill on three lessons (one with a planted wrong slide) and has Opus judge the pairs blind. RESULTS_LINE
+
 ## [3.1.1] - 2026-11-22
 
 Quotes in a vetting note are checked by code, not by the model that wrote them.
