@@ -2,6 +2,18 @@
 
 Checked **2026-10-02**, with synthetic learner prompts and locally generated examples. These checks assess instructions and software behavior; they do not measure real student learning.
 
+## 3.1.2: second-review gaps in the quote checker (2026-11-22)
+
+`python3 tests/yt_tool.py`: 41 of 41. The 3.1.1 checker fails five of them:
+
+- a `context:` line that shows "but that is wrong for E2" after a confirmed misconception;
+- 1.000 vs 1,000, "we'll" vs "well", and "hepatitis A" with the "A" dropped;
+- a pasted transcript panel with its stamps on their own lines;
+- a quote 28 seconds into a printed paragraph, checked at that paragraph's stamp, with a 2:29 control still refused;
+- exit 2 for a PDF, a missing file and `--at 8m01s`.
+
+The small-model run (`evals/quote-check/run.py`, LFM3 1.7B), rerun on this checker, gives the same table as 3.1.1: 8 of 8 attacks refused, both controls confirmed, and the judge answering NO throughout. The docs changes (context rule, exit 2, `course` only on an existing file) had no fresh-agent run.
+
 ## 3.1.1: quotes checked by code (2026-11-22)
 
 **Offline tests** (`python3 tests/yt_tool.py`, 38 checks, fixture transcripts and a fake `yt-dlp`). Real quotes confirm, with a one-letter typo, a plural, a copied `[m:ss]` stamp, "isn't" written as "is not", and the window edge at exactly 20 seconds. Refused, exit 6:

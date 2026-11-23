@@ -517,6 +517,8 @@ COURSE = (
     'Speciﬁc rule: the reaction is not stereospeciﬁc in E1.\n'
     'For this step \u0394G\u00b0\u2032 = \u221230.5 kJ/mol and K = 1.0 \u00d7 10\u2075, so Ka = 1.8 \u00d7 10\u207b\u2075.\n'
     'Blood leaves the right ventricle for the lungs; it isn\'t the left one.\n'
+    'The patient was infected with hepatitis A virus. A dose of 1.000 mg was given.\n'
+    'We\'ll take the left one later.\n'
 )
 
 
@@ -564,6 +566,10 @@ def test_attack_signs_exponents_and_dropped_meaning_words_are_refused():
         ('so Ka = 1.8 x 10^-5', True),
         ('blood leaves the ventricle for the lungs', False),  # "right" carries meaning
         ('blood leaves the right ventricle for the lungs; it is not the left one', True),  # contraction spelled out
+        ('the patient was infected with hepatitis virus', False),  # "A" is a word, not filler
+        ('a dose of 1,000 mg was given', False),  # source says 1.000 mg
+        ('a dose of 1.000 mg was given', True),
+        ("well take the left one later", False),  # source says "we'll"
     ]:
         code, out, _ = course(b, text)
         assert (code == 0) == ok, (text, out)
@@ -572,7 +578,36 @@ def test_attack_signs_exponents_and_dropped_meaning_words_are_refused():
 def test_course_refuses_a_pdf_and_says_how_to_get_text():
     b = Box()
     code, out, err = course(b, 'the beta hydrogen and the leaving group', name='slides.pdf', body=b'%PDF-1.7\n\x00\x01')
-    assert code == 1 and 'pdftotext' in (out + err), out + err
+    assert code == 2 and 'pdftotext' in (out + err), out + err
+    code, out, err = b.run('course', str(b.dir / 'missing.txt'), 'the beta hydrogen and the leaving group', path=EMPTY)
+    assert code == 2 and 'no such file' in err, (code, err)
+    code, out, err = quote(b, '8m01s', ANTI)
+    assert code == 2 and '--at takes' in err, (code, err)
+
+
+def test_course_reads_a_pasted_transcript_panel():
+    b = Box()
+    panel = '0:31\nso the hydrogen and the leaving group\n0:35\nmust be anti periplanar\n0:39\ndraw the Newman projection\n'
+    code, out, _ = course(b, 'so the hydrogen and the leaving group must be anti periplanar', name='transcript.txt', body=panel)
+    assert code == 0 and 'transcript.txt, line 2' in out, out
+
+
+def test_confirmed_quote_comes_with_its_context():
+    b = Box()
+    body = COURSE + 'Some older books say syn-periplanar is required, but that is wrong for E2.\n'
+    code, out, _ = course(b, 'syn-periplanar is required', body=body)
+    assert code == 0, out
+    assert 'context: "Some older books say syn-periplanar is required, but that is wrong for E2."' in out, out
+    assert 'not their claim' in out, out
+
+
+def test_a_quote_late_in_a_printed_paragraph_counts_at_its_stamp():
+    b = Box()
+    late = 'this is filler line number 10 about rates & mechanisms'  # said about 28s after the 2:32 paragraph starts
+    code, out, _ = quote(b, '2:32', late)
+    assert code == 0, out
+    code, out, _ = quote(b, '2:29', late)  # not a paragraph start: the plain 20s window
+    assert code == 6 and 'not within 20s' in out, out
 
 
 def main():

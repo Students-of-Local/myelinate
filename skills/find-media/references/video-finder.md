@@ -48,27 +48,28 @@ Then **read the transcript of that segment yourself.** Term hits only say where 
 Your memory of a transcript is not evidence, and a quote that sounds right can carry a changed word, a dropped "not" or the wrong minute. Every quote the learner sees, from the video or from their course, passes a check first: in the vetting note, in a contradiction flag, in a pause point that quotes the speaker.
 
 <!-- local-tools -->
-**With a shell and `yt-dlp`,** run the checker on each quote from this skill's folder:
+**With a shell,** run the checker on each quote from this skill's folder. `course` needs only a shell; `quote` also needs `yt-dlp`:
 
 ```
 python3 scripts/yt.py quote <url> --at 8:01 "the hydrogen of relevance on the beta carbon has to be trans to the leaving group"
 python3 scripts/yt.py course slides.txt "the beta H and the leaving group must be anti-periplanar"
 ```
 
-`quote` looks for the words within 20 seconds of `--at`. `course` needs no `yt-dlp` and looks through any text file: their slides, notes or study guide, or a transcript they pasted (save it as a `.txt` file; `course` checks the words, so read the timestamp from the paste yourself). Convert a PDF first with `pdftotext file.pdf file.txt`.
+`quote` looks for the words within 20 seconds of `--at`; when `--at` is a paragraph stamp from `transcript`, the whole paragraph counts. `course` looks through a text file that already exists: the learner's slides, notes or study guide, a file they uploaded, a transcript panel they pasted into a file, or the output of `pdftotext file.pdf file.txt` for a PDF. Never check against a file you typed or wrote out yourself: then the checker would only confirm your own retyping. Text that exists only in the chat gets the rule for when the checker can't run.
 
-Both ignore case, punctuation, curly quotes, ligatures and words split across lines. They keep what changes meaning: a number, a sign (−30.5 is not 30.5), an exponent (10⁵ is not 105), a "not" (and "isn't" is "is not"), and every word but "uh", "um" and the articles. A word that differs passes only as a plural or a one-letter typo inside a long word with the same start and end, so "subsituted" passes and "alkane" for "alkene" or "syn" for "anti" fails. The whole quote must be at least 0.90 similar to the words found.
+Both ignore case, punctuation, curly quotes, ligatures, words split across lines and transcript stamps. They keep everything that can change meaning: numbers and their separators (1.000 is not 1,000), a sign (−30.5 is not 30.5), an exponent (10⁵ is not 105), a "not" ("isn't" is "is not"), apostrophes ("we'll" is not "well"), and every word, articles included. Only "uh", "um" and similar sounds may be left out. A word that differs passes only as a plural or a one-letter typo inside a long word with the same start and end. So "subsituted" passes, and "alkane" for "alkene" or "syn" for "anti" fails. The whole quote must be at least 0.90 similar to the words found.
 
 Quote one unbroken stretch of at least four words, copied from the text. A cut (`...`) is refused, because the words left out can reverse the meaning; quote two stretches separately instead.
 
-- **Exit 0, `CONFIRMED`:** it prints a `show:` line with the source's own words and their timestamp or line. Show the learner exactly those words with that place, not your version. If the line says "auto captions", say the words come from YouTube's automatic captions.
-- **Exit 6, `NOT CONFIRMED`:** don't show the quote, or any verdict or flag built on it. If it says the words were said at another time, re-read that part of the transcript and use that time. If it says not found or a word differs, copy the words again from the transcript or file, then check again. Don't edit a failed quote's wording until it gets through. If it says the captions are a machine translation, no quote from that video can be confirmed: treat the video as not vetted.
-- **Any other exit** (no `yt-dlp`, no captions, network, rate limit, a missing file): the check couldn't run. Use the rule below for that quote.
+- **Exit 0, `CONFIRMED`:** it prints a `show:` line with the source's own words and their timestamp or line, then a `context:` line with the sentence around them. Read the context before you use the quote. If the speaker is stating a view in order to reject it ("some books say X, but that's wrong") or is quoting someone else, X is not their claim, so it is neither a match nor a contradiction. Show the learner exactly the `show:` words with that place, not your version. If the line says "auto captions", say the words come from YouTube's automatic captions.
+- **Exit 6, `NOT CONFIRMED`:** don't show the quote, or any verdict or flag built on it. If it says the words were said at another time, re-read that part of the transcript and use that time. If it says not found or a word differs, copy the words again from the transcript or file and check again, or drop the quote. Don't tweak the words to make it pass. If it says the captions are a machine translation, no quote from that video can be confirmed: treat the video as not vetted.
+- **Exit 2:** the command was wrong (a bad `--at`, a missing file, a PDF). Fix it and run it again.
+- **Exit 1, 3, 4 or 5** (no captions, no `yt-dlp`, network, rate limit): the check couldn't run. Use the rule below for that quote.
 
 Never show a quote that exited 6, and never skip the checker when it can run.
 <!-- /local-tools -->
 
-**When the checker can't run** (no shell, no `yt-dlp`, or it couldn't reach the video), copy each quote character for character from the transcript or file you read, with its timestamp or slide beside it, and end the vetting note with "Quotes not machine-checked."
+**When the checker can't run** (no shell; for video quotes, no `yt-dlp` or no way to reach the video; for course quotes, text that exists only in the chat), copy each quote character for character from the transcript or file you read, with its timestamp or slide beside it, and end the vetting note with "Quotes not machine-checked."
 
 **Each verdict cites both sides:** the course's words with where they came from, and the video's words with the timestamp. A "Contradicts" verdict needs both quotes checked; if either fails, the verdict is "Can't tell."
 
