@@ -40,7 +40,19 @@ A claude.ai artifact blocks the model download, so the browser tier runs on the 
 
 ### Small model
 
-SMALL_MODEL_RESULTS
+`evals/make-video/small_model.py` gives LFM3-1.7B (Q4_K_M on a CPU llama-server, thinking off) three lessons: osmosis for a class, with a planted wrong slide; seasons for a self-learner; two-step equations for a class. The skill arm gets SKILL.md and the template, then up to six rounds with the checker's report pasted back. The baseline arm gets the same request and the template, one draft, no checker. `judge.py` builds each pair, renders four frames of each, and has Opus grade them blind in random order. `results.py` keeps the numbers in `evals/make-video/results/latest.json`, and CI holds them to `results/floors.json`.
+
+The first run (runs1, four rounds) produced no valid JSON in 16 skill drafts. Each later run fixed what the last one showed:
+
+| Run | What it found | Fix |
+| --- | --- | --- |
+| runs1 | A pause beat lost its closing `}`, and the model made the same slip every round because the report only named the line. | Repair of slips with one reading; 16 of 19 failed replies now parse. |
+| runs3 | Rounds that broke the JSON threw away the good draft before them. Extra `]`, `,,` and a closing code fence went unrepaired. | Each round builds on the best valid draft; three more repairs (2 of the 13 remaining failures). |
+| runs4 | The model resent one draft four times unchanged: the slip was at column 1258 and the report showed the first 160 characters. It also copied the sky example's sentences into the equations and seasons lessons, and read "(k1)" aloud. | The report quotes the text around the slip; sentences copied from the example are an error; ids in narration are removed. |
+
+runs4, the last judged run: no skill lesson reached READY. Two of three ended with a playable best draft (25 and 21 problems left; osmosis never wrote valid JSON). The blind judge preferred the skill lesson for seasons, where the baseline could not play, and the baseline for equations and osmosis (overall 2.33 against 3.33 out of 10). One lesson in each arm taught a false fact. The checker held: none of those drafts would show "checked", and the player labels them unverified.
+
+What is left is in the model, not the format. In the drafts that still fail, the model writes its reasoning into the file ("? Wait compute"), splits one object into made-up tool calls, writes `{...}` placeholders, or gives one key two values. None of these has a single reading, so the checker refuses them rather than guess. A host with an edit tool changes one line at a time; this harness asks for the whole file each round, which is harder for a small model.
 
 ### Triggers
 
