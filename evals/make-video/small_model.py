@@ -70,6 +70,17 @@ def run_check(path, scen):
     return out, errors
 
 
+def say_beats(path):
+    """How many beats in the lesson say something aloud: a draft with none is not a video, however few errors it has."""
+    try:
+        lesson = json.loads(Path(path).read_text())
+    except (OSError, json.JSONDecodeError):
+        return 0
+    scenes = lesson.get('scenes') if isinstance(lesson, dict) else None
+    return sum(1 for sc in scenes if isinstance(sc, dict) and isinstance(sc.get('beats'), list)
+               for b in sc['beats'] if isinstance(b, dict) and str(b.get('say') or '').strip()) if isinstance(scenes, list) else 0
+
+
 def skill_system():
     return ('You are a learning assistant. This skill is loaded and you follow it exactly:\n\n<skill>\n'
             + SKILL.read_text() + '\n</skill>\n\nThe file templates/video-lesson.json:\n```json\n' + TEMPLATE.read_text() + '```\n\n'
@@ -89,7 +100,10 @@ def run_one(scen, arm, rep, outdir, rounds):
         user = (request + '\n\nWrite the teaching video as JSON in exactly this format, replacing every <<...>> and adding '
                 'scenes as needed. Reply with only the JSON.\n```json\n' + TEMPLATE.read_text() + '```')
         rounds = 1
-    best = None  # (errors, draft): the draft the next round builds on, as a file a host would edit in place
+    # (rank, draft, report, errors, beats): the draft the next round builds on, as a file a host would edit in place.
+    # A draft that says nothing ranks below any that does: fewest errors alone kept a lesson with no
+    # scenes (33 errors) over one with ten (72), and every later round built on the empty one (runs5).
+    best = None
     for n in range(1, rounds + 1):
         reply = chat(system, user)
         (d / f'reply{n}.txt').write_text(reply)
@@ -98,12 +112,14 @@ def run_one(scen, arm, rep, outdir, rounds):
         report, errors = run_check(d / f'draft{n}.json', scen)
         (d / f'report{n}.txt').write_text(report)
         draft = (d / f'draft{n}.json').read_text()  # the checker saves a repaired file in place
-        log['rounds'].append({'round': n, 'errors': errors, 'valid_json': errors is not None,
+        beats = say_beats(d / f'draft{n}.json') if errors is not None else 0
+        log['rounds'].append({'round': n, 'errors': errors, 'valid_json': errors is not None, 'say_beats': beats,
                               'repaired': 'Repaired and saved it' in report})
-        if errors is not None and (best is None or errors <= best[0]):
-            best = (errors, draft, report)
+        rank = (beats == 0, errors)
+        if errors is not None and (best is None or rank <= best[0]):
+            best = (rank, draft, report, errors, beats)
         (d / 'lesson.json').write_text(best[1] if best else draft)
-        if errors == 0:
+        if errors == 0 and beats:
             break
         if best and errors is None:
             note = ('Your last reply was not valid JSON and the checker could not repair it, so it was set aside. '
@@ -115,8 +131,9 @@ def run_one(scen, arm, rep, outdir, rounds):
                 'The checker printed:\n```\n' + report.strip() + '\n```\n\n'
                 'Fix every numbered problem exactly as its Fix line says. Change nothing else. '
                 'Reply with the whole corrected lesson JSON only.')
-    log['ready'] = bool(best) and best[0] == 0
-    log['final_errors'] = best[0] if best else None  # the best valid draft, which lesson.json holds
+    log['ready'] = bool(best) and best[3] == 0 and best[4] > 0
+    log['final_errors'] = best[3] if best else None  # the best valid draft, which lesson.json holds
+    log['final_beats'] = best[4] if best else 0
     (d / 'run.json').write_text(json.dumps(log, indent=1))
     print(f"{scen['id']} {arm} {rep}: " + ' -> '.join(str(r['errors']) for r in log['rounds']), flush=True)
     return log

@@ -278,6 +278,21 @@ def old_rules():
     spot = next((ln for ln in r.stdout.splitlines() if 'The slip is at' in ln), '')
     check(r.returncode == 2 and re.search(r'"type">>> : "title"', spot) is not None,
           f'a slip far along a long line is quoted where it is ({r.stdout.splitlines()[1:2]})')
+    # Three more from runs5 (2026-11-23), each of which threw away a whole draft.
+    o, f = fixed('{\n "title": "T",\n "practice": {"claims": ["c3"]}\n}\n\n</parameter>\n}')
+    check(o == {'title': 'T', 'practice': {'claims': ['c3']}} and 'after the last }' in f,
+          f'a stray }} after a tool call wrapper, with nothing else after the object, is dropped ({o}, {f})')
+    o, f = fixed('{"materials": ["nasa.gov/seasons/", \'nasa.gov/seasons/\'], "n": 1}')
+    check(o == {'materials': ['nasa.gov/seasons/', 'nasa.gov/seasons/'], 'n': 1} and 'single quotes' in f, f"a 'single-quoted' value becomes a string ({o}, {f})")
+    o, f = fixed('{"calc": [{"id": "k4", "expr": "k3 / 3", "value": 3.333...},\n {"id": "k5", "value": 2\u2026}]}')
+    check(o == {'calc': [{'id': 'k4', 'expr': 'k3 / 3', 'value': 3.333}, {'id': 'k5', 'value': 2}]} and 'after the number 3.333' in f,
+          f'... after a number is dropped and the digits kept ({o}, {f})')
+    for bad in ("{\"say\": 'Earth's tilt', \"n\": 1}", "{\"say\": 'two\nlines'}", '{"title": "T"}\n</parameter>\n}, "n": 1}'):
+        check(fixed(bad)[0] is None, f'no guess for {bad[:30]!r}')
+    r = run(write('elided.json', '{\n "title": "T",\n "claims": [\n  ...\n ],\n "scenes": [{...}]\n}\n'))
+    check(r.returncode == 2 and 'leaves parts out with ...' in r.stdout, f'a draft that skips parts with ... is told to write them out ({r.stdout.splitlines()[:3]})')
+    r = run(write('not-elided.json', '{\n "title": "T",\n "wpm": ,\n "say": "and so..."\n}\n'))
+    check(r.returncode == 2 and 'leaves parts out' not in r.stdout, 'a ... inside narration is not read as a skipped part')
     for bad in ('{"expr": "2*k1"? Wait, recompute.", "value": 1}', '{"lang": "en"}\n<parameter=part>\n{"n": 1}', 'no object here', '{"a": tru}',
                 '{"learner": {...}, "n": 1}', '{"title": "A"}\n</parameter>\n}</think>{\n "title": "B"}'):
         check(fixed(bad)[0] is None, f'no guess for {bad[:30]!r}')
@@ -318,6 +333,9 @@ def old_rules():
         b0["say"], b0["talk"] = 'Each color travels as a wave, and blue waves are shorter than red ones.', True
         errs = [e[1] for e in vc.check(ex, osmo_src)[0] if e[0].startswith('Scene 1 ') and e[0].endswith('beat 1')]
         check(any('copies the worked example' in e for e in errs), f'a sky sentence in an osmosis lesson is flagged ({[e for e in errs if "copies" in e][:1]})')
+        fixes = [e[2] for e in vc.check(ex, osmo_src)[0] if 'copies the worked example' in e[1]]
+        check(fixes and all(x.startswith('Rewrite it about your own topic') for x in fixes),
+              f'the fix says to rewrite the copied beat, not delete it: runs5 gutted lessons on "Delete it" ({fixes[:1]})')
         b0["say"] = 'Water moves across the membrane toward the side with more solute.'
         errs = [e[1] for e in vc.check(ex, osmo_src)[0] if e[0].startswith('Scene 1 ') and e[0].endswith('beat 1')]
         check(not any('copies the worked example' in e for e in errs), 'an osmosis sentence in an osmosis lesson is not flagged')
@@ -327,7 +345,22 @@ def old_rules():
     check(not any('copies the worked example' in e for e in errs), 'the worked example itself, checked against its own source, is not flagged')
     two = sky()
     two['claims'][0]['file'] = 'nothing-like-it.md'
-    check(vc.tidy(two, srcs) == [] and two['claims'][0]['file'] == 'nothing-like-it.md', 'a file name close to no given file is left for the check to report')
+    two['claims'][0]['quote'] = 'No given file holds this sentence at all.'
+    check(vc.tidy(two, srcs) == [] and two['claims'][0]['file'] == 'nothing-like-it.md', 'a file name close to no given file, with a quote no file holds, is left for the check to report')
+    # runs5: a 1.7B named the web page as the file on every claim, and never fixed it from the report.
+    for bad_file in ('spaceplace.nasa.gov/blue-sky/en/', None):
+        web = sky()
+        if bad_file is None:
+            web['claims'][0].pop('file')
+        else:
+            web['claims'][0]['file'] = bad_file
+        done_web = vc.tidy(web, srcs)
+        check(web['claims'][0].get('file') == sky()['claims'][0]['file'] and any('the one file that holds its quote' in x for x in done_web),
+              f'a claim whose file is {bad_file!r} gets the one given file that holds its quote ({done_web})')
+    many = {'a.md': srcs[sorted(srcs)[0]], 'b.md': srcs[sorted(srcs)[0]]}
+    amb = sky()
+    amb['claims'][0]['file'] = 'page.html'
+    check(vc.tidy(amb, many) == [] and amb['claims'][0]['file'] == 'page.html', 'a quote found in two given files is left for the learner to name')
     r = run(write('tidy.json', untidy), '--sources', SKY_SRC)
     check('Fixed and saved' in r.stdout and json.loads((WORK / 'tidy.json').read_text())['claims'][1]['from'] == 'outside', f'main() saves the tidied file and says so ({r.stdout.splitlines()[:1]})')
 

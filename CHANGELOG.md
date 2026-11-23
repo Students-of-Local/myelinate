@@ -6,6 +6,8 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+- **A small model's drafts are no longer thrown away by the eval or the checker.** On the fifth small-model run (runs5) the skill lost all three blind pairs. The eval kept the draft with the fewest errors, which was one with no scenes; drafts now rank by whether they say anything, and a lesson with no spoken beat no longer counts as playable. The checker now repairs three more slips with one reading (a stray `}` after a tool call wrapper, a `'single-quoted'` value, `3.333...` as a number), saving 4 of the 9 drafts runs5 lost, and tells a draft that skips parts with `...` to write them out. A claim that names a web page or no file gets the one given file that holds its quote. A beat copied from the sky example is now to be rewritten, not deleted, and the skill says to keep every scene while fixing.
+
 ## [3.2.0] - 2026-11-22
 
 Myelinate makes teaching videos: narrated, animated lessons built from the learner's own course materials, checked by code, with questions that stop the video until they answer.

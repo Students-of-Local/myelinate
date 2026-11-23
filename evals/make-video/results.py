@@ -8,7 +8,8 @@ usage:
 
 RUNDIR is what small_model.py wrote (runs.json) after judge.py added judgments.json. The result keeps
 one row per scenario and arm: whether the checker passed it, the problems left in its best draft
-(null when no draft was valid JSON, so the player cannot open it), how many drafts were valid, and the
+(null when no draft was valid JSON, so the player cannot open it), how many of its beats say something
+aloud (a lesson with none plays nothing, so it is not playable), how many drafts were valid, and the
 blind judge's scores. --check recomputes the summary from the rows and fails when the result is
 partial, when its rows and summary disagree, or when the skill arm falls below results/floors.json.
 
@@ -36,7 +37,7 @@ def rows_from(rundir):
         s = p['scores'][r['arm']]
         rows.append({'id': r['id'], 'arm': r['arm'], 'rep': r['rep'], 'rounds': len(r['rounds']),
                      'valid_drafts': sum(bool(x.get('valid_json')) for x in r['rounds']),
-                     'ready': bool(r['ready']), 'final_errors': r['final_errors'],
+                     'ready': bool(r['ready']), 'final_errors': r['final_errors'], 'say_beats': r.get('final_beats', 0),
                      'won': p['winner'] == r['arm'], 'teaches_false': bool(s.get('teaches_false')),
                      'overall': s['overall'], 'accuracy': s['accuracy']})
     return sorted(rows, key=lambda x: (x['id'], x['arm'], x['rep']))
@@ -46,7 +47,7 @@ def summarize(rows):
     out = {}
     for arm in ARMS:
         rs = [r for r in rows if r['arm'] == arm]
-        playable = [r for r in rs if r['final_errors'] is not None]
+        playable = [r for r in rs if r['final_errors'] is not None and r.get('say_beats', 0) > 0]
         out[arm] = {'lessons': len(rs), 'ready': sum(r['ready'] for r in rs), 'playable': len(playable),
                     'problems_left': sum(r['final_errors'] for r in playable),
                     'valid_drafts': sum(r['valid_drafts'] for r in rs), 'drafts': sum(r['rounds'] for r in rs),
@@ -68,6 +69,8 @@ def problems(result, floors):
     have = {(r['id'], r['arm']) for r in rows}
     if want - have:
         errs.append(f'partial run: no row for {sorted(want - have)}')
+    if any(not isinstance(r.get('say_beats'), int) for r in rows):
+        errs.append('a row has no "say_beats"; rewrite the result with results.py RUNDIR')
     if summarize(rows) != result.get('summary'):
         errs.append('the summary does not match the rows; rewrite the result with results.py RUNDIR')
     s, f = summarize(rows)['skill'], floors['skill']
@@ -103,6 +106,15 @@ def self_test():
             r['final_errors'] += floors['skill']['max_problems_left'] + 1
             b['summary'] = summarize(b['rows'])
         cases['more problems left'] = doctored(worse)
+
+        def silent(b):  # a valid draft with no scenes is not a video (runs5 kept one as the best draft)
+            for r in b['rows']:
+                if r['arm'] == 'skill':
+                    r['say_beats'] = 0
+            b['summary'] = summarize(b['rows'])
+        if floors['skill']['min_playable'] > 0:
+            cases['lessons that say nothing'] = doctored(silent)
+        cases['a row with no beat count'] = doctored(lambda b: b['rows'][0].pop('say_beats'))
 
     def falsehood(b):
         for r in b['rows']:
