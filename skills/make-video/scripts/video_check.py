@@ -1228,8 +1228,8 @@ class _Unfixable(Exception):
 
 class _Loose:
     """A forgiving JSON reader for the slips small models make. It repairs only what has one reading:
-    a comma before } or ], a missing comma between items, a { or [ left open, a doubled closing quote,
-    a line break inside text, and words before or after the object. Anything else is unfixable."""
+    a comma before } or ], a doubled comma, a missing comma between items, a { or [ left open, a doubled
+    closing quote, a line break inside text, and words before or after the object. Anything else is unfixable."""
 
     NUM = re.compile(r'-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?')
 
@@ -1291,6 +1291,9 @@ class _Loose:
         c = self.peek()
         if c == ',':
             self.i += 1
+            while self.peek() == ',':
+                self.fix('removed a doubled ,')
+                self.i += 1
             if self.peek() in '}]':
                 self.fix('removed a comma before ' + self.peek())
                 return False
@@ -1357,7 +1360,7 @@ def _parse_loose(text, a):
     except (_Unfixable, RecursionError):
         return None, None, p.closers, p.i
     rest = re.sub(r'</?[A-Za-z_][^>]*>', '', text[p.i:]).strip()
-    if rest and not re.match(r'[A-Za-z#*>]', rest):
+    if rest and not re.match(r'[A-Za-z#*>`]', rest):
         return None, None, p.closers, p.i  # more JSON after the object: a } or ] closed it too early
     if text[:a].strip():
         p.fixes.insert(0, 'removed words before the first {')
@@ -1368,8 +1371,8 @@ def _parse_loose(text, a):
 
 def repair_json(text, tries=12, window=40):
     """(object, fixes) when the text is one JSON object with slips that have a single reading, else None.
-    When reading stops, it tries removing one extra } or ] that it had read as structure (never a
-    character inside text). It keeps a removal that reads the whole object with the fewest repairs, or
+    When reading stops, it tries removing one extra } or ] that it had read as structure, or the one
+    where it stopped (never a character inside text). It keeps a removal that reads the whole object with the fewest repairs, or
     else the one that reads farthest, and removes at most `tries` in all."""
     a = text.find('{')
     if a < 0:
@@ -1382,7 +1385,9 @@ def repair_json(text, tries=12, window=40):
         if len(removed) == tries:
             return None
         best = None
-        for j in sorted(closers, reverse=True)[:window]:
+        # The } or ] where reading stopped is a candidate too: one too many right after a close.
+        here = [stop] if stop < len(text) and text[stop] in '}]' else []
+        for j in here + sorted(closers, reverse=True)[:window]:
             cand = text[:j] + text[j + 1:]
             o, f, _, far = _parse_loose(cand, a)
             score = (0, len(f)) if o is not None else (1, -far)

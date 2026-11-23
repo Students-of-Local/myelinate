@@ -250,7 +250,15 @@ def old_rules():
     check(o is None or o == {'say': 'A set {1, 2} and ] marks', 'n': 1}, f'a brace inside text is never touched ({o})')
     o, f = fixed('{"say": "one",\n "text": "a line\nbreak"}')
     check(o == {'say': 'one', 'text': 'a line break'} and 'line break inside text' in f, f'a raw line break inside text becomes a space ({o}, {f})')
-    for bad in ('{"expr": "2*k1"? Wait, recompute.", "value": 1}', '{"lang": "en"}\n<parameter=part>\n{"n": 1}', 'no object here', '{"a": tru}'):
+    # Three more from the 2026-11-23 rerun.
+    o, f = fixed('{"steps": ["a", "b"],,\n "claims": ["c5"]}')
+    check(o == {'steps': ['a', 'b'], 'claims': ['c5']} and 'doubled ,' in f, f'a doubled comma becomes one ({o}, {f})')
+    o, f = fixed('{"claims": [\n {"id": "c14", "text": "t",},]\n],\n "calc": []}')
+    check(o == {'claims': [{'id': 'c14', 'text': 't'}], 'calc': []} and 'removed an extra ]' in f, f'a ] one too many right after a close is removed ({o}, {f})')
+    o, f = fixed('{"title": "T"}\n```\n\nWe need to fix all issues per the checker output.')
+    check(o == {'title': 'T'} and 'after the last }' in f, f'a closing ``` fence and notes after the object are dropped ({o}, {f})')
+    for bad in ('{"expr": "2*k1"? Wait, recompute.", "value": 1}', '{"lang": "en"}\n<parameter=part>\n{"n": 1}', 'no object here', '{"a": tru}',
+                '{"learner": {...}, "n": 1}', '{"title": "A"}\n</parameter>\n}</think>{\n "title": "B"}'):
         check(fixed(bad)[0] is None, f'no guess for {bad[:30]!r}')
     fenced = write('fenced.json', '```json\n' + SKY.read_text().strip() + '\n```\n')
     lesson, note = vc.read_lesson(fenced)
