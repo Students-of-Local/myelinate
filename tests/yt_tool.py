@@ -517,6 +517,8 @@ COURSE = (
     'Speciﬁc rule: the reaction is not stereospeciﬁc in E1.\n'
     'For this step \u0394G\u00b0\u2032 = \u221230.5 kJ/mol and K = 1.0 \u00d7 10\u2075, so Ka = 1.8 \u00d7 10\u207b\u2075.\n'
     'Blood leaves the right ventricle for the lungs; it isn\'t the left one.\n'
+    'The patient was infected with hepatitis A virus. A dose of 1.000 mg was given.\n'
+    'We\'ll take the left one later.\n'
 )
 
 
@@ -564,6 +566,10 @@ def test_attack_signs_exponents_and_dropped_meaning_words_are_refused():
         ('so Ka = 1.8 x 10^-5', True),
         ('blood leaves the ventricle for the lungs', False),  # "right" carries meaning
         ('blood leaves the right ventricle for the lungs; it is not the left one', True),  # contraction spelled out
+        ('the patient was infected with hepatitis virus', False),  # "A" is a word, not filler
+        ('a dose of 1,000 mg was given', False),  # source says 1.000 mg
+        ('a dose of 1.000 mg was given', True),
+        ("well take the left one later", False),  # source says "we'll"
     ]:
         code, out, _ = course(b, text)
         assert (code == 0) == ok, (text, out)
@@ -571,8 +577,102 @@ def test_attack_signs_exponents_and_dropped_meaning_words_are_refused():
 
 def test_course_refuses_a_pdf_and_says_how_to_get_text():
     b = Box()
-    code, out, err = course(b, 'the beta hydrogen and the leaving group', name='slides.pdf', body=b'%PDF-1.7\n\x00\x01')
-    assert code == 1 and 'pdftotext' in (out + err), out + err
+    pdf = b.dir / 'slides.pdf'
+    pdf.write_bytes(b'%PDF-1.7\n\x00\x01')
+    words = 'the beta hydrogen and the leaving group'
+    tool = b.dir / 'pdfbin'
+    tool.mkdir()
+    (tool / 'pdftotext').write_text('#!/bin/sh\nexit 0\n')
+    (tool / 'pdftotext').chmod(0o755)
+    code, out, err = b.run('course', str(pdf), words, path=EMPTY, PATH=str(tool))
+    assert code == 2 and 'run pdftotext' in err, (code, err)  # it can make the text itself: a wrong command
+    no_tool = b.run('course', str(pdf), words, path=EMPTY)
+    assert no_tool[0] == 1 and 'cannot be machine-checked' in no_tool[2], no_tool  # it can't: the check can't run
+    for msg in (err, no_tool[2]):
+        assert 'paste' not in msg.lower() and 'save' not in msg.lower(), msg  # never "retype it into a file"
+    which = shutil.which
+    shutil.which = lambda name, *a, **k: None if name == 'pdftotext' else which(name, *a, **k)
+    try:
+        for f in (pdf, b.dir / 'slides.bin'):
+            if f.suffix == '.bin':
+                f.write_bytes(b'\x89PNG\x00\x01')
+            try:
+                yt.file_source(f)
+                raise AssertionError(f'{f} was read')
+            except yt.YTError as e:
+                assert e.kind == 'other' and yt.EXIT[e.kind] == 1, (f, e.kind)  # the check cannot run
+                assert 'paste' not in str(e).lower() and 'save' not in str(e).lower(), str(e)
+    finally:
+        shutil.which = which
+    code, out, err = b.run('course', str(b.dir / 'missing.txt'), words, path=EMPTY)
+    assert code == 2 and 'no such file' in err, (code, err)
+    code, out, err = quote(b, '8m01s', ANTI)
+    assert code == 2 and '--at takes' in err, (code, err)
+
+
+def test_a_mistyped_video_id_or_url_is_a_wrong_command():
+    b = Box()
+    for ref in ('AAAAAAAAAA', 'https://www.youtube.com/watch?v=AAAA', 'https://example.com/watch?v=AAAAAAAAAAA'):
+        code, out, err = b.run('quote', ref, '--at', '2:24', ANTI)
+        assert code == 2 and 'not a YouTube video URL or id' in err, (ref, code, err)
+    for stderr in ('ERROR: [youtube:truncated_id] AAAA: Incomplete YouTube ID AAAA. URL looks truncated.',
+                   "ERROR: 'AAAA' is not a valid URL."):
+        assert yt.classify(stderr)[0] == 'usage', stderr
+
+
+def test_course_reads_a_pasted_transcript_panel():
+    b = Box()
+    panel = ('0:31\nso the hydrogen and the leaving group\n0:35\nmust be anti periplanar\n0:39\ndraw the Newman projection\n'
+             'of the anti-\n0:44\n12 conformer here\n')
+    code, out, _ = course(b, 'so the hydrogen and the leaving group must be anti periplanar', name='transcript.txt', body=panel)
+    assert code == 0 and 'transcript.txt, line 2, under stamp 0:31' in out, out
+    # A quote copied across a stamp line keeps its words; the stamp is not one of them.
+    code, out, _ = course(b, 'so the hydrogen and the leaving group 0:35 must be anti periplanar', name='transcript.txt', body=panel)
+    assert code == 0, out
+    # A word split across a stamp line is never glued to the stamp ("anti0").
+    code, out, _ = course(b, 'draw the Newman projection of the anti 12 conformer', name='transcript.txt', body=panel)
+    assert code == 6, out
+
+
+def test_confirmed_quote_comes_with_its_context():
+    b = Box()
+    body = COURSE + 'Some older books say syn-periplanar is required, but that is wrong for E2.\n'
+    code, out, _ = course(b, 'syn-periplanar is required', body=body)
+    assert code == 0, out
+    assert 'Some older books say syn-periplanar is required, but that is wrong for E2."' in out, out
+    assert 'not their claim' in out, out
+    # The frame is often its own sentence, before or after the quote.
+    for body, frame in [
+        (COURSE + 'Some books say syn-periplanar is required. That is wrong.\n', 'That is wrong.'),
+        (COURSE + 'A common myth. Syn-periplanar is required for E2.\n', 'A common myth.'),
+    ]:
+        code, out, _ = course(b, 'syn-periplanar is required', body=body)
+        ctx = [ln for ln in out.splitlines() if ln.startswith('context:')]
+        assert code == 0 and ctx and frame in ctx[0], out
+
+
+def test_quoted_terms_possessives_and_units_are_words():
+    b = Box()
+    body = COURSE + "The 'leaving group' is the atom's departing part. Prepare a 5 mM Tris buffer, oh so carefully.\n"
+    code, out, _ = course(b, "the leaving group is the atom's departing part", body=body)
+    assert code == 0, out
+    code, out, _ = course(b, 'the leaving group is the atoms departing part', body=body)
+    assert code == 6, out  # apostrophes count, as in "we'll" and "well"
+    code, out, _ = course(b, "The 'leaving group' is the atom's departing part", body=body)
+    assert code == 0, out
+    code, out, _ = course(b, 'Prepare a 5 Tris buffer', body=body)
+    assert code == 6, out  # the unit was dropped: "mm" is not a filler sound
+    code, out, _ = course(b, 'Prepare a 5 mM Tris buffer so carefully', body=body)
+    assert code == 6, out  # "oh" is a word here too
+
+
+def test_a_quote_late_in_a_printed_paragraph_counts_at_its_stamp():
+    b = Box()
+    late = 'this is filler line number 10 about rates & mechanisms'  # said about 28s after the 2:32 paragraph starts
+    code, out, _ = quote(b, '2:32', late)
+    assert code == 0, out
+    code, out, _ = quote(b, '2:29', late)  # not a paragraph start: the plain 20s window
+    assert code == 6 and 'not within 20s' in out, out
 
 
 def main():

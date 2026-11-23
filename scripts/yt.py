@@ -17,7 +17,8 @@ whole run at the first subtitle error.
 Every command takes --json. Results are cached under $TMPDIR/myelinate-yt-<uid>/
 by video id, so asking again makes no network request.
 
-Exit codes: 0 ok, 1 video unavailable or no captions, 3 yt-dlp missing,
+Exit codes: 0 ok, 1 video unavailable or no captions, 2 usage error (fix the
+command: a bad --at, a missing, PDF or binary course file), 3 yt-dlp missing,
 4 network failure, 5 rate limited (HTTP 429) or blocked by YouTube,
 6 quote not confirmed (quote and course).
 """
@@ -60,7 +61,7 @@ class YTError(Exception):
         self.kind = kind
 
 
-EXIT = {'unavailable': 1, 'nocaptions': 1, 'other': 1, 'network': 4, 'ratelimit': 5, 'unconfirmed': 6}
+EXIT = {'unavailable': 1, 'nocaptions': 1, 'other': 1, 'usage': 2, 'network': 4, 'ratelimit': 5}
 
 
 # ---------- running yt-dlp ----------
@@ -76,10 +77,12 @@ def classify(stderr):
         return 'ratelimit', 'YouTube rate limited the request (HTTP 429); wait a minute and ask for less.'
     if "confirm you're not a bot" in low or 'confirm you are not a bot' in low:
         return 'ratelimit', 'YouTube asked for a bot check; wait and try later, or use the browser transcript panel.'
+    for pat in ('incomplete youtube id', 'is not a valid url'):
+        if pat in low:
+            return 'usage', f'not a valid video id or URL (check it for a typo): {last}'
     for pat, why in (('private video', 'private'), ('age', 'age-restricted'), ('members-only', 'members only'),
                      ('video unavailable', 'unavailable'), ('not available', 'unavailable'),
-                     ('has been removed', 'removed'), ('copyright', 'blocked for copyright'),
-                     ('incomplete youtube id', 'not a valid video id'), ('is not a valid url', 'not a valid video id')):
+                     ('has been removed', 'removed'), ('copyright', 'blocked for copyright')):
         if pat in low and (pat != 'age' or 'sign in to confirm your age' in low or 'age-restricted' in low or 'age restricted' in low):
             return 'unavailable', f'video {why}: {last}'
     if any(p in low for p in ('getaddrinfo', 'name resolution', 'timed out', 'connection', 'network is unreachable',
@@ -125,7 +128,7 @@ def video_id(ref):
     else:
         cand = ''
     if not ID_RE.match(cand or ''):
-        raise YTError('unavailable', f'not a YouTube video URL or id: {ref}')
+        raise YTError('usage', f'not a YouTube video URL or id: {ref}')
     return cand
 
 
@@ -545,9 +548,9 @@ def parse_terms(s):
 # The thresholds are deliberately high: a caption slip ("leading group" for "leaving group") passes, while a
 # changed meaning ("cis" for "trans", "E1" for "E2", a dropped "not") fails.
 QUOTE_THRESHOLD = 0.90  # character similarity of the whole quote to the words found
-WORD_THRESHOLD = 0.75   # each run of words that differs must be at least this similar, and a slip (see slip)
+WORD_THRESHOLD = 0.75   # a source word this similar to one of the quote's first three may start a match
 QUOTE_WINDOW = 20       # seconds either side of --at
-FILLER = {'uh', 'um', 'uhm', 'er', 'ah', 'oh', 'a', 'an', 'the'}  # disfluencies and articles only
+FILLER = {'uh', 'um', 'uhm', 'hmm'}  # sounds that are never words: 'a' (hepatitis A), 'mm' (5 mM), 'oh', 'er' count
 NEGATION = {'not', 'no', 'never', 'cannot', 'cant', 'dont', 'doesnt', 'isnt', 'arent', 'wont', 'wasnt',
             'werent', 'shouldnt', 'couldnt', 'wouldnt', 'nor', 'without', 'neither', 'none'}
 QUOTE_MARKS = {'‘': "'", '’': "'", '‚': "'", '′': "'", '“': '"', '”': '"',
@@ -562,6 +565,7 @@ SIGNED = re.compile('(?<![\\w.])[-\u2010\u2011\u2012\u2013\u2014\u2212](?=\\d)')
 
 
 STAMP = re.compile(r'\[\d{1,2}:\d\d(?::\d\d)?\]')
+PANEL_STAMP = re.compile(r'^\s*\d{1,2}:\d\d(?::\d\d)?\s*$')
 
 
 def quote_tokens(text):
@@ -573,13 +577,18 @@ def quote_tokens(text):
     text = unicodedata.normalize('NFKC', text).replace('\xad', '')
     text = re.sub(r'(\w)-[ \t]*\r?\n[ \t]*(\w)', r'\1\2', text)
     text = SIGNED.sub(' minus ', text)
+    text = re.sub(r'(?<=\d)\.(?=\d)', ' point ', text)  # 1.000 is not 1,000
+    text = re.sub(r'(?<=\d),(?=\d)', ' comma ', text)
     text = text.replace('\u00d7', ' x ')  # 1.0 \u00d7 10^5 and 1.0 x 10^5 read the same
     for k, v in QUOTE_MARKS.items():
         text = text.replace(k, v)
     out = []
     for w in norm_words(text):
-        w = w.replace("'", '')
-        out += CONTRACTIONS.get(w, w).split() if w else []
+        bare = w.replace("'", '')
+        if bare in CONTRACTIONS:
+            out += CONTRACTIONS[bare].split()
+        elif bare:
+            out.append(w)  # "we'll" is not "well", "we're" is not "were"
     return out
 
 
@@ -593,6 +602,8 @@ class Source:
 
     def __init__(self):
         self.tokens, self.where, self.raw_index, self.raw = [], [], [], []
+        self.stamps = {}    # line number -> the last transcript-panel stamp above it
+        self.panel = False  # the file is a pasted transcript panel (stamps on their own lines)
 
     def add(self, text, where_for):
         words = raw_words(text)
@@ -606,6 +617,30 @@ class Source:
     def text(self, i, j):
         return ' '.join(self.raw[self.raw_index[i]:self.raw_index[j - 1] + 1])
 
+    def context(self, i, j, reach=40):
+        """The raw words around tokens i..j: the sentence they are in plus one whole sentence before and
+        one after, at most `reach` words each way, so a quote can be read in its frame ("A common myth.
+        X." or "Some books say X. That's wrong.")."""
+        def ends(w):
+            return w.rstrip('"\')]”’').endswith(('.', '?', '!'))
+        a, b = self.raw_index[i], self.raw_index[j - 1]
+        lo, crossed = a, 0
+        while lo > 0 and a - lo < reach:
+            if ends(self.raw[lo - 1]):
+                if crossed:
+                    break
+                crossed = 1
+            lo -= 1
+        hi, crossed = b, 0
+        while hi + 1 < len(self.raw) and hi - b < reach:
+            if ends(self.raw[hi]):
+                if crossed:
+                    break
+                crossed = 1
+            hi += 1
+        return ('... ' if lo > 0 and a - lo >= reach else '') + ' '.join(self.raw[lo:hi + 1]) + \
+            (' ...' if hi + 1 < len(self.raw) and hi - b >= reach else '')
+
 
 def transcript_source(tr):
     src = Source()
@@ -618,17 +653,34 @@ def transcript_source(tr):
 def file_source(path):
     path = Path(path)
     if not path.is_file():
-        raise YTError('other', f'no such file: {path}')
+        raise YTError('usage', f'no such file: {path} (fix the path; if the text was never in a file, do not make one: the quote cannot be machine-checked)')
     head = path.read_bytes()[:4096]
+    # Never suggest retyping or pasting the text into a new file: a check against the model's own copy proves nothing.
     if head.startswith(b'%PDF'):
-        raise YTError('other', f'{path} is a PDF; give its text (pdftotext "{path}" out.txt, without -layout) or paste the passage into a .txt file')
+        if shutil.which('pdftotext'):
+            raise YTError('usage', f'{path} is a PDF: run pdftotext "{path}" out.txt (without -layout), then check against out.txt')
+        raise YTError('other', f'{path} is a PDF and pdftotext is not installed, so this quote cannot be machine-checked')
     if b'\x00' in head:
-        raise YTError('other', f'{path} is not a text file; save the course text as .txt or .md first')
+        raise YTError('other', f'{path} is not a text file, so this quote cannot be machine-checked')
     text = path.read_text(encoding='utf-8', errors='replace')
-    # Rejoin a word split across lines ("anti-" / "periplanar") and keep the line count.
-    text = re.sub(r'(\w)-[ \t]*\r?\n[ \t]*(\w+)', r'\1\2\n', text)
     src = Source()
+    lines, stamp = [], None
     for n, line in enumerate(text.splitlines(), 1):
+        if PANEL_STAMP.match(line):  # a stamp on its own line, as YouTube's transcript panel pastes it
+            stamp, src.panel = line.strip(), True
+            continue
+        if stamp:
+            src.stamps[n] = stamp
+        lines.append([n, STAMP.sub(' ', line)])
+    # Rejoin a word split across lines ("anti-" / "periplanar"); stamp lines are already gone, so a
+    # stamp is never glued onto a word.
+    for k in range(len(lines) - 1):
+        m = re.search(r'(\w)-[ \t]*$', lines[k][1])
+        nxt = re.match(r'[ \t]*(\w+)', lines[k + 1][1])
+        if m and nxt:
+            lines[k][1] = lines[k][1][:m.start() + 1] + nxt.group(1)
+            lines[k + 1][1] = lines[k + 1][1][nxt.end():]
+    for n, line in lines:
         src.add(line, lambda k, total, n=n: n)
     return src
 
@@ -662,7 +714,7 @@ def slip(qa, ca):
     x, y = ''.join(qa), ''.join(ca)
     if x == y or x in (y + 's', y + 'es') or y in (x + 's', x + 'es'):
         return True
-    if min(len(x), len(y)) < 7 or ratio(x, y) < WORD_THRESHOLD or x[:2] != y[:2] or edits(x, y) != 1:
+    if min(len(x), len(y)) < 7 or x[:2] != y[:2] or edits(x, y) != 1:
         return False
     tail = 0
     while tail < min(len(x), len(y)) and x[-1 - tail] == y[-1 - tail]:
@@ -730,6 +782,8 @@ def match_quote(text, src, starts):
     end and problems for the best span: one that passes, if there is one. A quote is one unbroken
     stretch of words: a cut ("a ... b") can hide words that reverse it, so it is refused."""
     text = STAMP.sub(' ', text)  # a [8:01] copied from the transcript view is not a spoken word
+    if src.panel:  # nor is a bare 0:31 copied across a pasted panel's stamp line
+        text = re.sub(r'(?<!\S)\d{1,2}:\d\d(?::\d\d)?(?!\S)', ' ', text)
     if ELLIPSIS.search(text):
         return {'ok': False, 'score': 0.0, 'problems': [
             'the quote has a cut (...): the left-out words can change its meaning, so check each unbroken stretch as its own quote']}
@@ -757,7 +811,7 @@ def parse_at(s):
     try:
         return float(s) if ':' not in s else secs(s + ('.0' if '.' not in s else ''))
     except ValueError:
-        raise YTError('other', f'--at takes m:ss, h:mm:ss or seconds, not "{s}"')
+        raise YTError('usage', f'--at takes m:ss, h:mm:ss or seconds, not "{s}"')
 
 
 def check_video_quote(ref, at, text, lang='en', window=QUOTE_WINDOW):
@@ -768,7 +822,10 @@ def check_video_quote(ref, at, text, lang='en', window=QUOTE_WINDOW):
                 'score': 0.0, 'problems': [f'the only captions are a machine translation ({tr["label"]}): they are not '
                                            'the speaker\'s words, so no quote from them can be confirmed']}
     src = transcript_source(tr)
-    near = [i for i, t in enumerate(src.where) if at - window <= t <= at + window]
+    # `transcript` prints one stamp per paragraph, so a quote from late in a paragraph is given that
+    # paragraph's start: when --at is a paragraph start, the window runs to that paragraph's end.
+    end = max([p['end'] for p in tr.get('paragraphs', []) if abs(p['start'] - at) <= 1] or [at])
+    near = [i for i, t in enumerate(src.where) if at - window <= t <= end + window]
     res = match_quote(text, src, near)
     out = {'kind': 'video', 'id': tr['id'], 'at': at, 'window': window, 'track': tr['label'],
            'captions': tr.get('kind'),
@@ -777,6 +834,7 @@ def check_video_quote(ref, at, text, lang='en', window=QUOTE_WINDOW):
     if res.get('end') is not None and res['score'] > 0:
         t0 = src.where[res['start']]
         out.update({'found_at': round(t0, 1), 'source_words': src.text(res['start'], res['end']),
+                    'context': src.context(res['start'], res['end']),
                     'link': f'https://www.youtube.com/watch?v={tr["id"]}&t={int(t0)}s'})
     if not res['ok']:
         anywhere = match_quote(text, src, range(len(src.tokens)))
@@ -793,7 +851,11 @@ def check_course_quote(path, text):
     out = {'kind': 'course', 'file': str(path), 'threshold': QUOTE_THRESHOLD, 'word_threshold': WORD_THRESHOLD,
            'quote': text, 'ok': res['ok'], 'score': res['score'], 'problems': res['problems']}
     if res.get('end') is not None and res['score'] > 0:
-        out.update({'line': src.where[res['start']], 'source_words': src.text(res['start'], res['end'])})
+        line = src.where[res['start']]
+        out.update({'line': line, 'source_words': src.text(res['start'], res['end']),
+                    'context': src.context(res['start'], res['end'])})
+        if line in src.stamps:
+            out['stamp'] = src.stamps[line]
     return out
 
 
@@ -803,6 +865,9 @@ def print_check(r, where):
         print(f'CONFIRMED (similarity {r["score"]:.2f}, threshold {r["threshold"]})')
         label = 'auto captions, may mishear technical words: ' if r.get('captions') == 'auto' else ''
         print(f'show: "{r["source_words"]}" ({label}{where})')
+        print(f'context: "{r["context"]}"')
+        print('Read the context before you use the quote: if the speaker or author is stating a view to reject it, '
+              'or quoting someone else, the quote is not their claim.')
         return 0
     print(f'NOT CONFIRMED (threshold {r["threshold"]}; a differing word must be a plural or a one-letter typo '
           'inside a long word): do not show this quote.')
@@ -827,7 +892,8 @@ def cmd_course(a):
     if a.json:
         print(json.dumps(r, indent=1))
         return 0 if r['ok'] else 6
-    return print_check(r, f'{Path(a.file).name}, line {r.get("line")}')
+    stamp = f', under stamp {r["stamp"]}' if r.get('stamp') else ''
+    return print_check(r, f'{Path(a.file).name}, line {r.get("line")}{stamp}')
 
 
 # ---------- search ----------
@@ -1012,7 +1078,7 @@ def cmd_scan(a):
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog='yt.py', description=(__doc__ or '').split('\n\n')[0],
-                                epilog='Exit codes: 0 ok, 1 unavailable or no captions, 3 yt-dlp missing, 4 network, 5 rate limited, 6 quote not confirmed.')
+                                epilog='Exit codes: 0 ok, 1 unavailable or no captions, 2 usage error, 3 yt-dlp missing, 4 network, 5 rate limited, 6 quote not confirmed.')
     sub = p.add_subparsers(dest='cmd', required=True)
 
     def add(name, help_text):
