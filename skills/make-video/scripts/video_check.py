@@ -1228,7 +1228,7 @@ class _Unfixable(Exception):
 
 class _Loose:
     """A forgiving JSON reader for the slips small models make. It repairs only what has one reading:
-    a comma before } or ], a doubled comma, a missing comma between items, a { or [ left open, a doubled
+    a comma before } or ], a doubled comma, a stray ", after a value, a missing comma between items, a { or [ left open, a doubled
     closing quote, a line break inside text, and words before or after the object. Anything else is unfixable."""
 
     NUM = re.compile(r'-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?')
@@ -1294,6 +1294,11 @@ class _Loose:
             while self.peek() == ',':
                 self.fix('removed a doubled ,')
                 self.i += 1
+            # In an object a key comes next, so "x",", "k" has a stray ", (a key never reads ", ").
+            if closer == '}' and re.match(r'",\s*"(?!\s*:)', self.t[self.i:self.i + 40]):
+                self.fix('removed a stray ",')
+                self.i += 2
+                self.peek()
             if self.peek() in '}]':
                 self.fix('removed a comma before ' + self.peek())
                 return False
@@ -1481,15 +1486,17 @@ def read_lesson(path):
             shown = '; '.join(fixes[:8]) + (f'; and {len(fixes) - 8} more' if len(fixes) > 8 else '')
             return lesson, (f'The file was not valid JSON. Repaired and saved it ({shown}). '
                             'Read the saved file and check every beat is where you meant it.')
-        lines = text.splitlines()
-        shown = lines[exc.lineno - 1] if 0 < exc.lineno <= len(lines) else ''
+        # Quote the text around the exact spot: a long line cut at its start hides the slip.
+        before = text[max(0, exc.pos - 70):exc.pos].replace('\n', ' ')
+        after = text[exc.pos:exc.pos + 50].replace('\n', ' ')
         print(f'NOT VALID JSON: line {exc.lineno}, column {exc.colno}: {exc.msg}.')
-        print(f'  That line: {shown.strip()[:160]}')
-        print('FIX: look at that line and the one before it. The usual causes:')
+        print(f'  The slip is at >>> : ...{before}>>> {after}...')
+        print('FIX: change the text at >>> . The usual causes:')
         print('  1. A missing comma between two items or two "key": value pairs.')
         print('  2. A comma right before ] or }. Delete it.')
         print('  3. A " inside text. Replace it with \' .')
-        print('  4. A comment (// or #). JSON has no comments. Delete it.')
+        print('  4. A comment (// or #) or your own notes. JSON has no comments. Delete them.')
+        print('  5. Two values for one key, like "type": "title": {...}. Each key holds one value: "type": "title", "text": "...".')
         print('Then run this check again.')
         raise SystemExit(2)
 

@@ -257,6 +257,16 @@ def old_rules():
     check(o == {'claims': [{'id': 'c14', 'text': 't'}], 'calc': []} and 'removed an extra ]' in f, f'a ] one too many right after a close is removed ({o}, {f})')
     o, f = fixed('{"title": "T"}\n```\n\nWe need to fix all issues per the checker output.')
     check(o == {'title': 'T'} and 'after the last }' in f, f'a closing ``` fence and notes after the object are dropped ({o}, {f})')
+    o, f = fixed('{"claims": [{"id": "c1", "text": "Tilted toward the Sun.",", "changes": true}, {"id": "c2"}],,}')
+    check(o == {'claims': [{'id': 'c1', 'text': 'Tilted toward the Sun.', 'changes': True}, {'id': 'c2'}]} and 'stray ",' in f,
+          f'a stray ", after a sentence is removed ({o}, {f})')
+    o, f = fixed('{"a": 1, ",": 2, "b": [1,]}')
+    check(o == {'a': 1, ',': 2, 'b': [1]}, f'a key named "," is kept while another slip is repaired ({o}, {f})')
+    long_line = '{"claims": [{"id": "c1", "text": "' + 'word ' * 300 + '", "from": "course"}, "type": "title": {"text": "T"}]}'
+    r = run(write('long-line.json', long_line))
+    spot = next((ln for ln in r.stdout.splitlines() if 'The slip is at' in ln), '')
+    check(r.returncode == 2 and re.search(r'"type">>> : "title"', spot) is not None,
+          f'a slip far along a long line is quoted where it is ({r.stdout.splitlines()[1:2]})')
     for bad in ('{"expr": "2*k1"? Wait, recompute.", "value": 1}', '{"lang": "en"}\n<parameter=part>\n{"n": 1}', 'no object here', '{"a": tru}',
                 '{"learner": {...}, "n": 1}', '{"title": "A"}\n</parameter>\n}</think>{\n "title": "B"}'):
         check(fixed(bad)[0] is None, f'no guess for {bad[:30]!r}')

@@ -15,7 +15,7 @@ Arms (same model, same request, same materials):
 
 Any OpenAI-compatible server works (llama-server, ollama). Nothing here calls a paid API.
 Each run writes OUTDIR/<scenario>-<arm>-<rep>/ with every draft (as the checker left it: it saves
-repaired JSON in place), every checker report, lesson.json (the last draft) and run.json (errors per
+repaired JSON in place), every checker report, lesson.json (the best valid draft) and run.json (errors per
 round, valid JSON or not, repaired or not).
 Judge the results with judge.py.
 """
