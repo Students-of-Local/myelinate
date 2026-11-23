@@ -7,7 +7,9 @@ Arms (same model, same request, same materials):
   skill     SKILL.md and the fill-in template as the system prompt. After each draft the
             checker runs with --sources on the learner's materials and its report goes back
             to the model, up to --rounds drafts in all. This is how the skill tells a model
-            with a shell to work.
+            with a shell to work. A host with tools edits one file in place; here the model
+            rewrites it whole, so a reply that is not JSON even after repair is set aside and
+            the next round builds on the best valid draft so far, which lesson.json keeps.
   baseline  No skill. The request asks for the same JSON format (the template) so the
             player can show it. One draft, no checker.
 
@@ -87,6 +89,7 @@ def run_one(scen, arm, rep, outdir, rounds):
         user = (request + '\n\nWrite the teaching video as JSON in exactly this format, replacing every <<...>> and adding '
                 'scenes as needed. Reply with only the JSON.\n```json\n' + TEMPLATE.read_text() + '```')
         rounds = 1
+    best = None  # (errors, draft): the draft the next round builds on, as a file a host would edit in place
     for n in range(1, rounds + 1):
         reply = chat(system, user)
         (d / f'reply{n}.txt').write_text(reply)
@@ -97,15 +100,23 @@ def run_one(scen, arm, rep, outdir, rounds):
         draft = (d / f'draft{n}.json').read_text()  # the checker saves a repaired file in place
         log['rounds'].append({'round': n, 'errors': errors, 'valid_json': errors is not None,
                               'repaired': 'Repaired and saved it' in report})
-        (d / 'lesson.json').write_text(draft)
+        if errors is not None and (best is None or errors <= best[0]):
+            best = (errors, draft, report)
+        (d / 'lesson.json').write_text(best[1] if best else draft)
         if errors == 0:
             break
-        user = (request + '\n\nYour last draft of the lesson JSON:\n```json\n' + draft + '\n```\n\n'
+        if best and errors is None:
+            note = ('Your last reply was not valid JSON and the checker could not repair it, so it was set aside. '
+                    'Here is your best draft so far, and what the checker printed for it.')
+            draft, report = best[1], best[2]
+        else:
+            note = 'Your last draft of the lesson JSON, and what the checker printed for it.'
+        user = (request + '\n\n' + note + '\n```json\n' + draft + '\n```\n\n'
                 'The checker printed:\n```\n' + report.strip() + '\n```\n\n'
-                'Fix every numbered problem exactly as its Fix line says. Reply with the whole corrected lesson JSON only.')
-    last = log['rounds'][-1]
-    log['ready'] = last['errors'] == 0
-    log['final_errors'] = last['errors']
+                'Fix every numbered problem exactly as its Fix line says. Change nothing else. '
+                'Reply with the whole corrected lesson JSON only.')
+    log['ready'] = bool(best) and best[0] == 0
+    log['final_errors'] = best[0] if best else None  # the best valid draft, which lesson.json holds
     (d / 'run.json').write_text(json.dumps(log, indent=1))
     print(f"{scen['id']} {arm} {rep}: " + ' -> '.join(str(r['errors']) for r in log['rounds']), flush=True)
     return log
