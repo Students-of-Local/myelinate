@@ -403,6 +403,178 @@ def test_pauses_between_network_steps():
         yt.CACHE, yt.time, yt.PAUSE_SCALE = saved_cache, saved_time, 1.0
 
 
+
+# ---------- checking quotes ----------
+
+ANTI = 'so the hydrogen and the leaving group must be anti periplanar'  # said at 2:24 in A
+
+
+def quote(b, at, text, *more):
+    return b.run('quote', A, '--at', at, text, *more)
+
+
+def test_quote_confirms_real_words_and_shows_the_source_words():
+    b = Box()
+    code, out, err = quote(b, '2:24', 'the hydrogen and the leaving group must be anti-periplanar')
+    assert code == 0, out + err
+    assert 'CONFIRMED (similarity' in out and 'threshold 0.9' in out, out
+    assert 'show: "the hydrogen and the leaving group must be anti periplanar"' in out, out
+    assert 'watch?v=AAAAAAAAAAA&t=14' in out, out
+    code, out, _ = quote(b, '2:04', ANTI)  # exactly 20 seconds early is still inside the window
+    assert code == 0, out
+    code, out, _ = quote(b, '2:24', '[2:24] ' + ANTI)  # a stamp copied from the transcript view
+    assert code == 0, out
+
+
+def test_quote_allows_a_typo_but_shows_the_caption_and_labels_auto_captions():
+    b = Box()
+    code, out, _ = quote(b, '2:36', 'which is the more subsituted alkene')
+    assert code == 0, out
+    assert 'show: "which is the more substituted alkene" (auto captions, may mishear technical words: 2:36' in out, out
+    code, out, _ = quote(b, '2:32', "with a strong base you usually don't get the Zaitsev product")
+    assert code == 6 and 'negation' in out, out
+
+
+def test_quote_refuses_a_machine_translated_track():
+    b = Box()
+    code, out, _ = b.run('quote', H, '--at', '0:05', 'the Zaitsev product is the most substituted',
+                         FAKE_YT_429=f'{H}:es-orig,{H}:es', FAKE_YT_ALLOW_TLANG='1')
+    assert code == 6 and 'machine translation' in out and 'show:' not in out, out
+
+
+def test_attack_real_quote_at_the_wrong_time_is_refused_and_located():
+    b = Box()
+    code, out, _ = quote(b, '1:00', ANTI)
+    assert code == 6, out
+    assert 'NOT CONFIRMED' in out and 'do not show this quote' in out, out
+    assert 'said at 2:24, not within 20s of 1:00' in out, out
+    assert 'show:' not in out
+
+
+def test_attack_misquoted_words_at_the_right_time_are_refused():
+    b = Box()
+    for text, why in [
+        ('but a bulky strong base gives the Zaitsev product', 'zaitsev'),
+        ('so the hydrogen and the leaving group must not be anti periplanar', 'negation differs'),
+        ('on a cyclohexane ring both groups must be equatorial to be antiperiplanar', 'equatorial'),
+        ('the hydrogen and the leaving group must be anti periplanar in 3 cases', 'number differs'),
+    ]:
+        code, out, _ = quote(b, '2:40' if 'bulky' in text else '3:24' if 'cyclohexane' in text else '2:24', text)
+        assert code == 6, (text, out)
+        assert why in out.lower(), (text, out)
+        assert 'show:' not in out, out
+
+
+def test_attack_invented_quote_is_refused():
+    b = Box()
+    code, out, _ = quote(b, '2:24', 'E2 reactions always run faster in water than in hexane')
+    assert code == 6 and 'NOT CONFIRMED' in out and 'show:' not in out, out
+    code, out, _ = quote(b, '2:24', 'anti periplanar')  # too short to tell a quote from a term hit
+    assert code == 6, out
+
+
+
+def test_a_slip_is_a_misspelling_never_a_different_word():
+    for q, c in [('leading', 'leaving'), ('subsituted', 'substituted'), ('anti periplanar', 'antiperiplanar'),
+                 ('mechanism', 'mechanisms'), ('alkenes', 'alkene')]:
+        assert yt.slip(q.split(), c.split()), (q, c)
+    for q, c in [('synperiplanar', 'antiperiplanar'), ('syn periplanar', 'antiperiplanar'), ('unstable', 'stable'),
+                 ('dehydration', 'hydration'), ('hypertonic', 'hypotonic'), ('intracellular', 'intercellular'),
+                 ('cis', 'trans'), ('absorb', 'adsorb'), ('mitosis', 'meiosis'), ('exergonic', 'endergonic'),
+                 ('heterozygous', 'homozygous'), ('increase', 'decrease'), ('meta', 'para'),
+                 ('alkane', 'alkene'), ('alkyne', 'alkene'), ('amine', 'amide'), ('nitrite', 'nitrate'),
+                 ('sulfite', 'sulfate'), ('hexane', 'hexene'), ('nadp', 'nadh'), ('chloride', 'chlorate'),
+                 ('more', 'mole'), ('propanol', 'propenol'), ('zaitzev', 'zaitsev')]:
+        assert not yt.slip(q.split(), c.split()), (q, c)
+
+def test_attack_a_cut_is_refused_because_it_can_splice_a_reversal():
+    b = Box()
+    for text in ['in E2 the base pulls off a hydrogen ... the leaving group must be anti periplanar',
+                 'with a strong base \u2026 the Hofmann product']:
+        code, out, _ = quote(b, '2:32', text)
+        assert code == 6 and 'cut' in out and 'show:' not in out, out
+    # Both halves are on slide line 4, but the slide says the opposite of the splice.
+    code, out, _ = course(b, 'A small strong base gives the ... Hofmann product')
+    assert code == 6 and 'cut' in out, out
+
+
+def test_quote_json_reports_threshold_score_and_where():
+    b = Box()
+    code, out, _ = quote(b, '2:24', ANTI, '--json')
+    r = json.loads(out)
+    assert code == 0 and r['ok'] is True and r['threshold'] == 0.9 and r['score'] >= 0.9, r
+    assert r['found_at'] == 144 and r['source_words'] == ANTI and r['window'] == 20, r
+    code, out, _ = quote(b, '0:30', ANTI, '--json')
+    r = json.loads(out)
+    assert code == 6 and r['ok'] is False and r['elsewhere'], r
+
+
+COURSE = (
+    'Slide 3. E2 eliminations\n'
+    'In E2 the beta hydrogen and the leaving group must be anti-\n'
+    'periplanar, a dihedral angle of 180 degrees.\n'
+    'A small strong base gives the “Zaitsev” product; a bulky base gives the Hofmann product.\n'
+    'Speciﬁc rule: the reaction is not stereospeciﬁc in E1.\n'
+    'For this step \u0394G\u00b0\u2032 = \u221230.5 kJ/mol and K = 1.0 \u00d7 10\u2075, so Ka = 1.8 \u00d7 10\u207b\u2075.\n'
+    'Blood leaves the right ventricle for the lungs; it isn\'t the left one.\n'
+)
+
+
+def course(b, text, *more, name='slides.txt', body=COURSE):
+    f = b.dir / name
+    f.write_text(body) if isinstance(body, str) else f.write_bytes(body)
+    return b.run('course', str(f), text, *more, path=EMPTY)  # no yt-dlp needed
+
+
+def test_course_confirms_across_ligatures_hyphenation_and_curly_quotes():
+    b = Box()
+    code, out, err = course(b, 'the beta hydrogen and the leaving group must be antiperiplanar')
+    assert code == 0, out + err
+    assert 'slides.txt, line 2' in out, out
+    code, out, _ = course(b, 'a small strong base gives the "Zaitsev" product')
+    assert code == 0 and 'line 4' in out, out
+    code, out, _ = course(b, 'Specific rule: the reaction is not stereospecific in E1')
+    assert code == 0 and 'line 5' in out, out
+
+
+def test_attack_altered_or_invented_course_quote_is_refused():
+    b = Box()
+    for text, why in [
+        ('a small strong base gives the Hofmann product', ''),
+        ('a dihedral angle of 109 degrees', 'number differs'),
+        ('the reaction is stereospecific in E1', 'negation differs'),
+        ('E2 is always faster than E1 in every solvent', ''),
+        ('the beta hydrogen and the leaving group must be syn-periplanar', 'syn'),  # 0.85 similar, opposite meaning
+        ('A small strong base gives the "Zaitsev" product; a bulky base gives the Hofmann reactant', 'reactant'),
+    ]:
+        code, out, _ = course(b, text)
+        assert code == 6 and 'NOT CONFIRMED' in out and 'show:' not in out, (text, out)
+        assert why in out, (text, out)
+
+
+def test_attack_signs_exponents_and_dropped_meaning_words_are_refused():
+    b = Box()
+    for text, ok in [
+        ("for this step \u0394G\u00b0' = -30.5 kJ/mol", True),
+        ('for this step \u0394G\u00b0\u2032 = \u221230.5 kJ/mol', True),
+        ('for this step \u0394G\u00b0\u2032 = 30.5 kJ/mol', False),  # sign dropped
+        ('and K = 1.0 x 10^5, so Ka', True),
+        ('and K = 1.0 x 105, so Ka', False),  # 10^5 read as 105
+        ('so Ka = 1.8 x 10^5', False),  # exponent's minus dropped
+        ('so Ka = 1.8 x 10^-5', True),
+        ('blood leaves the ventricle for the lungs', False),  # "right" carries meaning
+        ('blood leaves the right ventricle for the lungs; it is not the left one', True),  # contraction spelled out
+    ]:
+        code, out, _ = course(b, text)
+        assert (code == 0) == ok, (text, out)
+
+
+def test_course_refuses_a_pdf_and_says_how_to_get_text():
+    b = Box()
+    code, out, err = course(b, 'the beta hydrogen and the leaving group', name='slides.pdf', body=b'%PDF-1.7\n\x00\x01')
+    assert code == 1 and 'pdftotext' in (out + err), out + err
+
+
 def main():
     tests = [(k, v) for k, v in globals().items() if k.startswith('test_') and callable(v)]
     failed = 0

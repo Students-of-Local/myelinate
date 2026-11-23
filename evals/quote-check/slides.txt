@@ -1,0 +1,4 @@
+Slide 13. Geometry: the beta H and the leaving group must be anti-
+periplanar (dihedral angle near 180 degrees).
+Slide 14. A strong, small base (NaOEt) gives mainly the Zaitsev alkene; a bulky base (KOtBu) gives the “Hofmann” alkene.
+Slide 15. If no beta H can be trans-diaxial, that alkene does not form, even the Zaitsev product. Speciﬁc examples follow.

@@ -43,6 +43,37 @@ Then **read the transcript of that segment yourself.** Term hits only say where 
 
 ## 4. Vet it against the course
 
+### Check every quote before you show it
+
+Your memory of a transcript is not evidence, and a quote that sounds right can carry a changed word, a dropped "not" or the wrong minute. Every quote the learner sees, from the video or from their course, passes a check first: in the vetting note, in a contradiction flag, in a pause point that quotes the speaker.
+
+<!-- local-tools -->
+**With a shell and `yt-dlp`,** run the checker on each quote from this skill's folder:
+
+```
+python3 scripts/yt.py quote <url> --at 8:01 "the hydrogen of relevance on the beta carbon has to be trans to the leaving group"
+python3 scripts/yt.py course slides.txt "the beta H and the leaving group must be anti-periplanar"
+```
+
+`quote` looks for the words within 20 seconds of `--at`. `course` needs no `yt-dlp` and looks through any text file: their slides, notes or study guide, or a transcript they pasted (save it as a `.txt` file; `course` checks the words, so read the timestamp from the paste yourself). Convert a PDF first with `pdftotext file.pdf file.txt`.
+
+Both ignore case, punctuation, curly quotes, ligatures and words split across lines. They keep what changes meaning: a number, a sign (−30.5 is not 30.5), an exponent (10⁵ is not 105), a "not" (and "isn't" is "is not"), and every word but "uh", "um" and the articles. A word that differs passes only as a plural or a one-letter typo inside a long word with the same start and end, so "subsituted" passes and "alkane" for "alkene" or "syn" for "anti" fails. The whole quote must be at least 0.90 similar to the words found.
+
+Quote one unbroken stretch of at least four words, copied from the text. A cut (`...`) is refused, because the words left out can reverse the meaning; quote two stretches separately instead.
+
+- **Exit 0, `CONFIRMED`:** it prints a `show:` line with the source's own words and their timestamp or line. Show the learner exactly those words with that place, not your version. If the line says "auto captions", say the words come from YouTube's automatic captions.
+- **Exit 6, `NOT CONFIRMED`:** don't show the quote, or any verdict or flag built on it. If it says the words were said at another time, re-read that part of the transcript and use that time. If it says not found or a word differs, copy the words again from the transcript or file, then check again. Don't edit a failed quote's wording until it gets through. If it says the captions are a machine translation, no quote from that video can be confirmed: treat the video as not vetted.
+- **Any other exit** (no `yt-dlp`, no captions, network, rate limit, a missing file): the check couldn't run. Use the rule below for that quote.
+
+Never show a quote that exited 6, and never skip the checker when it can run.
+<!-- /local-tools -->
+
+**When the checker can't run** (no shell, no `yt-dlp`, or it couldn't reach the video), copy each quote character for character from the transcript or file you read, with its timestamp or slide beside it, and end the vetting note with "Quotes not machine-checked."
+
+**Each verdict cites both sides:** the course's words with where they came from, and the video's words with the timestamp. A "Contradicts" verdict needs both quotes checked; if either fails, the verdict is "Can't tell."
+
+### Give each claim a verdict
+
 For each course claim from step 1, find what the segment says and give one verdict:
 
 | Verdict | What you do |
@@ -64,7 +95,7 @@ Also check, before calling it vetted:
 Lead with one pick. Give the learner:
 
 1. **The segment,** not the video: title, channel, the range (`4:10 to 9:30, about 5 minutes`), a link that starts there (`&t=250s`), and an embed that stops at the end when you can render one (`inline-widgets.html`'s video view takes `start`, `end` and `segments`).
-2. **The vetting note,** two or three lines: what you checked it against, what matched, any notation mapping, and what to skip.
+2. **The vetting note,** two or three lines: what you checked it against, what matched, any notation mapping, and what to skip, with the checked quotes from step 4.
 3. **One question to watch for,** taken from their target or their mistake.
 4. **Pause points** from the transcript, each just before a key move: "Pause at 6:02. Which hydrogen leaves, and why that one?"
 5. **After:** a recall prompt with the video closed, then one new problem they do without it.
@@ -75,4 +106,4 @@ Then the video goes back to being a tool: recall and practice are what show whet
 
 ## Don't
 
-Recommend a video you didn't find this session. Give a timestamp you didn't read. Call a video vetted when you read only its title or description. Hand over a full lecture when a segment exists. Download the video itself: link and embed it.
+Recommend a video you didn't find this session. Give a timestamp you didn't read. Show a quote that failed the check, or one you didn't check when the checker could run. Call a video vetted when you read only its title or description. Hand over a full lecture when a segment exists. Download the video itself: link and embed it.
