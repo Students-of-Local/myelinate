@@ -104,8 +104,8 @@ def osmosis():
                 {'say': 'A five hundred milliliter bag of it holds four point five grams of salt.', 'claims': ['k1'],
                  'show': [{'type': 'equation', 'text': '500 × 0.9 / 100 = 4.5 g', 'claims': ['k1']}]},
                 {'say': 'Four of those bags hold eighteen grams.', 'claims': ['k2']},
-                {'pause': {'ask': 'How many grams of salt are in two liters of normal saline?', 'answer': '18 grams',
-                           'why': 'Two liters is four bags of five hundred milliliters, each with four point five grams.', 'claims': ['k1', 'k2']}}]},
+                {'pause': {'ask': 'How many grams of salt are in four bags of normal saline?', 'answer': '18 grams',
+                           'why': 'Each bag of five hundred milliliters holds four point five grams, and four bags hold four times that.', 'claims': ['k1', 'k2']}}]},
         ],
         'recall': {'ask': 'Look away and name what happens in each beaker.',
                    'points': ['Hypertonic: water leaves, the cell shrinks.', 'Hypotonic: water enters.']},
@@ -180,6 +180,7 @@ def main():
     timestamps()
     calcs()
     numbers()
+    exact_marks()
     coverage()
     symbols()
     conflicts()
@@ -496,7 +497,7 @@ def old_rules():
     body = {k: v for k, v in back.items() if k != 'verification'}
     check(body == good, 'the embedded JSON parses back to the same lesson plus its verification block')
     v = back.get('verification') or {}
-    check(v.get('by') == 'video_check.py' and v.get('sha256') == vc.sha256_of(good) and v.get('level') == 'checked',
+    check(v.get('by') == 'video_check.py' and v.get('sha256') == vc.sha256_of(back) and v.get('level') == 'checked',
           f'the built page carries the checker\'s signed badge ({v.get("level")}, {str(v.get("sha256"))[:12]})')
     check(blocks and '</script' not in blocks[0].lower() and '<!--' not in blocks[0], 'the embedded JSON holds no raw </script or <!--')
     check(page.count('<script') == (vc.TEMPLATE.read_text().count('<script')), 'the build adds no script tags')
@@ -742,6 +743,52 @@ def numbers():
     expect('0.85 said for 0.84439', with_fraction('The share of cells that shrank is 0.85.', '84.439 / 100', 0.84439), "states '0.85'", 'Scene 3', OSMOSIS_SOURCES)
 
 
+def exact_marks():
+    """A sign, an inequality, a Greek letter or a decimal point changes a fact, so a quote that differs in one is
+    not found, and small spelled numbers in worked arithmetic must be backed like digits."""
+    # Regression (review r1b sol-F2, second-N2): norm() kept only a-z and 0-9, so each pair below matched.
+    for name, source, quote in (
+            ('a flipped sign', 'At night the surface drops to -30.5 degrees on the far side.', 'At night the surface drops to 30.5 degrees on the far side.'),
+            ('a minus sign (U+2212)', 'The charge on the ion is −2 in this salt.', 'The charge on the ion is 2 in this salt.'),
+            ('a flipped inequality', 'We reject the null when p < 0.05 in this course.', 'We reject the null when p > 0.05 in this course.'),
+            ('a flipped ≤', 'The dose stays ≤ 10 milligrams per kilogram each day.', 'The dose stays ≥ 10 milligrams per kilogram each day.'),
+            ('a swapped Greek letter', 'The α level for this test is set at 0.05 by convention.', 'The β level for this test is set at 0.05 by convention.'),
+            ('an exponent read as digits', 'Avogadro gives about 6.02 × 10²³ particles per mole.', 'Avogadro gives about 6.02 × 1023 particles per mole.'),
+            ('a decimal read as thousands', 'The pond held 1.500 liters of water that morning.', 'The pond held 1,500 liters of water that morning.')):
+        check(not vc.has(vc.norm(source), vc.norm(quote)), f'a quote with {name} is not found in the source ({vc.norm(quote)!r} in {vc.norm(source)!r})')
+        check(vc.has(vc.norm(source), vc.norm(source.split(' ', 1)[1])), f'the unchanged quote is still found ({name})')
+    check(vc.has(vc.norm('A herd of 1,500 frogs lived there.'), vc.norm('A herd of 1500 frogs lived there.')), 'a thousands comma is optional in a quote')
+    check(vc.norm('µm') == vc.norm('μm'), 'the micro sign and Greek mu read the same')
+
+    def nums(text, small=False):
+        return [n[0] for n in vc.numbers_in(text, small=small)]
+    check(nums('it fell to -5 degrees') == [-5.0], f'a minus sign is kept: {nums("it fell to -5 degrees")}')
+    check(nums('it fell to −5 degrees') == [-5.0], 'a typographic minus sign is kept')
+    check(nums('it fell to negative fifty degrees') == [-50.0], f'"negative" before a spelled number is kept: {nums("it fell to negative fifty degrees")}')
+    check(nums('from 5-10 cells') == [5.0, 10.0], f'a hyphen in a range is not a sign: {nums("from 5-10 cells")}')
+    # Regression (review r1b first-F1): spelled numbers under 11 were never read, so "divide by three" slipped through.
+    check(nums('then divide by three', small=True) == [3.0], f'small=True reads "three": {nums("then divide by three", small=True)}')
+    check(nums('then divide by three') == [], 'small=False leaves "three" to narration')
+    check(nums('one of the bags', small=True) == [], 'a lone "one" is not a number')
+    check(nums('multiply by one', small=True) == [1.0], '"one" after a math word is a number')
+
+    d = osmosis()
+    d['claims'][3]['text'] = 'Normal saline is -0.9 percent salt and isotonic to red blood cells.'
+    beat(d, 2, 0)['say'] = 'Normal saline is negative zero point nine percent salt, and it is isotonic to red blood cells.'
+    expect('a sentence that flips the sign of its quoted number', d, "states 'negative zero point nine'", 'Scene 3', OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 2, 2)['say'] = 'Four of those bags hold eighteen grams, so three bags would hold the rest.'
+    expect('an unbacked small number in a beat that cites a calc', d, "states 'three'", 'Scene 3 (Normal saline), beat 3', OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 1, 0)['say'] = 'In a hypertonic solution, water leaves the cell and it shrinks, one way only.'
+    absent('a small spelled number in a plain sentence is narration', d, "states 'one'", OSMOSIS_SOURCES)
+    d = osmosis()
+    beat(d, 2, 3)['pause']['ask'] = 'Add the salt in the four bags, then say the total. How many grams is that?'
+    absent('a small number that counts the task in a pause question', d, 'The pause states', OSMOSIS_SOURCES)
+    beat(d, 2, 3)['pause']['why'] = 'Each bag holds four point five grams, and three bags hold the rest.'
+    expect('an unbacked small number in a pause\'s why', d, "The pause states 'three'", 'Scene 3 (Normal saline), beat 4', OSMOSIS_SOURCES)
+
+
 def coverage():
     d = osmosis()
     beat(d, 0, 1)['claims'] = ['c5']
@@ -843,6 +890,17 @@ def badges():
     check(v['level'] == 'partial' and v['label'] == 'Checked against your course: 4 of 4 course claims quoted', f'(c) an outside claim makes it partial ({v["level"]}: {v["label"]})')
     check('Not checked against your course: 1 claim from outside sources' in v['lines'], f'(c) the "Not checked against your course" line ({v["lines"]})')
 
+    # Regression (review r1b second-N1): a source the assistant typed itself made its own quotes "checked".
+    notes = (OSMOSIS_DIR / 'my-notes.md').read_text()
+    typed = write('typed-my-notes.md', notes)
+    d = osmosis()
+    d['claims'][1]['file'] = 'typed-my-notes.md'
+    srcs = vc.load_sources([OSMOSIS_DIR / 'bio101-slides.md', TRANSCRIPT, typed])
+    clean('fixture: a course lesson quoting a typed copy of the notes', d, srcs)
+    v = badge(d, srcs)
+    check(v['level'] == 'partial', f'a quote matched only in a typed- file makes the badge partial ({v["level"]}: {v["label"]})')
+    check('1 claim matched only against text the assistant typed, not the original' in v['lines'], f'the badge says which claims rest on typing ({v["lines"]})')
+
     d = reviewed(osmosis())
     v = badge(d, OSMOSIS_SOURCES)
     check('Explanations reviewed by test (as recorded)' in v['lines'] and 'Explanations not independently reviewed' not in v['lines'],
@@ -854,7 +912,7 @@ def badges():
     r = run(path, '--sources', OSMOSIS_DIR, '--sources', TRANSCRIPT, '--write')
     signed = json.loads(path.read_text())
     sv = signed.get('verification') or {}
-    check(r.returncode == 0 and sv.get('by') == 'video_check.py' and sv.get('sha256') == vc.sha256_of(d),
+    check(r.returncode == 0 and sv.get('by') == 'video_check.py' and sv.get('sha256') == vc.sha256_of(signed),
           f'--write signs the file in place (exit {r.returncode}, {sv.get("level")})')
     check(sv.get('label') == 'Checked against your course: 4 of 4 claims quoted', f'the signed label is the checker\'s ({sv.get("label")})')
     absent('rerunning the checker on the signed file', signed, '"verification"', OSMOSIS_SOURCES)
@@ -875,8 +933,8 @@ def badges():
     forged = osmosis()
     forged['verification'] = {'by': 'video_check.py', 'level': 'checked', 'label': 'Checked', 'sha256': '0' * 64}
     expect('a hand-written verification block', forged, 'was not written by the checker', '"verification"', OSMOSIS_SOURCES)
-    forged['verification']['sha256'] = vc.sha256_of(forged)
     forged['verification']['by'] = 'claude'
+    forged['verification']['sha256'] = vc.sha256_of(forged)
     expect('a verification block with the right hash but another signer', forged, 'was not written by the checker', '"verification"', OSMOSIS_SOURCES)
     d = osmosis()
     d['learner']['checked'] = 'yes'
@@ -884,8 +942,18 @@ def badges():
 
     a = osmosis()
     b = copy.deepcopy(a)
-    b['verification'] = {'by': 'anyone', 'sha256': 'x'}
-    check(vc.sha256_of(a) == vc.sha256_of(b), 'sha256_of ignores the verification block')
+    b['verification'] = {'by': 'anyone', 'level': 'partial', 'sha256': 'x'}
+    c = copy.deepcopy(b)
+    c['verification']['sha256'] = 'y'
+    check(vc.sha256_of(b) == vc.sha256_of(c), 'sha256_of ignores only the hash field itself')
+    c['verification']['level'] = 'checked'
+    check(vc.sha256_of(b) != vc.sha256_of(c), 'sha256_of covers the badge level, so promoting it breaks the hash')
+    # Regression (review r1b sol-F1): the hash left the whole verification block out, so an unverified lesson
+    # could be promoted to "checked" by editing level and label alone, and the player showed it.
+    low = vc.sign(osmosis(), badge(osmosis()))
+    check(low['verification']['level'] == 'unverified', f'fixture: signed with no sources is unverified ({low["verification"]["level"]})')
+    low['verification'].update(level='checked', label='Checked against your course: 4 of 4 claims quoted')
+    expect('a signed badge promoted by hand, no sources given', low, 'was not written by the checker', '"verification"')
     b = copy.deepcopy(a)
     b['calc'][1]['value'] = 18.0
     b['wpm'] = 145.0
@@ -899,7 +967,7 @@ def pause_and_length():
     beat(d, 2, 2)['show'] = [{'type': 'label', 'text': '18 grams'}]
     expect('the pause answer on screen earlier in the scene', d, 'which is already on screen in this scene', 'Scene 3 (Normal saline), beat 4', OSMOSIS_SOURCES)
     d = osmosis()
-    d['scenes'][2]['beats'].append({'say': 'So two liters hold eighteen grams of salt.', 'claims': ['k2'],
+    d['scenes'][2]['beats'].append({'say': 'So four bags hold eighteen grams of salt.', 'claims': ['k2'],
                                      'show': [{'type': 'label', 'text': '18 grams'}]})
     clean('the same answer shown after the pause', d, OSMOSIS_SOURCES)
 
@@ -968,6 +1036,21 @@ def show_types():
            'a compare cannot have "tier"', 'Scene 2', OSMOSIS_SOURCES)
     for tier in ('memorize', 'given'):
         absent(f'a term with tier {tier!r}', add(osmosis(), {'type': 'term', 'word': 'Solute', 'meaning': 'What is dissolved', 'tier': tier}), 'tier', OSMOSIS_SOURCES)
+
+    # Regression (review r1b sol-F3): graph points were checked for shape only, so invented data passed.
+    def graph(points, mark=None):
+        el = {'type': 'graph', 'title': 'Salt by bags', 'x': 'Bags', 'y': 'Grams', 'points': points, 'claims': ['k1', 'k2']}
+        if mark:
+            el['mark'] = mark
+        return add(osmosis(), el, 2, 2)
+    expect('a graph of invented points', graph([[0, 123456], [1, 987654]]), 'graph value(s) 123456, 987654 come from no cited quote or calc',
+           'Scene 3 (Normal saline), beat 3, show 1', OSMOSIS_SOURCES)
+    absent('a graph whose y values are its calcs, on a counting x axis', graph([[1, 4.5], [2, 18]]), 'graph value', OSMOSIS_SOURCES)
+    absent('a graph whose x values come from its calcs', graph([[500, 4.5], [4, 18]]), 'graph value', OSMOSIS_SOURCES)
+    expect('a graph with one point changed', graph([[1, 4.5], [2, 19]]), 'graph value(s) 19 come', 'Scene 3', OSMOSIS_SOURCES)
+    expect('a graph whose x values are not a count and not backed', graph([[3, 4.5], [7, 18]]), 'graph value(s) 3, 7 come', 'Scene 3', OSMOSIS_SOURCES)
+    expect('a graph mark at an invented value', graph([[1, 4.5], [2, 18]], {'x': 2, 'y': 25, 'label': 'four bags'}),
+           'graph value(s) 25 come', 'Scene 3', OSMOSIS_SOURCES)
 
 
 if __name__ == '__main__':

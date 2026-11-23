@@ -112,13 +112,23 @@ def screen_words(text):
     return len([w for w in str(text).split() if re.search(r'[^\d.,%=+\-*/()^]', w)])
 
 
+SUPERSCRIPT = str.maketrans('⁰¹²³⁴⁵⁶⁷⁸⁹⁻', '0123456789-')
+NORM_TOKEN = re.compile(r'(?:(?<![a-z0-9])-)?\d+(?:\.\d+)+(?![a-z0-9])|(?<![a-z0-9])-\d+(?![a-z0-9.])|\^-?\d+|[a-z0-9]+|<=|>=|[<>=%±]')
+
+
 def norm(text):
-    """Lowercase letters and digits only, with ligatures, accents, quote marks and PDF line-break hyphens undone."""
-    text = unicodedata.normalize('NFKC', str(text)).replace('\u00ad', '')
+    """Words, numbers and the marks that change meaning, as space-separated tokens. Ligatures, accents, quote
+    marks, typographic dashes and PDF line-break hyphens are undone. Kept: a minus sign on a number (-30.5 is not
+    30.5), decimals as one token, exponents (10⁵ is 10 ^5, not 105), < > <= >= = % ±, and Greek letters by name."""
+    text = str(text).replace('\u00ad', '')
+    text = re.sub(r'[⁰¹²³⁴⁵⁶⁷⁸⁹⁻]+', lambda m: '^' + m.group(0).translate(SUPERSCRIPT), text)
+    text = unicodedata.normalize('NFKC', text).replace('\u2212', '-').replace('≤', '<=').replace('≥', '>=')
     text = re.sub(r'(\w)-[ \t]*\r?\n\s*(\w)', r'\1\2', text)
-    text = ''.join(ch for ch in unicodedata.normalize('NFKD', text) if not unicodedata.combining(ch))
-    text = text.lower().replace('’', "'").replace('‘', "'").replace('“', '"').replace('”', '"')
-    return ' '.join(re.sub(r'[^a-z0-9]+', ' ', text).split())
+    text = ''.join(ch for ch in unicodedata.normalize('NFKD', text) if not unicodedata.combining(ch)).lower()
+    text = ''.join(f' {unicodedata.name(ch).split()[-1].lower()} ' if '\u0370' <= ch <= '\u03ff' and unicodedata.name(ch, '').startswith('GREEK') else ch
+                   for ch in text)
+    text = re.sub(r'(?<=\d),(?=\d{3}(?!\d))', '', text)
+    return ' '.join(NORM_TOKEN.findall(text))
 
 
 def has(haystack, needle):
@@ -185,7 +195,8 @@ def element_texts(el):
 # ---------------------------------------------------------------- numbers
 
 ORDINAL_WORDS = r'(?:step|steps|part|chapter|scene|problem|question|example|exam|slide|slides|page|pages|lecture|figure|fig|table|unit|week|module|section|ch|p|pp|lab|quiz|homework|hw|beat|claim|item|choice|option|version|edition|ed|level)'
-NUM = re.compile(r'(?<![\w.^_])(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)(?![\w])(\s?%| percent)?', re.I)
+NUM = re.compile(r'(?<![\w.^_])([-−](?=\.?\d))?(\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?|\.\d+)(?![\w])(\s?%| percent)?', re.I)
+MATH_BEFORE = {'equals', 'is', 'get', 'gets', 'gives', 'by', 'times', 'plus', 'minus', 'over', 'subtract', 'add', 'from', 'divide', 'multiply', 'to'}
 ORDINAL_BEFORE = re.compile(r'(?<![A-Za-z])' + ORDINAL_WORDS + r'\.?\s*$', re.I)  # whole words: "dropped 37" is a number
 APPROX_BEFORE = re.compile(r'(?:about|around|roughly|nearly|almost|approximately|some|~|≈)\s*$', re.I)
 UNITS = {w: i for i, w in enumerate('zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen seventeen eighteen nineteen'.split())}
@@ -193,17 +204,19 @@ TENS = {w: 10 * i for i, w in enumerate('_ _ twenty thirty forty fifty sixty sev
 SCALES = {'hundred': 100, 'thousand': 1000, 'million': 1000000}
 
 
-def numbers_in(text, approx_ok=False):
+def numbers_in(text, approx_ok=False, small=False):
     """Numbers stated in a piece of text: [(value, decimals, is_percent, approximate, shown)].
 
     Digits are read as written. Spelled-out numbers are read too when they could carry a fact: 11 or more,
     anything with "point", "percent", "hundred", "thousand" or "million". Ordinal labels such as
-    "Step 2" or "slide 5", exponents (x^2) and subscripts (v_0) are not numbers.
+    "Step 2" or "slide 5", exponents (x^2) and subscripts (v_0) are not numbers. A minus sign written on a
+    number (-5, −5) or "negative" before a spelled one is kept. small=True, for sentences that work arithmetic,
+    reads spelled numbers under 11 too ("divide by three"), except a lone "one" not after a math word.
     """
     text = str(text)
     out = []
     for m in NUM.finditer(text):
-        raw, pct = m.group(1), bool(m.group(2))
+        sign, raw, pct = m.group(1), m.group(2), bool(m.group(3))
         before = text[max(0, m.start() - 16):m.start()]
         if ORDINAL_BEFORE.search(before) and '.' not in raw:
             continue
@@ -211,9 +224,9 @@ def numbers_in(text, approx_ok=False):
             continue
         if re.match(r'\s*(?:st|nd|rd|th)\b', text[m.end():]):
             continue
-        val = float(raw.replace(',', ''))
+        val = float(raw.replace(',', '')) * (-1 if sign else 1)
         dec = len(raw.split('.')[1]) if '.' in raw else 0
-        out.append((val, dec, pct, bool(APPROX_BEFORE.search(before)), raw + ('%' if pct else '')))
+        out.append((val, dec, pct, bool(APPROX_BEFORE.search(before)), ('-' if sign else '') + raw + ('%' if pct else '')))
     toks = re.findall(r"[a-z]+|\d+", text.lower().replace('-', ' '))
     i = 0
     while i < len(toks):
@@ -246,8 +259,12 @@ def numbers_in(text, approx_ok=False):
         value = total + cur + (float('0.' + dec_digits) if dec_digits else 0)
         pct = j < len(toks) and toks[j] == 'percent'
         before = ' '.join(toks[max(0, i - 2):i])
-        if (value >= 11 or seen_point or pct or big) and not ORDINAL_BEFORE.search(before):
-            out.append((float(value), len(dec_digits), pct, bool(APPROX_BEFORE.search(before)), ' '.join(toks[i:j])))
+        prev = toks[i - 1] if i else ''
+        lone_one = j - i == 1 and toks[i] == 'one' and prev not in MATH_BEFORE
+        if (value >= 11 or seen_point or pct or big or (small and j > i and not lone_one)) and not ORDINAL_BEFORE.search(before):
+            neg = prev == 'negative'
+            out.append((-float(value) if neg else float(value), len(dec_digits), pct, bool(APPROX_BEFORE.search(before)),
+                        ' '.join(toks[i - neg:j])))
         i = max(j, i + 1)
     return out
 
@@ -527,7 +544,8 @@ def example_runs():
 
 
 def canonical(lesson):
-    """The bytes the verification hash covers: the lesson without its verification block, keys sorted, whole floats as ints."""
+    """The bytes the verification hash covers: the whole lesson, keys sorted, whole floats as ints, with only the
+    verification block's own "sha256" left out, so a hand-edited level, label or line breaks the signature."""
     def fix(v):
         if isinstance(v, float) and v.is_integer() and abs(v) < 2 ** 53:
             return int(v)
@@ -537,6 +555,8 @@ def canonical(lesson):
             return [fix(x) for x in v]
         return v
     body = {k: v for k, v in lesson.items() if k != 'verification'}
+    if isinstance(lesson.get('verification'), dict):
+        body['verification'] = {k: v for k, v in lesson['verification'].items() if k != 'sha256'}
     return json.dumps(fix(body), sort_keys=True, separators=(',', ':'), ensure_ascii=False)
 
 
@@ -880,11 +900,39 @@ def check(lesson, sources=None, final=False, today=None):
         taken_ids.add(f'k{n}')
         return f'k{n}'
 
-    def numbers_ok(where, text, refs, what):
+    def graph_points_ok(where, el, refs):
+        """Every y value and mark coordinate on a graph is a fact, so a cited quote or calc must give it. The x
+        values may be a plain count (0, 1, 2, ... or 1, 2, 3, ...), which only places the points along the axis."""
+        def stated(v):
+            text = repr(float(v)).rstrip('0').rstrip('.') if float(v) != int(v) else str(int(v))
+            return (float(v), len(text.split('.')[1]) if '.' in text else 0, False, False, text)
+        pts = el['points']
+        xs = [pt[0] for pt in pts]
+        count = all(float(x).is_integer() for x in xs) and [int(x) for x in xs] in (list(range(len(xs))), list(range(1, len(xs) + 1)))
+        vals = [pt[1] for pt in pts] + ([] if count else xs)
+        mark = el.get('mark')
+        if isinstance(mark, dict):
+            vals += [mark[k] for k in (('y',) if count else ('x', 'y')) if isinstance(mark.get(k), (int, float)) and not isinstance(mark.get(k), bool)]
+        pool = backing(refs)
+        bad = []
+        for v in vals:
+            s = stated(v)
+            if not backs(s, pool) and s[4] not in bad:
+                bad.append(s[4])
+        if bad:
+            r.error(where, f'graph value(s) {", ".join(bad[:8])} come from no cited quote or calc.',
+                    'Work out each point with a calc line ({"id": "k9", "expr": "...", "value": ...}) and add its id to the graph\'s "claims", '
+                    'or cite the claim whose quote states it. Never guess a point.')
+
+    def works_math(refs, role=None):
+        """A sentence that cites a calc, or sits in a worked or faded example, says its small numbers as facts."""
+        return role in ('worked', 'faded') or any(ref in calc_pool for ref in refs)
+
+    def numbers_ok(where, text, refs, what, role=None, plain=''):
         """One problem per text, listing every number nothing backs, with calc lines to paste where
         two of the text's own numbers (or a cited source's) give it by + - * /."""
         pool = backing(refs)
-        nums = numbers_in(text)
+        nums = numbers_in(plain) + numbers_in(text, small=works_math(refs, role))
         bad = [n for n in nums if not backs(n, pool)]
         if not bad:
             return
@@ -942,9 +990,9 @@ def check(lesson, sources=None, final=False, today=None):
             r.error(where, f'copies the worked example about the sky ("{hit}"), and your materials never say it.',
                     'Delete it. Write only about your own topic, from the learner\'s files.')
 
-    def coverage(where, text, refs):
-        st = stems(text)
-        nums = numbers_in(text)
+    def coverage(where, text, refs, role=None, plain=''):
+        st = stems(plain + ' ' + text)
+        nums = numbers_in(plain) + numbers_in(text, small=works_math(refs, role))
         for ref in refs:
             if ref in ids:
                 c = ids[ref]
@@ -1006,9 +1054,12 @@ def check(lesson, sources=None, final=False, today=None):
                     elif p.get('answer') not in ch:
                         r.error(where, 'pause "answer" is not one of its "choices".', 'Make "answer" exactly match one of the choices.')
                 refs = need_claims(where, p.get('claims'), True, 'The pause answer')
-                ptext = ' '.join(str(p.get(k, '')) for k in ('ask', 'answer', 'why')) + ' ' + ' '.join(map(str, ch if isinstance(ch, list) else []))
-                numbers_ok(where, ptext, refs, 'The pause')
-                coverage(where, ptext, refs)
+                # Small spelled numbers in the question often count the task ("add the three terms"); the
+                # answer, the why and the choices carry the arithmetic, so only there are they read as facts.
+                pans = ' '.join(str(p.get(k, '')) for k in ('answer', 'why')) + ' ' + ' '.join(map(str, ch if isinstance(ch, list) else []))
+                ptext = str(p.get('ask', '')) + ' ' + pans
+                numbers_ok(where, pans, refs, 'The pause', role, plain=str(p.get('ask', '')))
+                coverage(where, pans, refs, role, plain=str(p.get('ask', '')))
                 copied(where, ptext)
                 ans = norm(p.get('answer', ''))
                 if ans and (re.search(r'\d', ans) or len(ans.split()) >= 2 or len(ans) >= 4):
@@ -1044,15 +1095,16 @@ def check(lesson, sources=None, final=False, today=None):
             talk = beat.get('talk') is True
             refs = []
             if talk:
-                if numbers_in(say):
+                talk_refs = [x for x in beat.get('claims') or [] if isinstance(x, str)] if isinstance(beat.get('claims'), list) else []
+                if numbers_in(say, small=works_math(talk_refs, role)):
                     r.error(where, 'is marked "talk" but has a number in it.', 'Numbers are facts: remove "talk": true and add "claims" with the id that supports the number.')
                 if beat.get('claims'):
                     refs = need_claims(where, beat.get('claims'), False, 'This sentence')
             else:
                 refs = need_claims(where, beat.get('claims'), True,
                                    'This sentence (if it is only a question, an instruction or a transition, add "talk": true instead)')
-                numbers_ok(where, say, refs, 'The sentence')
-                coverage(where, say, refs)
+                numbers_ok(where, say, refs, 'The sentence', role)
+                coverage(where, say, refs, role)
             cited_pairs.append(set(refs))
             scene_seconds += beat_seconds(beat, wpm, clip_seconds)
             gap += beat_seconds(beat, wpm, clip_seconds)
@@ -1133,6 +1185,8 @@ def check(lesson, sources=None, final=False, today=None):
                         isinstance(pt, list) and len(pt) == 2 and all(isinstance(v, (int, float)) and not isinstance(v, bool) for v in pt) for pt in pts)
                     if not ok:
                         r.error(ew, 'graph "points" must be [[x, y], ...] with at least 2 number pairs.', 'Write numbers only, like [[0, 1], [1, 3], [2, 9]]. Work each one out; never guess.')
+                    else:
+                        graph_points_ok(ew, el, el_refs)
                 if t == 'image':
                     src = str(el.get('src', ''))
                     if src and not re.match(r'^(https://|data:image/|[\w./-]+$)', src):
@@ -1277,6 +1331,12 @@ def check(lesson, sources=None, final=False, today=None):
     else:
         level = 'checked' if n_quoted == n_claims and n_claims else 'partial'
         label = f'Checked against its sources: {n_quoted} of {n_claims} claims quoted'
+    # A file the assistant typed itself (named typed-...) proves only that the quote matches its own typing.
+    typed = sum(1 for fname in quoted.values() if str(fname).lower().startswith('typed-'))
+    if typed:
+        if level == 'checked':
+            level = 'partial'
+        lines.insert(0, f'{typed} claim{"s" if typed != 1 else ""} matched only against text the assistant typed, not the original')
     if calcs:
         lines.append(f'Every number recomputed by code: {len(calcs)} calculation{"s" if len(calcs) != 1 else ""}')
     if conflicts:
@@ -1303,11 +1363,11 @@ def check(lesson, sources=None, final=False, today=None):
 
 
 def sign(lesson, verification):
-    """Return a copy of the lesson carrying the verification block, hashed over everything else."""
+    """Return a copy of the lesson carrying the verification block, hashed over everything but the hash itself."""
     out = {k: v for k, v in lesson.items() if k != 'verification'}
     v = dict(verification)
-    v['sha256'] = sha256_of(out)
     out['verification'] = v
+    v['sha256'] = sha256_of(out)
     return out
 
 

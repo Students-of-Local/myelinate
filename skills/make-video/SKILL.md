@@ -35,7 +35,9 @@ Send **one** message. Don't wait for the answer to start drafting.
 
 If they have nothing, or don't answer, build it anyway from reliable outside sources (a textbook, a university, a government agency, a journal). The badge then says the video was not checked against their course. When their materials arrive, redo steps 3 and 5 against them.
 
-Save each thing they give you as a plain text file in one folder, like `sources/notes.md` or `sources/slides.md`. A transcript with timestamps keeps them: lines like `[4:05] words said`. These files are what the checker reads.
+Save each thing they give you as a plain text file in one folder, like `sources/notes.md` or `sources/slides.md`. Copy their text as it came: an uploaded file as is, a PDF through `pdftotext`, a pasted transcript pasted whole. A transcript with timestamps keeps them: lines like `[4:05] words said`. These files are what the checker reads.
+
+If you have to type a source yourself (a photo of a slide, a page you can read but not save), name its file `typed-<name>.md`, like `sources/typed-slide-photo.md`. A quote matched only against your own typing proves nothing, so the badge says so.
 
 If `debrief` or the learner named a question they missed, put it in `learner.target` and make that miss the video's misconception.
 
@@ -53,7 +55,7 @@ Before any narration, list every fact the video will state. For **each claim**:
 1. Find the line in a source file that says it.
 2. Copy that line, letter for letter, into `"quote"`. Never fix its spelling, never shorten it in the middle. 40 words at most.
 3. Write the file's name in `"file"`, exactly as it is in your sources folder.
-4. Write where it is in `"where"`: the page, slide or section number for the learner's material (`"from": "course"`), the `m:ss` timestamp for a transcript, or the full `https://` address for anything else (`"from": "outside"`, plus `"checked": "YYYY-MM-DD"`, the day you read it). Save an outside page's text as a file too, so its quote can be matched.
+4. Write where it is in `"where"`: the page, slide or section number for the learner's material (`"from": "course"`), the `m:ss` timestamp for a transcript, or the full `https://` address for anything else (`"from": "outside"`, plus `"checked": "YYYY-MM-DD"`, the day you read it). Save an outside page's text as a file too, with a tool that saves the page (a fetch or a download), so its quote can be matched. A page you typed goes in a `typed-` file.
 5. A fact that changes over time (a price, a law, a record, a current number) also gets `"changes": true`.
 6. **If no line says it, delete the claim.** Or find a reliable outside source and mark it `"from": "outside"`. On screen it shows as *outside your course*.
 7. Use the course's own words and symbols. If the professor writes ΔH, write ΔH.

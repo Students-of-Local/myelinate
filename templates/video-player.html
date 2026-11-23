@@ -398,7 +398,8 @@ function math(s) {
 
 // ---------- The verification badge: only scripts/video_check.py can earn "checked" ----------
 // canonical() matches the Python checker byte for byte: keys sorted, compact, whole floats as ints,
-// other floats in Python's repr, the verification block left out.
+// other floats in Python's repr. It covers the verification block too, all but its own sha256, so editing the
+// badge's level, label or lines breaks the signature.
 function pyNum(x) {
   if (!isFinite(x)) return 'null';
   if (Number.isInteger(x)) return String(x).includes('e') ? BigInt(x).toString() : String(x);
@@ -438,7 +439,13 @@ function sha256(str) {
   }
   return H.map(x => x.toString(16).padStart(8, '0')).join('');
 }
-function lessonHash(d) { const body = {}; Object.keys(d).forEach(k => { if (k !== 'verification') body[k] = d[k]; }); return sha256(canon(body)); }
+function hashBody(d) {
+  const body = {}; Object.keys(d).forEach(k => { if (k !== 'verification') body[k] = d[k]; });
+  const v = d.verification;
+  if (v && typeof v === 'object' && !Array.isArray(v)) { const m = {}; Object.keys(v).forEach(k => { if (k !== 'sha256') m[k] = v[k]; }); body.verification = m; }
+  return body;
+}
+function lessonHash(d) { return sha256(canon(hashBody(d))); }
 function verify(d) {
   const v = d.verification;
   if (!v || typeof v !== 'object') return {level: 'unverified', label: 'Unverified: this lesson was not run through the checker', lines: [], signed: false};
@@ -1240,7 +1247,7 @@ window.__video = {
   get duration() { return T ? T.duration : 0; },
   timeline: () => T ? T.items.map(i => ({kind: i.kind, what: i.what || null, start: +i.start.toFixed(3), dur: +i.dur.toFixed(3), text: i.text || null, key: i.key || null, scene: i.si == null ? null : i.si, claims: i.claims || null})) : [],
   get verification() { return V ? {...V} : null; },
-  hash: d => lessonHash(d || L), canonical: d => { const b = {}; Object.keys(d || L).forEach(k => { if (k !== 'verification') b[k] = (d || L)[k]; }); return canon(b); },
+  hash: d => lessonHash(d || L), canonical: d => canon(hashBody(d || L)),
   ttsText: s => ttsText(s),
   renderAt, seek: t => seek(t), play, pause, fnv,
   audit() {

@@ -3,6 +3,7 @@
 the loader's invalid input, layouts, reduced motion and the keyboard."""
 import json
 import re
+import sys
 import tempfile
 from pathlib import Path
 
@@ -258,6 +259,23 @@ with sync_playwright() as p:
     kb.keyboard.press('c')
     check(kb.get_attribute('#cc', 'aria-pressed') == 'true' and kb.is_visible('#cap'), 'C turns captions back on')
     check(not kb_errors, f'no page errors with the keyboard: {kb_errors}')
+    ctx.close()
+
+    # Regression (review r1b sol-F1): the hash covers the badge, so a promoted level or label reads as changed.
+    sys.path.insert(0, str(ROOT / 'scripts'))
+    import video_check as vc
+    sky = json.loads(SKY.read_text())
+    signed = vc.sign(sky, vc.check(sky)[2]['verification'])
+    pg, pg_errors, _, ctx = open_page(browser, variant(signed))
+    honest = pg.evaluate('__video.verification')
+    check(pg.evaluate('__video.hash()') == signed['verification']['sha256'] and honest['signed'],
+          f'the player computes the checker\'s hash and accepts its signed badge ({honest["level"]})')
+    ctx.close()
+    signed['verification'].update(level='checked', label='Checked against its sources: 11 of 11 claims quoted')
+    pg, pg_errors, _, ctx = open_page(browser, variant(signed))
+    promoted = pg.evaluate('__video.verification')
+    check(not promoted['signed'] and promoted['level'] == 'unverified', f'a badge promoted by hand shows Unverified ({promoted["label"]})')
+    check(not pg_errors, f'no page errors on a promoted badge: {pg_errors}')
     ctx.close()
 
     browser.close()
