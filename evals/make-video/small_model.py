@@ -22,7 +22,7 @@ Judge the results with judge.py.
 import json, re, subprocess, sys, urllib.request, concurrent.futures as cf
 from pathlib import Path
 
-from results import better_draft, say_beats  # same folder: results.py scores what this keeps
+from results import next_round, say_beats  # same folder: results.py scores what this keeps
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
@@ -91,7 +91,7 @@ def run_one(scen, arm, rep, outdir, rounds):
         user = (request + '\n\nWrite the teaching video as JSON in exactly this format, replacing every <<...>> and adding '
                 'scenes as needed. Reply with only the JSON.\n```json\n' + TEMPLATE.read_text() + '```')
         rounds = 1
-    best = None  # (errors, beats, draft, report): the draft the next round builds on, as a file a host would edit in place
+    state = {'best': None, 'peak': 0}  # best: (errors, beats, draft, report), the draft a host would edit in place
     for n in range(1, rounds + 1):
         reply = chat(system, user)
         (d / f'reply{n}.txt').write_text(reply)
@@ -103,21 +103,16 @@ def run_one(scen, arm, rep, outdir, rounds):
         beats = say_beats(d / f'draft{n}.json') if errors is not None else 0
         log['rounds'].append({'round': n, 'errors': errors, 'valid_json': errors is not None, 'say_beats': beats,
                               'repaired': 'Repaired and saved it' in report})
-        if errors is not None and (best is None or better_draft(errors, beats, best[0], best[1])):
-            best = (errors, beats, draft, report)
+        state, draft, report, note = next_round(state, errors, beats, draft, report)
+        best = state['best']
         (d / 'lesson.json').write_text(best[2] if best else draft)
-        if errors == 0 and beats:
-            break
-        if best and errors is None:
-            note = ('Your last reply was not valid JSON and the checker could not repair it, so it was set aside. '
-                    'Here is your best draft so far, and what the checker printed for it.')
-            draft, report = best[2], best[3]
-        else:
-            note = 'Your last draft of the lesson JSON, and what the checker printed for it.'
+        if best and best[0] == 0 and best[1]:
+            break  # stop on the kept draft, never on one that was set aside
         user = (request + '\n\n' + note + '\n```json\n' + draft + '\n```\n\n'
                 'The checker printed:\n```\n' + report.strip() + '\n```\n\n'
                 'Fix every numbered problem exactly as its Fix line says. Change nothing else. '
                 'Reply with the whole corrected lesson JSON only.')
+    best = state['best']
     log['ready'] = bool(best) and best[0] == 0 and best[1] > 0
     log['final_errors'] = best[0] if best else None  # the best valid draft, which lesson.json holds
     log['final_beats'] = best[1] if best else 0

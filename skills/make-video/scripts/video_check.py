@@ -1537,9 +1537,12 @@ def _parse_loose(text, a):
     except (_Unfixable, RecursionError):
         return None, None, p.closers, p.i
     rest = re.sub(r'</?[A-Za-z_][^>]*>', '', text[p.i:]).strip()
-    # Only } and ] left over (a tool call's wrapper, like "</parameter> }"): they hold no content, so
-    # the object already read is the whole lesson. Anything else after it means a } closed it too early.
-    if rest and not re.match(r'[A-Za-z#*>`]', rest) and not re.fullmatch(r'[\]}\s]+', rest):
+    # Only } and ] left over after a tool call's wrapper tag, like "</parameter> }", on a read that closed
+    # nothing left open: they hold no content, so the object already read is the whole lesson. Otherwise
+    # a } or ] closed it too early (an extra } mid-file leaves "]}" behind), and the caller removes it.
+    wrapper_only = (re.search(r'</?[A-Za-z_][^>]*>', text[p.i:]) and re.fullmatch(r'[\]}\s]+', rest)
+                    and not any('left open' in f for f in p.fixes))
+    if rest and not re.match(r'[A-Za-z#*>`]', rest) and not wrapper_only:
         return None, None, p.closers, p.i  # more JSON after the object: a } or ] closed it too early
     if text[:a].strip():
         p.fixes.insert(0, 'removed words before the first {')

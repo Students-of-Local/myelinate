@@ -37,13 +37,40 @@ def say_beats(path):
 
 
 
-def better_draft(errors, beats, best_errors, best_beats):
-    """Whether a new valid draft should replace the best one. Content first: a draft with under half the
-    other's spoken beats loses to it, however few errors it has. Fewest errors alone kept a draft with
-    no scenes (33 errors) over one with ten (72) in runs5, and every later round built on the empty one."""
-    if beats * 2 < best_beats or best_beats * 2 < beats:
-        return beats > best_beats
-    return errors <= best_errors
+def better_draft(errors, beats, best_errors, best_beats, peak=0):
+    """Whether a new valid draft should replace the best one. A READY draft (no errors, something said)
+    always wins. Otherwise content first: a draft with under half the most spoken beats any valid draft
+    has had ranks below one that keeps them, however few errors it has. Fewest errors alone kept a draft
+    with no scenes (33 errors) over one with ten (72) in runs5, and every later round built on the empty
+    one; measuring against the peak, not the current best, stops a lesson shrinking a step at a time."""
+    p = max(peak, beats, best_beats)
+
+    def rank(e, b):
+        return (not (e == 0 and b > 0), b * 2 < p, e, -b)
+    return rank(errors, beats) <= rank(best_errors, best_beats)
+
+
+def next_round(state, errors, beats, draft, report):
+    """One round of the harness: keep the draft if it is better, then choose what the next prompt edits.
+    state is {"best": (errors, beats, draft, report) or None, "peak": int}. Returns (state, base draft,
+    base report, note). The next prompt edits the best draft whenever the last one was not kept, so a
+    gutted or broken draft is never built on."""
+    best, peak = state['best'], state['peak']
+    if errors is not None:
+        peak = max(peak, beats)
+        if best is None or better_draft(errors, beats, best[0], best[1], peak):
+            best = (errors, beats, draft, report)
+    state = {'best': best, 'peak': peak}
+    if best is None or best[2] == draft:
+        return state, draft, report, 'Your last draft of the lesson JSON, and what the checker printed for it.'
+    if errors is None:
+        why = 'was not valid JSON and the checker could not repair it'
+    elif beats * 2 < peak:
+        why = f'says only {beats} sentence(s) aloud, under half of the {peak} your fullest draft had: keep every scene and beat'
+    else:
+        why = f'has {errors} problem(s), more than your best draft\'s {best[0]}'
+    return state, best[2], best[3], (f'Your last reply {why}, so it was set aside. '
+                                      'Here is your best draft so far, and what the checker printed for it.')
 
 
 def rows_from(rundir):
@@ -162,14 +189,25 @@ def self_test():
     for name, bad in cases.items():
         if not problems(bad, floors):
             fails.append(f'{name} was not caught')
-    # The harness keeps content: (errors, beats) of a new draft against the best so far.
-    for new, best, want, what in (((33, 0), (72, 14), False, 'a draft with no scenes replaced a ten-scene one'),
-                                  ((33, 1), (72, 14), False, 'a draft cut to one beat replaced a fourteen-beat one'),
-                                  ((72, 14), (33, 1), True, 'a full draft did not replace a gutted one'),
-                                  ((10, 12), (20, 14), True, 'a similar draft with fewer errors was not kept'),
-                                  ((20, 14), (10, 12), False, 'a similar draft with more errors was kept')):
-        if better_draft(*new, *best) != want:
-            fails.append(what)
+    # The harness keeps content. Each case is the (errors, beats) of each round's draft (None: invalid
+    # JSON), the draft lesson.json must end on, and the draft each next prompt must edit.
+    def play(seq):
+        state, bases = {'best': None, 'peak': 0}, []
+        for n, (e, b) in enumerate(seq):
+            state, base, _, _ = next_round(state, e, b, f'draft{n}', f'report{n}')
+            bases.append(base)
+        return state['best'][2] if state['best'] else None, bases
+    for seq, kept, bases, what in (
+            ([(72, 14), (33, 0)], 'draft0', ['draft0', 'draft0'], 'a draft with no scenes replaced a ten-scene one, or the next prompt built on it'),
+            ([(72, 14), (33, 1)], 'draft0', ['draft0', 'draft0'], 'a draft cut to one beat replaced a fourteen-beat one'),
+            ([(33, 1), (72, 14)], 'draft1', ['draft0', 'draft1'], 'a full draft did not replace a gutted one'),
+            ([(20, 14), (10, 12)], 'draft1', ['draft0', 'draft1'], 'a similar draft with fewer errors was not kept'),
+            ([(10, 12), (20, 14)], 'draft0', ['draft0', 'draft0'], 'a similar draft with more errors was kept or built on'),
+            ([(40, 14), (30, 8), (20, 5), (10, 3)], 'draft1', ['draft0', 'draft1', 'draft1', 'draft1'], 'a lesson shrank a step at a time (14, 8, 5, 3 beats)'),
+            ([(20, 14), (0, 6)], 'draft1', ['draft0', 'draft1'], 'a READY draft was not kept'),
+            ([(20, 14), (None, 0)], 'draft0', ['draft0', 'draft0'], 'a broken reply was built on')):
+        if play(seq) != (kept, bases):
+            fails.append(f'{what}: got {play(seq)}')
     for f in fails:
         print('FAIL:', f)
     print(f'SELF-TEST {"FAILED" if fails else "PASSED"}: {len(cases) - sum("not caught" in f for f in fails)} of {len(cases)} doctored results caught.')
