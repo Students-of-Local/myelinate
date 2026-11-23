@@ -381,6 +381,11 @@ def clean_vtt(text):
     return re.sub(r'(?m)^(?:WEBVTT|Kind:|Language:|NOTE\b|STYLE\b|REGION\b).*$', '', text)
 
 
+def key_terms(text):
+    """Word stems plus number and formula tokens (2pq, 0.42), for asking whether two texts are about the same thing."""
+    return stems(text) | {t.strip('.') for t in re.findall(r'[a-z0-9.^]+', str(text).lower()) if re.search(r'\d', t)}
+
+
 def load_sources(paths):
     """Text of each source file, keyed by file name. HTML is reduced to its text."""
     found = Sources()
@@ -783,7 +788,7 @@ def check(lesson, sources=None, final=False, today=None):
                 r.error(where, f'quote not found in {fname}.', f'Copy the exact sentence from {fname}, or delete the claim and every sentence that uses it.')
             elif len(q.split()) < 4:
                 r.error(where, f'quote is only {len(q.split())} word(s), too short to show the source states the claim.', f'Copy the whole sentence from {fname} that states the claim: at least 4 words.')
-            elif str(c.get('text', '')).strip() and not (stems(c['text']) & stems(c['quote'])):
+            elif str(c.get('text', '')).strip() and not (key_terms(c['text']) & key_terms(c['quote'])):
                 r.error(where, 'quote shares no key word with the claim\'s "text", so it does not state it.', 'Copy the sentence that says what "text" says, or rewrite "text" to say only what the quote says.')
             else:
                 t = seconds_of(c.get('where', '')) if re.search(r'\d:\d\d', str(c.get('where', ''))) else None

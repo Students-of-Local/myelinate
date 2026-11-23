@@ -808,6 +808,8 @@ def short_quotes():
     d = osmosis()
     d['claims'][0]['text'] = 'Blue light is ultraviolet radiation.'
     expect('a real quote under an unrelated claim', d, 'shares no key word with the claim', 'Claim c1', OSMOSIS_SOURCES)
+    check(vc.key_terms('The heterozygote share is 2pq, 0.42.') & vc.key_terms("That's why it's 2pq, 0.42."),
+          'a quote and claim that share a number or formula (2pq, 0.42) are about the same thing')
 
 
 def reveal_after_pause():
