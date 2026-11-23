@@ -48,6 +48,8 @@ ATTACKS = [
      'the beta H and the leaving group must be anti-periplanar (dihedral angle near 60 degrees)'),
     ('invented course quote', 'course', None,
      'a bulky base always gives mainly the Zaitsev alkene'),
+    ('two true fragments spliced with a cut', 'course', None,
+     'A strong, small base ... gives the Hofmann alkene'),
 ]
 
 CONTROLS = [
@@ -94,16 +96,12 @@ def check(kind, at, text):
 def which_check(r):
     if r['ok']:
         return 'none: confirmed'
-    if r.get('problems'):
-        return r['problems'][0][:110]
     probs = ' '.join(r.get('problems', []))
-    if r.get('elsewhere') or 'not within' in probs:
-        return 'time window (found elsewhere)'
-    for key, label in [('negation', 'negation'), ('number', 'number'), ('not found', 'not found')]:
+    for key, label in [('not within', 'time window'), ('cut (...)', 'cut refused'), ('match only', 'similarity below 0.90'),
+                       ('negation', 'negation'), ('number differs', 'number'), ('where the source says', 'word mismatch'),
+                       ('not in the source', 'added words'), ('leaves out', 'dropped words'), ('not found', 'not found')]:
         if key in probs:
             return label
-    if 'differs' in probs or 'missing' in probs or 'added' in probs or 'similarity' in probs:
-        return 'word match'
     return probs[:80] or 'refused'
 
 

@@ -8,7 +8,7 @@
    "video_quote": "[8:00] if we take a look at those, uh the lowest energy, is the chair conformations. So can explain what the deal is going on here",
    "at": "8:00",
    "video_ok": false,
-   "video_check": "closest source words \"we said that on a cyclohexane ring, the hydrogen of relevance on the beta carbon has to ",
+   "video_check": "similarity below 0.90",
    "video_show": null,
    "course_quote": "Slide 15. If no beta H can be trans-diaxial, that alkene does not form, even the Zaitsev product.",
    "course_ok": true,
@@ -48,7 +48,7 @@
    "judge": "NO",
    "checker_ok": false,
    "rc": 6,
-   "caught_by": "closest source words \"And in this case, the chlorine here is a wedge, but it's on a cyclohexane ring.\" match o",
+   "caught_by": "similarity below 0.90",
    "problems": [
     "closest source words \"And in this case, the chlorine here is a wedge, but it's on a cyclohexane ring.\" match only 0.44 (need 0.9)",
     "number differs: quote \"an e2 reaction\", source \"and in this case the chlorine here is a wedge but its\"",
@@ -64,7 +64,7 @@
    "judge": "NO",
    "checker_ok": false,
    "rc": 6,
-   "caught_by": "quote says \"cis\" where the source says \"trans\"",
+   "caught_by": "word mismatch",
    "problems": [
     "quote says \"cis\" where the source says \"trans\""
    ]
@@ -78,7 +78,7 @@
    "judge": "NO",
    "checker_ok": false,
    "rc": 6,
-   "caught_by": "negation differs: quote \"(nothing)\", source \"not\"",
+   "caught_by": "negation",
    "problems": [
     "negation differs: quote \"(nothing)\", source \"not\"",
     "negation differs: quote \"(nothing)\", source \"not\""
@@ -93,7 +93,7 @@
    "judge": "NO",
    "checker_ok": false,
    "rc": 6,
-   "caught_by": "said at 8:00, not within 20s of 1:30: re-check the timestamp, then quote it at 8:00",
+   "caught_by": "time window",
    "problems": [
     "said at 8:00, not within 20s of 1:30: re-check the timestamp, then quote it at 8:00"
    ]
@@ -107,7 +107,7 @@
    "judge": "NO",
    "checker_ok": false,
    "rc": 6,
-   "caught_by": "quote says \"syn periplanar\" where the source says \"antiperiplanar\"",
+   "caught_by": "word mismatch",
    "problems": [
     "quote says \"syn periplanar\" where the source says \"antiperiplanar\""
    ]
@@ -121,7 +121,7 @@
    "judge": "NO",
    "checker_ok": false,
    "rc": 6,
-   "caught_by": "number differs: quote \"60\", source \"180\"",
+   "caught_by": "number",
    "problems": [
     "number differs: quote \"60\", source \"180\""
    ]
@@ -135,11 +135,25 @@
    "judge": "NO",
    "checker_ok": false,
    "rc": 6,
-   "caught_by": "closest source words \"base (NaOEt) gives mainly the Zaitsev alkene;\" match only 0.82 (need 0.9)",
+   "caught_by": "similarity below 0.90",
    "problems": [
     "closest source words \"base (NaOEt) gives mainly the Zaitsev alkene;\" match only 0.82 (need 0.9)",
     "not in the source: \"a bulky\"",
     "quote says \"always\" where the source says \"naoet\""
+   ]
+  },
+  {
+   "case": "two true fragments spliced with a cut",
+   "attack": true,
+   "kind": "course",
+   "at": null,
+   "text": "A strong, small base ... gives the Hofmann alkene",
+   "judge": "NO",
+   "checker_ok": false,
+   "rc": 6,
+   "caught_by": "cut refused",
+   "problems": [
+    "the quote has a cut (...): the left-out words can change its meaning, so check each unbroken stretch as its own quote"
    ]
   },
   {

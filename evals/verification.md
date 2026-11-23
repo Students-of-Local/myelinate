@@ -4,28 +4,38 @@ Checked **2026-10-02**, with synthetic learner prompts and locally generated exa
 
 ## 3.1.1: quotes checked by code (2026-11-22)
 
-**Offline tests** (`python3 tests/yt_tool.py`, 36 checks, fixture transcripts and a fake `yt-dlp`): real quotes confirm, with a caption slip, a copied `[m:ss]` stamp and the window edge at exactly 20 seconds. Refused, exit 6: a real quote at the wrong time (reported as said at 2:24), words changed at the right time (Zaitsev for Hofmann, a dropped "not", equatorial for axial, an added number), an invented quote, an ellipsis out of order, altered or invented course quotes, and syn- for anti-periplanar. A PDF is refused with the `pdftotext` hint. Each guard was checked by breaking it: a 400-second window, a 0.30 threshold, a 0.0 word threshold and the old ratio-only word rule each make at least one test fail.
+**Offline tests** (`python3 tests/yt_tool.py`, 38 checks, fixture transcripts and a fake `yt-dlp`). Real quotes confirm, with a one-letter typo, a plural, a copied `[m:ss]` stamp, "isn't" written as "is not", and the window edge at exactly 20 seconds. Refused, exit 6:
+
+- a real quote at the wrong time, reported as said at 2:24;
+- words changed at the right time: Zaitsev for Hofmann, a dropped "not", equatorial for axial, an added number;
+- an invented quote, and any `...` cut, including two true fragments of one slide spliced into its opposite;
+- a dropped sign (30.5 for −30.5), 105 for 10⁵, 10^5 for 10⁻⁵, and a meaning word ("right") dropped from inside a quote;
+- one-letter swaps such as alkane/alkene, nitrite/nitrate, amine/amide and propanol/propenol, plus syn- for anti-periplanar;
+- a machine-translated caption track, and altered or invented course quotes.
+
+A PDF is refused with the `pdftotext` hint. Each guard was checked by breaking it: a 400-second window, a 0.30 threshold, a 0.0 word threshold, the old ratio-only word rule, and the whole pre-review checker. Each break makes at least one test fail; the pre-review checker fails 5.
 
 **Small-model run** (`evals/quote-check/run.py`, LFM3 1.7B Q4_K_M through Ollama on Parish1, temperature 0, one request at a time). The video is Chad's Prep FZKTSHLh84I, with an excerpt from 7:00 to 8:40; the slides are `evals/quote-check/slides.txt`. The model judges each quote first, and then the checker decides.
 
 | Case | 1.7B judge | Checker | Caught by |
 | --- | --- | --- | --- |
-| Invented video quote at 8:00 | NO | refused | not found within 20s (closest words 0.44 similar) |
+| Invented video quote at 8:00 | NO | refused | similarity 0.44, needs 0.90 |
 | "cis" for "trans" at the right time | NO | refused | word: "cis" where the source says "trans" |
 | Dropped "not" at the right time | NO | refused | negation differs |
 | Real quote at 1:30, said at 8:00 | NO | refused | time window: "said at 8:00, not within 20s of 1:30" |
 | syn- for anti-periplanar (course) | NO | refused | word: not a slip (0.85 similar; passed before the slip rule) |
 | 60 for 180 degrees (course) | NO | refused | number differs |
 | Invented course quote | NO | refused | 0.82 similar, needs 0.90 |
+| Two true slide fragments spliced with `...` into the opposite claim | NO | refused | cut refused (this splice passed before review) |
 | Real video quote at 8:01 (control) | NO | confirmed | |
 | Real course quote (control) | NO | confirmed | |
 | Arithmetic slip, uncited number, citation on an unrelated sentence, planted slide error, self-set badge | | | make-video's scope (`video_check.py`), not this release |
 
-The judge said NO to every quote, the controls included, so it cannot tell a real quote from a planted one. Every attack was caught by the checker, and no real quote was refused. In its own vetting note, the model wrote three video quotes. One joined two lines under the wrong timestamp; the checker refused it. The checker confirmed the other two, and all three of its course quotes.
+The judge said NO to every quote, the controls included, so it cannot tell a real quote from a planted one. All 8 attacks were caught by the checker, and no real quote was refused (rerun after the review fixes). In its own vetting note, the model wrote three video quotes. One joined two lines under the wrong timestamp; the checker refused it. The checker confirmed the other two, and all three of its course quotes.
 
 **Fresh agent** (Claude Code with this plugin, `claude -p`, Bash, Read and Skill only, a seeded cache with "cis to the leaving group, on the same face" planted at 8:01, and E2 slides). It loaded `video`. Before writing, it ran `yt.py quote` on all four video quotes and `yt.py course` on all three slide quotes. Its note uses the checker's timestamps (8:01, 8:18, 0:37) where its own guesses had been 7:58, 8:10 and 0:35. It flagged the plant, quoting both the video and slide 15, and gave pause points, a recall prompt and a new problem. One run, not a rate.
 
-**Limits.** The checker confirms that words were said, not that they are true: a speaker's error quoted exactly passes, and the verdict on it is still the model's. It reads captions, not the board. Course files must be text. A misspelling that changes meaning and still looks like a slip (same first two letters, one letter off) passes; the opposite-prefix list is short.
+**Limits.** The checker confirms that words were said, not that they are true: a speaker's error quoted exactly passes, and the verdict on it is still the model's. It reads captions, not the board. Course files must be text. A one-letter consonant change inside a word of seven or more letters, with the same start and end, still passes as a typo, so a real change of that shape gets through. The learner sees the source's words, not the quote's, which limits the harm.
 
 ## 3.0.1: review follow-ups (2026-11-22)
 
