@@ -292,6 +292,28 @@ def old_rules():
     check(len(first) == len(sky()['scenes'][0]['beats']) and first[0]['show'][-1]['word'] == 'Scatter', 'a beat that only shows joins the sentence before it')
     check(' equals done.' in first[0]['say'], 'a spaced = in narration reads "equals"')
     check(vc.tidy(sky(), srcs) == [], 'a clean lesson is left alone')
+    said = sky()
+    said['scenes'][0]['beats'][0]['say'] = 'Look up on a clear afternoon (c1, c2) and the sky is blue.'
+    done_ids = vc.tidy(said, srcs)
+    check(said['scenes'][0]['beats'][0]['say'] == 'Look up on a clear afternoon and the sky is blue.' and any('(k1)' in x for x in done_ids),
+          f'claim ids said in the narration are removed ({said["scenes"][0]["beats"][0]["say"]!r})')
+
+    # A small model copies the worked example's sentences into other topics (runs4, 2026-11-23).
+    osmo_src = vc.load_sources([ROOT / 'evals' / 'make-video' / 'sources' / 'osmosis'])
+    if osmo_src:
+        ex = sky()
+        ex['claims'] = [dict(ex['claims'][0], file=sorted(osmo_src)[0])]
+        b0 = ex["scenes"][0]["beats"][0]
+        b0["say"], b0["talk"] = 'Each color travels as a wave, and blue waves are shorter than red ones.', True
+        errs = [e[1] for e in vc.check(ex, osmo_src)[0] if e[0].startswith('Scene 1 ') and e[0].endswith('beat 1')]
+        check(any('copies the worked example' in e for e in errs), f'a sky sentence in an osmosis lesson is flagged ({[e for e in errs if "copies" in e][:1]})')
+        b0["say"] = 'Water moves across the membrane toward the side with more solute.'
+        errs = [e[1] for e in vc.check(ex, osmo_src)[0] if e[0].startswith('Scene 1 ') and e[0].endswith('beat 1')]
+        check(not any('copies the worked example' in e for e in errs), 'an osmosis sentence in an osmosis lesson is not flagged')
+    else:
+        check(False, 'the osmosis eval sources are present for the copy test')
+    errs = [e[1] for e in vc.check(sky(), srcs)[0]]
+    check(not any('copies the worked example' in e for e in errs), 'the worked example itself, checked against its own source, is not flagged')
     two = sky()
     two['claims'][0]['file'] = 'nothing-like-it.md'
     check(vc.tidy(two, srcs) == [] and two['claims'][0]['file'] == 'nothing-like-it.md', 'a file name close to no given file is left for the check to report')

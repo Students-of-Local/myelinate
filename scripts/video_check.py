@@ -19,6 +19,7 @@ Reasoning and explanations need a second reader: that is the "review" block (ski
 """
 import argparse
 import ast
+import collections
 import datetime
 import difflib
 import hashlib
@@ -51,6 +52,7 @@ TIME_WINDOW = 20  # seconds either side of a transcript timestamp
 BEAT_GAP = 0.4  # seconds of silence after each sentence, same as the player
 CLIP_WPM_MAX = 260  # no recorded sentence is faster than this; a shorter length was not measured
 TEMPLATE = Path(__file__).resolve().parent.parent / 'templates' / 'video-player.html'
+EXAMPLE = Path(__file__).resolve().parent.parent / 'examples' / 'video-lesson-sky.json'
 DATE = re.compile(r'^\d{4}-\d{2}-\d{2}$')
 CALC_ID = re.compile(r'^[A-Za-z][A-Za-z0-9_]{0,15}$')
 # Word limits for things on screen: the narration carries the sentence, the screen carries a few key words.
@@ -475,6 +477,40 @@ def sentences(raw):
 
 # ---------------------------------------------------------------- the check
 
+_EXAMPLE_RUNS = None
+
+
+def _runs(text, n=4):
+    """Every run of n words in the text that holds at least two words that are not stop words."""
+    w = re.findall(r"[a-z0-9']+", str(text).lower())
+    return {' '.join(w[i:i + n]) for i in range(len(w) - n + 1) if sum(x not in STOP for x in w[i:i + n]) >= 2}
+
+
+def example_runs():
+    """(runs, source files, topic words) of the worked example, or empty sets when it is not next to this script.
+    Topic words are the ones the example says three or more times and its own source also uses: sky, blue, scatter."""
+    global _EXAMPLE_RUNS
+    if _EXAMPLE_RUNS is None:
+        try:
+            ex = json.loads(EXAMPLE.read_text())
+            texts = []
+            for sc in ex.get('scenes', []):
+                for b in sc.get('beats', []):
+                    texts.append(b.get('say', ''))
+                    if isinstance(b.get('pause'), dict):
+                        texts += [str(b['pause'].get(k, '')) for k in ('ask', 'answer', 'why')]
+                    for el in b.get('show', []) if isinstance(b.get('show'), list) else []:
+                        texts += [t for _, t in element_texts(el)]
+            files = {c.get('file') for c in ex.get('claims', []) if isinstance(c, dict)}
+            src = set(re.findall(r"[a-z0-9']+", (EXAMPLE.parent / 'video-lesson-sky-source.md').read_text().lower()))
+            count = collections.Counter(w for t in texts for w in re.findall(r"[a-z0-9']+", str(t).lower()) if w not in STOP)
+            topic = {w for w, n in count.items() if n >= 3 and w in src}
+            _EXAMPLE_RUNS = (set().union(*map(_runs, texts)), files, topic)
+        except (OSError, ValueError, AttributeError):
+            _EXAMPLE_RUNS = (set(), set(), set())
+    return _EXAMPLE_RUNS
+
+
 def canonical(lesson):
     """The bytes the verification hash covers: the lesson without its verification block, keys sorted, whole floats as ints."""
     def fix(v):
@@ -864,6 +900,23 @@ def check(lesson, sources=None, final=False, today=None):
                        'put it in a calc that works the example, like {"id": "k9", "expr": "2*6 + 7", "value": 19}, and cite that. If it is wrong, fix it.')
         r.error(where, f'{what} states {shown}, which no cited quote or calc gives.', ' '.join(fix))
 
+    ex_runs, ex_files, ex_topic = example_runs()
+    copy_check = bool(sources) and ex_runs and not (set(sources) & ex_files)
+    src_runs_text = [' ' + ' '.join(re.findall(r"[a-z0-9']+", str(getattr(sources, 'raw', {}).get(k, v)).lower())) + ' '
+                     for k, v in (sources or {}).items()] if copy_check else []
+    src_words = set(' '.join(src_runs_text).split())
+
+    def copied(where, text):
+        """A small model copies the worked example's sentences into other topics. Flag a run of words
+        from the example that the learner's materials never use."""
+        if not copy_check:
+            return
+        hit = next((run for run in sorted(_runs(text) & ex_runs)
+                    if set(run.split()) & ex_topic - src_words and not any(f' {run} ' in src for src in src_runs_text)), None)
+        if hit:
+            r.error(where, f'copies the worked example about the sky ("{hit}"), and your materials never say it.',
+                    'Delete it. Write only about your own topic, from the learner\'s files.')
+
     def coverage(where, text, refs):
         st = stems(text)
         nums = numbers_in(text)
@@ -931,6 +984,7 @@ def check(lesson, sources=None, final=False, today=None):
                 ptext = ' '.join(str(p.get(k, '')) for k in ('ask', 'answer', 'why')) + ' ' + ' '.join(map(str, ch if isinstance(ch, list) else []))
                 numbers_ok(where, ptext, refs, 'The pause')
                 coverage(where, ptext, refs)
+                copied(where, ptext)
                 ans = norm(p.get('answer', ''))
                 if ans and (re.search(r'\d', ans) or len(ans.split()) >= 2 or len(ans) >= 4):
                     if any(has(s, ans) for s in shown):
@@ -961,6 +1015,7 @@ def check(lesson, sources=None, final=False, today=None):
             if sym:
                 r.error(where, f'asks the voice to read the symbol {sym.group(0)!r}.',
                         'Write it the way you would say it: "p squared", "equals", "divided by", "v sub zero". Put the symbols on screen in an "equation".')
+            copied(where, say)
             talk = beat.get('talk') is True
             refs = []
             if talk:
@@ -1018,6 +1073,7 @@ def check(lesson, sources=None, final=False, today=None):
                     if words(text) >= 5 and norm(text) and norm(text) in norm(say) and t != 'quote':
                         r.error(ew, 'repeats the narration word for word.', 'Show 2 to 6 key words instead of the sentence being spoken.')
                     scene_words += screen_words(text)
+                    copied(ew, text)
                     if t not in ('quote', 'image'):
                         numbers_ok(ew, text if key != 'bars.value' else text, el_refs, 'The screen')
                 if t == 'compare':
@@ -1409,7 +1465,7 @@ def tidy(lesson, sources=None):
     """Fix in place the slips that have one right answer, and return what changed. The check then
     judges the result like any other file. A small model makes these often and can rarely fix them
     from a report: a beat that only shows something, a file name one slip off a given file, a file
-    name written in "from", and a spaced = in narration."""
+    name written in "from", a claim or calc id like (k1) in narration, and a spaced = in narration."""
     done = []
     if not isinstance(lesson, dict):
         return done
@@ -1445,6 +1501,10 @@ def tidy(lesson, sources=None):
                         host['claims'] = list(host.get('claims') or []) + extra
                     done.append(f'scene {si}, beat {bi}: it only showed something, so it now shows with the sentence beside it')
                     continue
+            ids_said = r'\s*\((?:[ck]\d+)(?:\s*,\s*[ck]\d+)*\)'
+            if isinstance(b, dict) and isinstance(b.get('say'), str) and re.search(ids_said, b['say']):
+                b['say'] = re.sub(ids_said, '', b['say'])
+                done.append(f'scene {si}, beat {bi}: claim or calc ids like (k1) were in the narration; they belong in "claims" and are gone')
             if isinstance(b, dict) and isinstance(b.get('say'), str) and re.search(r'\s=\s', b['say']):
                 b['say'] = re.sub(r'\s=\s', ' equals ', b['say'])
                 done.append(f'scene {si}, beat {bi}: " = " in the narration now reads "equals"')
