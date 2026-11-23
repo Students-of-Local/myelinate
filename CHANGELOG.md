@@ -6,6 +6,16 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+## [3.1.1] - 2026-11-22
+
+Quotes in a vetting note are checked by code, not by the model that wrote them.
+
+- **`yt.py quote URL --at m:ss "text"`** confirms the words were said within 20 seconds of the timestamp. It ignores case, punctuation, curly quotes and dashes, allows caption slips, and fails on anything else. The whole quote must be at least 0.90 similar to the words found, and a word that differs must read as a slip: at least 0.75 similar, the same first two letters, at most one letter off (two in words of seven letters or more), and not a hyper/hypo or inter/intra swap. So "leading" for "leaving" passes and "syn-periplanar" for "anti-periplanar" fails, though it is 0.85 similar. A changed number, an added or dropped "not", or an added or missing content word fails at any similarity. A `[8:01]` stamp copied from the transcript view is ignored. `...` marks a cut; the parts must occur in order. A real quote at the wrong time fails and says when it was said. On success it prints the source's own words and a link to show the learner, so the label comes from the checker, never from the model's retyping. Exit 6 means not confirmed.
+- **`yt.py course FILE "text"`** checks a course quote against a text file the same way, also undoing ligatures and words hyphenated across lines, and names the line. It needs no `yt-dlp`. A PDF is refused with the `pdftotext` command to run first.
+- **`references/video-finder.md` and `video` require the check** before any vetting quote or contradiction flag is shown; each verdict cites the course quote and the video quote, and "Contradicts" needs both confirmed. Without a shell, quotes are copied from the text read and labeled "Quotes not machine-checked."
+- **A small-model run** (`evals/quote-check/run.py`, LFM3 1.7B through Ollama) plants seven attacks; the checker refused all seven and confirmed both real quotes, while the same model, asked to judge, answered "NO" to every quote, real ones included. Results in `evals/verification.md`.
+- Offline tests cover a real quote at the wrong time, words changed at the right time (a swapped term, a dropped "not", an added number), an invented quote, an ellipsis out of order, and altered or invented course quotes.
+
 ## [3.1.0] - 2026-11-22
 
 Video learners get the few minutes that teach the concept, checked against their course.

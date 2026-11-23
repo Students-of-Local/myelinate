@@ -1,0 +1,170 @@
+{
+ "model": "hf.co/LiquidAI/LFM3-1.7B-GGUF:Q4_K_M",
+ "video": "FZKTSHLh84I",
+ "excerpt": "7:00 to 8:40",
+ "writer_raw": "{ \"items\": [ { \"video_quote\": \"[8:00] if we take a look at those, uh the lowest energy, is the chair conformations. So can explain what the deal is going on here\", \"at\": \"8:00\", \"course_quote\": \"Slide 15. If no beta H can be trans-diaxial, that alkene does not form, even the Zaitsev product.\", \"verdict\": \"matches\" }, { \"video_quote\": \"[8:04] I need a hydride on the dash. This one over here will not work, and we will not be able to form the double bond in that location.\", \"at\": \"8:04\", \"course_quote\": \"Slide 13. Geometry: the beta H and the leaving group must be anti-periplanar (dihedral angle near 180 degrees).\", \"verdict\": \"matches\" }, { \"video_quote\": \"[8:17] turns out to be anti-periplanar, you've got to have a trans hydrogen. And if we look at cyclohexane, uh the most common conformation we adopt, the lowest energy, is the chair conformations.\", \"at\": \"8:17\", \"course_quote\": \"Slide 15. If no beta H can be trans-diaxial, that alkene does not form, even the Zaitsev product. Speci\ufb01c examples follow.\", \"verdict\": \"matches\" } ] }",
+ "writer": [
+  {
+   "video_quote": "[8:00] if we take a look at those, uh the lowest energy, is the chair conformations. So can explain what the deal is going on here",
+   "at": "8:00",
+   "video_ok": false,
+   "video_check": "closest source words \"we said that on a cyclohexane ring, the hydrogen of relevance on the beta carbon has to ",
+   "video_show": null,
+   "course_quote": "Slide 15. If no beta H can be trans-diaxial, that alkene does not form, even the Zaitsev product.",
+   "course_ok": true,
+   "course_check": "none: confirmed",
+   "model_verdict": "matches"
+  },
+  {
+   "video_quote": "[8:04] I need a hydride on the dash. This one over here will not work, and we will not be able to form the double bond in that location.",
+   "at": "8:04",
+   "video_ok": true,
+   "video_check": "none: confirmed",
+   "video_show": "I need a hydride on the dash. This one over here will not work, and we will not be able to form the double bond in that location.",
+   "course_quote": "Slide 13. Geometry: the beta H and the leaving group must be anti-periplanar (dihedral angle near 180 degrees).",
+   "course_ok": true,
+   "course_check": "none: confirmed",
+   "model_verdict": "matches"
+  },
+  {
+   "video_quote": "[8:17] turns out to be anti-periplanar, you've got to have a trans hydrogen. And if we look at cyclohexane, uh the most common conformation we adopt, the lowest energy, is the chair conformations.",
+   "at": "8:17",
+   "video_ok": true,
+   "video_check": "none: confirmed",
+   "video_show": "turns out to be anti-periplanar, you've got to have a trans hydrogen. And if we look at cyclohexane, uh the most common conformation we adopt, the lowest energy, is the chair conformations.",
+   "course_quote": "Slide 15. If no beta H can be trans-diaxial, that alkene does not form, even the Zaitsev product. Speci\ufb01c examples follow.",
+   "course_ok": true,
+   "course_check": "none: confirmed",
+   "model_verdict": "matches"
+  }
+ ],
+ "attacks": [
+  {
+   "case": "invented video quote",
+   "attack": true,
+   "kind": "video",
+   "at": "8:00",
+   "text": "an E2 reaction on a cyclohexane ring always gives the Zaitsev product",
+   "judge": "NO",
+   "checker_ok": false,
+   "rc": 6,
+   "caught_by": "closest source words \"And in this case, the chlorine here is a wedge, but it's on a cyclohexane ring.\" match o",
+   "problems": [
+    "closest source words \"And in this case, the chlorine here is a wedge, but it's on a cyclohexane ring.\" match only 0.44 (need 0.9)",
+    "number differs: quote \"an e2 reaction\", source \"and in this case the chlorine here is a wedge but its\"",
+    "not in the source: \"always gives the zaitsev product\""
+   ]
+  },
+  {
+   "case": "words changed at the right time",
+   "attack": true,
+   "kind": "video",
+   "at": "8:00",
+   "text": "the hydrogen of relevance on the beta carbon has to be cis to the leaving group",
+   "judge": "NO",
+   "checker_ok": false,
+   "rc": 6,
+   "caught_by": "quote says \"cis\" where the source says \"trans\"",
+   "problems": [
+    "quote says \"cis\" where the source says \"trans\""
+   ]
+  },
+  {
+   "case": "dropped \"not\" at the right time",
+   "attack": true,
+   "kind": "video",
+   "at": "8:08",
+   "text": "this one over here will work, and we will be able to form the double bond",
+   "judge": "NO",
+   "checker_ok": false,
+   "rc": 6,
+   "caught_by": "negation differs: quote \"(nothing)\", source \"not\"",
+   "problems": [
+    "negation differs: quote \"(nothing)\", source \"not\"",
+    "negation differs: quote \"(nothing)\", source \"not\""
+   ]
+  },
+  {
+   "case": "real quote at the wrong time",
+   "attack": true,
+   "kind": "video",
+   "at": "1:30",
+   "text": "the hydrogen of relevance on the beta carbon has to be trans to the leaving group",
+   "judge": "NO",
+   "checker_ok": false,
+   "rc": 6,
+   "caught_by": "said at 8:00, not within 20s of 1:30: re-check the timestamp, then quote it at 8:00",
+   "problems": [
+    "said at 8:00, not within 20s of 1:30: re-check the timestamp, then quote it at 8:00"
+   ]
+  },
+  {
+   "case": "altered course quote",
+   "attack": true,
+   "kind": "course",
+   "at": null,
+   "text": "the beta H and the leaving group must be syn-periplanar",
+   "judge": "NO",
+   "checker_ok": false,
+   "rc": 6,
+   "caught_by": "quote says \"syn periplanar\" where the source says \"antiperiplanar\"",
+   "problems": [
+    "quote says \"syn periplanar\" where the source says \"antiperiplanar\""
+   ]
+  },
+  {
+   "case": "course number changed",
+   "attack": true,
+   "kind": "course",
+   "at": null,
+   "text": "the beta H and the leaving group must be anti-periplanar (dihedral angle near 60 degrees)",
+   "judge": "NO",
+   "checker_ok": false,
+   "rc": 6,
+   "caught_by": "number differs: quote \"60\", source \"180\"",
+   "problems": [
+    "number differs: quote \"60\", source \"180\""
+   ]
+  },
+  {
+   "case": "invented course quote",
+   "attack": true,
+   "kind": "course",
+   "at": null,
+   "text": "a bulky base always gives mainly the Zaitsev alkene",
+   "judge": "NO",
+   "checker_ok": false,
+   "rc": 6,
+   "caught_by": "closest source words \"base (NaOEt) gives mainly the Zaitsev alkene;\" match only 0.82 (need 0.9)",
+   "problems": [
+    "closest source words \"base (NaOEt) gives mainly the Zaitsev alkene;\" match only 0.82 (need 0.9)",
+    "not in the source: \"a bulky\"",
+    "quote says \"always\" where the source says \"naoet\""
+   ]
+  },
+  {
+   "case": "real video quote, right time",
+   "attack": false,
+   "kind": "video",
+   "at": "8:01",
+   "text": "the hydrogen of relevance on the beta carbon has to be trans to the leaving group",
+   "judge": "NO",
+   "checker_ok": true,
+   "rc": 0,
+   "caught_by": "none: confirmed",
+   "problems": []
+  },
+  {
+   "case": "real course quote",
+   "attack": false,
+   "kind": "course",
+   "at": null,
+   "text": "the beta H and the leaving group must be anti-periplanar",
+   "judge": "NO",
+   "checker_ok": true,
+   "rc": 0,
+   "caught_by": "none: confirmed",
+   "problems": []
+  }
+ ]
+}

@@ -43,6 +43,32 @@ Then **read the transcript of that segment yourself.** Term hits only say where 
 
 ## 4. Vet it against the course
 
+### Check every quote before you show it
+
+Your memory of a transcript is not evidence, and a quote that sounds right can carry a changed word, a dropped "not" or the wrong minute. Every quote the learner sees, from the video or from their course, passes a check first: in the vetting note, in a contradiction flag, in a pause point that quotes the speaker.
+
+<!-- local-tools -->
+**With a shell,** run the checker on each quote from this skill's folder:
+
+```
+python3 scripts/yt.py quote <url> --at 8:01 "the hydrogen of relevance on the beta carbon has to be trans to the leaving group"
+python3 scripts/yt.py course slides.txt "the beta H and the leaving group must be anti-periplanar"
+```
+
+`quote` looks for the words within 20 seconds of `--at`. `course` looks through a text file of their slides, notes or study guide; convert a PDF first with `pdftotext -layout file.pdf file.txt`. Both ignore case, punctuation, curly quotes, ligatures and words split across lines, and allow small caption slips: the whole quote must be at least 0.90 similar to the words found, and a word that differs must read as a misspelling (same first two letters, a letter or two off), so "leading" for "leaving" passes and "syn" for "anti" fails. A changed number, an added or dropped "not", or an added or missing content word fails at any similarity. A quote needs at least four words; mark a cut with `...`.
+
+- **Exit 0, `CONFIRMED`:** it prints a `show:` line with the source's own words and their timestamp or line. Show the learner exactly those words with that place, not your version.
+- **Exit 6, `NOT CONFIRMED`:** don't show the quote, or any verdict or flag built on it. If it says the words were said at another time, re-read that part of the transcript and use that time. If it says not found, quote again from the text you read, not from memory.
+
+Never re-word a quote until it passes, and never show one you didn't run.
+<!-- /local-tools -->
+
+**Without the checker,** copy each quote character for character from the transcript or file you read, with its timestamp or slide beside it, and end the vetting note with "Quotes not machine-checked."
+
+**Each verdict cites both sides:** the course's words with where they came from, and the video's words with the timestamp. A "Contradicts" verdict needs both quotes checked; if either fails, the verdict is "Can't tell."
+
+### Give each claim a verdict
+
 For each course claim from step 1, find what the segment says and give one verdict:
 
 | Verdict | What you do |
@@ -64,7 +90,7 @@ Also check, before calling it vetted:
 Lead with one pick. Give the learner:
 
 1. **The segment,** not the video: title, channel, the range (`4:10 to 9:30, about 5 minutes`), a link that starts there (`&t=250s`), and an embed that stops at the end when you can render one (`inline-widgets.html`'s video view takes `start`, `end` and `segments`).
-2. **The vetting note,** two or three lines: what you checked it against, what matched, any notation mapping, and what to skip.
+2. **The vetting note,** two or three lines: what you checked it against, what matched, any notation mapping, and what to skip, with the checked quotes from step 4.
 3. **One question to watch for,** taken from their target or their mistake.
 4. **Pause points** from the transcript, each just before a key move: "Pause at 6:02. Which hydrogen leaves, and why that one?"
 5. **After:** a recall prompt with the video closed, then one new problem they do without it.
@@ -75,4 +101,4 @@ Then the video goes back to being a tool: recall and practice are what show whet
 
 ## Don't
 
-Recommend a video you didn't find this session. Give a timestamp you didn't read. Call a video vetted when you read only its title or description. Hand over a full lecture when a segment exists. Download the video itself: link and embed it.
+Recommend a video you didn't find this session. Give a timestamp you didn't read. Show a quote that failed the check, or, with a shell, one you didn't run through it. Call a video vetted when you read only its title or description. Hand over a full lecture when a segment exists. Download the video itself: link and embed it.

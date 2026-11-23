@@ -174,7 +174,7 @@ Myelinate is instructions, templates and a few small local scripts. It has no se
 - **Your learner record and profile** are written only when you ask, and stay on your machine. The record holds topics, courses and review dates. Myelinate tells the assistant to keep health and condition labels out of it, but it's plain text the assistant writes, so check it if that matters to you.
 - **Printing.** `print` may run `scripts/make_pdf.py`, which renders an HTML page to PDF with your local headless Chromium; a web font or image the page links to is loaded while rendering.
 - **Video pages.** A page Myelinate makes with a YouTube player loads it from `youtube-nocookie.com` only when you press play, and shows a thumbnail from `i.ytimg.com`. YouTube's own terms and privacy policy apply to those.
-- **Your assistant's own tools.** Source checks, video searches, YouTube's public oEmbed check and `verify` use your assistant's web search and fetch when the task calls for them. If you have `yt-dlp` and a shell, `video` and `find-media` use `scripts/yt.py` to search YouTube, read one caption track at a time and find the segment that says the course's terms. It never downloads video.
+- **Your assistant's own tools.** Source checks, video searches, YouTube's public oEmbed check and `verify` use your assistant's web search and fetch when the task calls for them. If you have `yt-dlp` and a shell, `video` and `find-media` use `scripts/yt.py` to search YouTube, read one caption track at a time and find the segment that says the course's terms, and `yt.py quote` and `yt.py course` confirm every quote in a vetting note against the transcript and the course file before it is shown. It never downloads video.
 
 ## See the approach
 

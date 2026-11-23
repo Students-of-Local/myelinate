@@ -11,12 +11,15 @@ whole run at the first subtitle error.
     python3 scripts/yt.py transcript VIDEO_ID [--lang en] [--plain]
     python3 scripts/yt.py find VIDEO_ID --terms "anti-periplanar,Zaitsev"
     python3 scripts/yt.py scan "E2 elimination" --terms "anti-periplanar,Zaitsev" --n 8
+    python3 scripts/yt.py quote VIDEO_ID --at 7:55 "the hydrogen has to be trans to the leaving group"
+    python3 scripts/yt.py course slides.txt "the beta H and the leaving group must be anti-periplanar"
 
 Every command takes --json. Results are cached under $TMPDIR/myelinate-yt-<uid>/
 by video id, so asking again makes no network request.
 
 Exit codes: 0 ok, 1 video unavailable or no captions, 3 yt-dlp missing,
-4 network failure, 5 rate limited (HTTP 429) or blocked by YouTube.
+4 network failure, 5 rate limited (HTTP 429) or blocked by YouTube,
+6 quote not confirmed (quote and course).
 """
 import argparse
 import html
@@ -28,6 +31,8 @@ import subprocess
 import sys
 import tempfile
 import time
+import unicodedata
+from difflib import SequenceMatcher
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -55,7 +60,7 @@ class YTError(Exception):
         self.kind = kind
 
 
-EXIT = {'unavailable': 1, 'nocaptions': 1, 'other': 1, 'network': 4, 'ratelimit': 5}
+EXIT = {'unavailable': 1, 'nocaptions': 1, 'other': 1, 'network': 4, 'ratelimit': 5, 'unconfirmed': 6}
 
 
 # ---------- running yt-dlp ----------
@@ -535,6 +540,277 @@ def parse_terms(s):
     return terms
 
 
+# ---------- checking quotes ----------
+# A quote is shown to a learner only after these checks pass, and what they see is the source's own words.
+# The thresholds are deliberately high: a caption slip ("leading group" for "leaving group") passes, while a
+# changed meaning ("cis" for "trans", "E1" for "E2", a dropped "not") fails.
+QUOTE_THRESHOLD = 0.90  # character similarity of the whole quote to the words found
+WORD_THRESHOLD = 0.75   # each run of words that differs must be at least this similar, and a slip (see slip)
+QUOTE_WINDOW = 20       # seconds either side of --at
+FILLER = {'uh', 'um', 'uhm', 'er', 'ah', 'so', 'okay', 'ok', 'well', 'like', 'just', 'now', 'and',
+          'a', 'an', 'the', 'oh', 'yeah', 'right', 'basically', 'actually'}
+NEGATION = {'not', 'no', 'never', 'cannot', 'cant', 'dont', 'doesnt', 'isnt', 'arent', 'wont', 'wasnt',
+            'werent', 'shouldnt', 'couldnt', 'wouldnt', 'nor', 'without', 'neither', 'none'}
+QUOTE_MARKS = {'‘': "'", '’': "'", '‚': "'", '′': "'", '“': '"', '”': '"',
+               '„': '"', '″': '"', '«': '"', '»': '"'}
+ELLIPSIS = re.compile(r'\.{3,}|…|\[\s*\.\.\.\s*\]')
+
+
+STAMP = re.compile(r'\[\d{1,2}:\d\d(?::\d\d)?\]')
+
+
+def quote_tokens(text):
+    """Words compared by the quote checks: case, accents-as-composed, ligatures, curly quotes, dashes,
+    soft hyphens and words hyphenated across a line break (PDF text) all stop mattering."""
+    text = unicodedata.normalize('NFKC', text).replace('­', '')
+    text = re.sub(r'(\w)-[ \t]*\r?\n[ \t]*(\w)', r'\1\2', text)
+    for k, v in QUOTE_MARKS.items():
+        text = text.replace(k, v)
+    return [w.replace("'", '') for w in norm_words(text) if w.replace("'", '')]
+
+
+def raw_words(text):
+    """[(raw word, [tokens])] so a match can be shown in the source's own spelling."""
+    return [(w, quote_tokens(w)) for w in text.split()]
+
+
+class Source:
+    """Token stream of a transcript or file, each token with a time (seconds) or line number and its raw word."""
+
+    def __init__(self):
+        self.tokens, self.where, self.raw_index, self.raw = [], [], [], []
+
+    def add(self, text, where_for):
+        words = raw_words(text)
+        for k, (w, toks) in enumerate(words):
+            self.raw.append(w)
+            for tok in toks:
+                self.tokens.append(tok)
+                self.where.append(where_for(k, len(words)))
+                self.raw_index.append(len(self.raw) - 1)
+
+    def text(self, i, j):
+        return ' '.join(self.raw[self.raw_index[i]:self.raw_index[j - 1] + 1])
+
+
+def transcript_source(tr):
+    src = Source()
+    for c in tr['cues']:
+        span = max(0.0, c['end'] - c['start'])
+        src.add(c['text'], lambda k, n, c=c, span=span: c['start'] + span * k / max(n, 1))
+    return src
+
+
+def file_source(path):
+    path = Path(path)
+    if not path.is_file():
+        raise YTError('other', f'no such file: {path}')
+    head = path.read_bytes()[:4096]
+    if head.startswith(b'%PDF'):
+        raise YTError('other', f'{path} is a PDF; give its text (pdftotext "{path}" out.txt) or paste the passage into a .txt file')
+    if b'\x00' in head:
+        raise YTError('other', f'{path} is not a text file; save the course text as .txt or .md first')
+    text = path.read_text(encoding='utf-8', errors='replace')
+    # Rejoin a word split across lines ("anti-" / "periplanar") and keep the line count.
+    text = re.sub(r'(\w)-[ \t]*\r?\n[ \t]*(\w+)', r'\1\2\n', text)
+    src = Source()
+    for n, line in enumerate(text.splitlines(), 1):
+        src.add(line, lambda k, total, n=n: n)
+    return src
+
+
+def ratio(a, b):
+    return SequenceMatcher(None, a, b, autojunk=False).ratio()
+
+
+# Same start, different meaning: these prefixes are one or two letters apart.
+OPPOSITE_PREFIXES = [('hyper', 'hypo'), ('inter', 'intra'), ('hetero', 'homo'), ('supra', 'sub')]
+
+
+def edits(a, b):
+    """Levenshtein distance between two short strings."""
+    prev = list(range(len(b) + 1))
+    for i, x in enumerate(a, 1):
+        cur = [i]
+        for j, y in enumerate(b, 1):
+            cur.append(min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (x != y)))
+        prev = cur
+    return prev[-1]
+
+
+def slip(qa, ca):
+    """True when words that differ read as a caption or spelling slip ("leading" for "leaving",
+    "Zaitzev" for "Zaitsev", "anti periplanar" for "antiperiplanar"), not a different word.
+    A changed start ("syn"/"anti", "un"/"", "de"/"") or more than one letter off (two in long
+    words) is a different word, however similar the rest is."""
+    x, y = ''.join(qa), ''.join(ca)
+    if x == y:
+        return True
+    if ratio(x, y) < WORD_THRESHOLD or x[:2] != y[:2]:
+        return False
+    if edits(x, y) > (1 if min(len(x), len(y)) < 7 else 2):
+        return False
+    return not any(x.startswith(a) and y.startswith(b) or x.startswith(b) and y.startswith(a)
+                   for a, b in OPPOSITE_PREFIXES)
+
+
+def judge(q, cand):
+    """Problems that make cand not what q says, word by word. Empty means the words match."""
+    problems = []
+    for tag, i1, i2, j1, j2 in SequenceMatcher(None, q, cand, autojunk=False).get_opcodes():
+        qa, ca = q[i1:i2], cand[j1:j2]
+        if tag == 'equal':
+            continue
+        neg = {w for w in qa + ca if w in NEGATION}
+        if neg and set(w for w in qa if w in NEGATION) != set(w for w in ca if w in NEGATION):
+            problems.append(f'negation differs: quote "{" ".join(qa) or "(nothing)"}", source "{" ".join(ca) or "(nothing)"}"')
+            continue
+        nums_q = [w for w in qa if any(ch.isdigit() for ch in w)]
+        nums_c = [w for w in ca if any(ch.isdigit() for ch in w)]
+        if nums_q != nums_c:
+            problems.append(f'number differs: quote "{" ".join(qa)}", source "{" ".join(ca)}"')
+            continue
+        if tag == 'replace':
+            if not slip(qa, ca):
+                problems.append(f'quote says "{" ".join(qa)}" where the source says "{" ".join(ca)}"')
+        elif tag == 'delete':
+            extra = [w for w in qa if w not in FILLER]
+            if extra:
+                problems.append(f'not in the source: "{" ".join(qa)}"')
+        elif tag == 'insert':
+            dropped = [w for w in ca if w not in FILLER]
+            if dropped:
+                problems.append(f'quote leaves out "{" ".join(ca)}" (mark a cut with ... instead)')
+    return problems
+
+
+def spans_at(q, src, starts, slack=4, keep=8):
+    """Best-scoring (score, i, j) source spans, one per start, near the quote's length, best first."""
+    qs, n = ' '.join(q), len(q)
+    heads = set(q[:3])
+    found = []
+    for i in starts:
+        if src.tokens[i] not in heads and not any(ratio(src.tokens[i], h) >= WORD_THRESHOLD for h in heads):
+            continue
+        best = (0.0, i, i)
+        for m in range(max(1, n - slack), n + slack + 1):
+            j = min(len(src.tokens), i + m)
+            s = ratio(qs, ' '.join(src.tokens[i:j]))
+            if s > best[0]:
+                best = (s, i, j)
+        found.append(best)
+    return sorted(found, reverse=True)[:keep]
+
+
+def match_quote(text, src, starts):
+    """Match each part of a quote ("a ... b" is two parts, in order) against src. starts limits where the
+    first part may begin; each later part follows within about 60 words. Returns ok, score, start, end and
+    problems for the best chain: one where every part passes, if there is one."""
+    text = STAMP.sub(' ', text)  # a [8:01] copied from the transcript view is not a spoken word
+    parts = [quote_tokens(x) for x in ELLIPSIS.split(text)]
+    parts = [x for x in parts if x]
+    if not parts:
+        return {'ok': False, 'score': 0.0, 'problems': ['the quote has no words']}
+    if sum(len(x) for x in parts) < 4:
+        return {'ok': False, 'score': 0.0, 'problems': ['quote at least four words, so it can be told apart from a coincidence']}
+
+    def chain(k, idx):
+        """Best result for parts[k:], with parts[k] starting at one of idx."""
+        best = None
+        for s, i, j in spans_at(parts[k], src, idx):
+            problems = ([] if s >= QUOTE_THRESHOLD else
+                        [f'closest source words "{src.text(i, j)}" match only {s:.2f} (need {QUOTE_THRESHOLD})'])
+            problems += judge(parts[k], src.tokens[i:j])
+            res = {'score': s, 'start': i, 'end': j, 'problems': problems}
+            if k + 1 < len(parts):
+                rest = chain(k + 1, range(j, min(len(src.tokens), j + 60)))
+                if rest is None:
+                    res['problems'] = problems + [f'not found after it: "{" ".join(parts[k + 1])}"']
+                else:
+                    res = {'score': min(s, rest['score']), 'start': i, 'end': rest['end'],
+                           'problems': problems + rest['problems']}
+            if best is None or (not res['problems'], res['score']) > (not best['problems'], best['score']):
+                best = res
+        return best
+
+    res = chain(0, list(starts))
+    if res is None:
+        return {'ok': False, 'score': 0.0, 'problems': [f'not found: "{" ".join(parts[0])}"']}
+    return {'ok': not res['problems'], 'score': round(res['score'], 3), 'start': res['start'], 'end': res['end'],
+            'problems': res['problems']}
+
+
+def parse_at(s):
+    s = s.strip()
+    try:
+        return float(s) if ':' not in s else secs(s + ('.0' if '.' not in s else ''))
+    except ValueError:
+        raise YTError('other', f'--at takes m:ss, h:mm:ss or seconds, not "{s}"')
+
+
+def check_video_quote(ref, at, text, lang='en', window=QUOTE_WINDOW):
+    tr = get_transcript(ref, lang)
+    src = transcript_source(tr)
+    near = [i for i, t in enumerate(src.where) if at - window <= t <= at + window]
+    res = match_quote(text, src, near)
+    out = {'kind': 'video', 'id': tr['id'], 'at': at, 'window': window, 'track': tr['label'],
+           'threshold': QUOTE_THRESHOLD, 'word_threshold': WORD_THRESHOLD, 'quote': text,
+           'ok': res['ok'], 'score': res['score'], 'problems': res['problems']}
+    if res.get('end') is not None and res['score'] > 0:
+        t0 = src.where[res['start']]
+        out.update({'found_at': round(t0, 1), 'source_words': src.text(res['start'], res['end']),
+                    'link': f'https://www.youtube.com/watch?v={tr["id"]}&t={int(t0)}s'})
+    if not res['ok']:
+        anywhere = match_quote(text, src, range(len(src.tokens)))
+        if anywhere['ok']:
+            t0 = src.where[anywhere['start']]
+            out['problems'] = [f'said at {clock(t0)}, not within {window}s of {clock(at)}: re-check the timestamp, then quote it at {clock(t0)}']
+            out['elsewhere'] = round(t0, 1)
+    return out
+
+
+def check_course_quote(path, text):
+    src = file_source(path)
+    res = match_quote(text, src, range(len(src.tokens)))
+    out = {'kind': 'course', 'file': str(path), 'threshold': QUOTE_THRESHOLD, 'word_threshold': WORD_THRESHOLD,
+           'quote': text, 'ok': res['ok'], 'score': res['score'], 'problems': res['problems']}
+    if res.get('end') is not None and res['score'] > 0:
+        out.update({'line': src.where[res['start']], 'source_words': src.text(res['start'], res['end'])})
+    return out
+
+
+def print_check(r, where):
+    if r['ok']:
+        # The line to show the learner: the source's own words, never the quote as the model typed it.
+        print(f'CONFIRMED (similarity {r["score"]:.2f}, threshold {r["threshold"]})')
+        print(f'show: "{r["source_words"]}" ({where})')
+        return 0
+    print(f'NOT CONFIRMED (threshold {r["threshold"]}; a differing word must be a slip: {r["word_threshold"]} similar, '
+          'same first two letters, at most one letter off, two in long words): do not show this quote.')
+    for pr in r['problems']:
+        print('  ' + pr)
+    if r.get('source_words') and not r.get('elsewhere'):
+        print(f'  closest source words: "{r["source_words"]}"')
+    return 6
+
+
+def cmd_quote(a):
+    r = check_video_quote(a.video, parse_at(a.at), a.text, a.lang, a.window)
+    if a.json:
+        print(json.dumps(r, indent=1))
+        return 0 if r['ok'] else 6
+    print(f'track: {r["track"]}')
+    return print_check(r, f'{clock(r.get("found_at", 0))}, {r.get("link", "")}')
+
+
+def cmd_course(a):
+    r = check_course_quote(a.file, a.text)
+    if a.json:
+        print(json.dumps(r, indent=1))
+        return 0 if r['ok'] else 6
+    return print_check(r, f'{Path(a.file).name}, line {r.get("line")}')
+
+
 # ---------- search ----------
 
 def search(query, n):
@@ -717,7 +993,7 @@ def cmd_scan(a):
 
 def main(argv=None):
     p = argparse.ArgumentParser(prog='yt.py', description=(__doc__ or '').split('\n\n')[0],
-                                epilog='Exit codes: 0 ok, 1 unavailable or no captions, 3 yt-dlp missing, 4 network, 5 rate limited.')
+                                epilog='Exit codes: 0 ok, 1 unavailable or no captions, 3 yt-dlp missing, 4 network, 5 rate limited, 6 quote not confirmed.')
     sub = p.add_subparsers(dest='cmd', required=True)
 
     def add(name, help_text):
@@ -748,12 +1024,24 @@ def main(argv=None):
     s.add_argument('--n', type=int, default=8, help='search results to consider (default 8)')
     s.add_argument('--lang', default='en', help='caption language (default en)')
     s.add_argument('--max-minutes', type=float, default=90, help='drop longer videos (default 90)')
+    s = add('quote', 'Confirm words are said in the video within 20 seconds of a time; prints the words to show.')
+    s.add_argument('video', help='URL or 11-character id')
+    s.add_argument('text', help='the quote, copied from the transcript; "..." marks a cut')
+    s.add_argument('--at', required=True, help='where it is said: m:ss, h:mm:ss or seconds')
+    s.add_argument('--window', type=float, default=QUOTE_WINDOW, help=f'seconds either side of --at (default {QUOTE_WINDOW})')
+    s.add_argument('--lang', default='en', help='caption language (default en)')
+    s = add('course', 'Confirm a quote appears in a course text file (slides, notes, a page saved as text).')
+    s.add_argument('file', help='a .txt or .md file; turn a PDF into text first')
+    s.add_argument('text', help='the quote, copied from the file; "..." marks a cut')
     a = p.parse_args(argv)
-    if not shutil.which('yt-dlp'):
+    if a.cmd != 'course' and not shutil.which('yt-dlp'):
         print(MISSING, file=sys.stderr)
         return 3
     try:
-        {'search': cmd_search, 'info': cmd_info, 'transcript': cmd_transcript, 'find': cmd_find, 'scan': cmd_scan}[a.cmd](a)
+        rc = {'search': cmd_search, 'info': cmd_info, 'transcript': cmd_transcript, 'find': cmd_find, 'scan': cmd_scan,
+              'quote': cmd_quote, 'course': cmd_course}[a.cmd](a)
+        if rc:
+            return rc
     except YTError as exc:
         print(str(exc), file=sys.stderr)
         return EXIT.get(exc.kind, 1)
