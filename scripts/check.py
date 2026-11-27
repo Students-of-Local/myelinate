@@ -186,7 +186,7 @@ if 'call the Skill tool for the matching myelinate skill' not in hook_text or 'm
 for skill in sorted((ROOT / 'skills').glob('*/SKILL.md')) + [source]:
     text = skill.read_text()
     rel = skill.relative_to(ROOT)
-    if 'raw.githubusercontent.com' in text or re.search(r'(?i)\b(fetch|download|pull|read|follow)\b[^.\n]{0,40}\b(it|myelinate|the skill|instructions|SKILL\.md|github\.com/baney75)\b[^.\n]{0,40}github|\b(fetch|read|follow)\b[^.\n]{0,20}github\.com/baney75/myelinate', text):
+    if 'raw.githubusercontent.com' in text or re.search(r'(?i)\b(fetch|download|pull|read|follow)\b[^.\n]{0,40}\b(it|myelinate|the skill|instructions|SKILL\.md|github\.com/(?:baney75|Students-of-Local))\b[^.\n]{0,40}github|\b(fetch|read|follow)\b[^.\n]{0,20}github\.com/(?:baney75|Students-of-Local)/myelinate', text):
         errors.append(f'{rel}: a skill may not tell the assistant to fetch instructions from outside the plugin')
     if re.search(r'(?i)\b(save|saved|update|keep|keeps|store)\b[^.\n]{0,60}\b(to|in) (platform |your |project )?memory\b|platform memory', text):
         errors.append(f'{rel}: a skill may not write to or read the host memory on its own initiative')

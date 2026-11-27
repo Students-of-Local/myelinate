@@ -18,4 +18,4 @@ Effective 2026-11-07. Myelinate is an open-source set of instructions, templates
 
 **Children.** Myelinate is not directed at children under 13 and collects no data from anyone. Learners under 18 should use it through an assistant and account their school or guardian permits.
 
-**Changes and contact.** Changes to this policy are made in this file and recorded in the repository history. Questions: open an issue at https://github.com/baney75/myelinate/issues.
+**Changes and contact.** Changes to this policy are made in this file and recorded in the repository history. Questions: open an issue at https://github.com/Students-of-Local/myelinate/issues.

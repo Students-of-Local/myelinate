@@ -6,8 +6,8 @@
     "name": "Donovan Baney",
     "url": "https://dbaney.com"
   },
-  "homepage": "https://baney75.github.io/myelinate/",
-  "repository": "https://github.com/baney75/myelinate",
+  "homepage": "https://students-of-local.github.io/myelinate/",
+  "repository": "https://github.com/Students-of-Local/myelinate",
   "license": "MIT",
   "skills": "./skills",
   "interface": {
@@ -25,13 +25,13 @@
       "Quiz me for my exam on Friday",
       "Find a good video on this and help me learn from it"
     ],
-    "websiteURL": "https://baney75.github.io/myelinate/",
+    "websiteURL": "https://students-of-local.github.io/myelinate/",
     "brandColor": "#16313B",
     "composerIcon": "./assets/logo-mark.svg",
     "logo": "./assets/icon.png",
-    "supportURL": "https://github.com/baney75/myelinate/issues",
-    "privacyPolicyURL": "https://github.com/baney75/myelinate/blob/main/PRIVACY.md",
-    "termsOfServiceURL": "https://github.com/baney75/myelinate/blob/main/TERMS.md",
+    "supportURL": "https://github.com/Students-of-Local/myelinate/issues",
+    "privacyPolicyURL": "https://github.com/Students-of-Local/myelinate/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/Students-of-Local/myelinate/blob/main/TERMS.md",
     "brandColorDark": "#E8835A"
   },
   "extensions": {

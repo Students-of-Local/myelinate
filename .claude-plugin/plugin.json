@@ -6,12 +6,12 @@
     "name": "Donovan Baney",
     "url": "https://dbaney.com"
   },
-  "homepage": "https://baney75.github.io/myelinate/",
-  "repository": "https://github.com/baney75/myelinate",
+  "homepage": "https://students-of-local.github.io/myelinate/",
+  "repository": "https://github.com/Students-of-Local/myelinate",
   "license": "MIT",
   "icon": "./assets/icon.png",
-  "documentationUrl": "https://github.com/baney75/myelinate#readme",
-  "supportUrl": "https://github.com/baney75/myelinate/issues",
+  "documentationUrl": "https://github.com/Students-of-Local/myelinate#readme",
+  "supportUrl": "https://github.com/Students-of-Local/myelinate/issues",
   "keywords": [
     "education",
     "tutoring",

@@ -1,7 +1,7 @@
 <p align="center"><img src="assets/hero.svg" alt="Myelinate. Understand it. Retrieve it. Use it. An open-source skill suite for learning: courses, live tutoring, labs, printable tests, flashcards and study plans. Honest, not agreeable, with an adversarial accuracy review before high-stakes material ships." width="100%"></p>
 
 <p align="center">
-  <a href="https://github.com/baney75/myelinate/actions/workflows/check.yml"><img src="https://github.com/baney75/myelinate/actions/workflows/check.yml/badge.svg" alt="Package check workflow status"></a>
+  <a href="https://github.com/Students-of-Local/myelinate/actions/workflows/check.yml"><img src="https://github.com/Students-of-Local/myelinate/actions/workflows/check.yml/badge.svg" alt="Package check workflow status"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-a54320" alt="License: MIT"></a>
   <a href="CHANGELOG.md"><img src="https://img.shields.io/badge/version-3.0.0-16313b" alt="Version 3.0.0"></a>
   <a href="#claude-code"><img src="https://img.shields.io/badge/Claude%20Code-plugin-a54320" alt="Claude Code plugin"></a>
@@ -11,7 +11,7 @@
 
 Ask about a concept. Bring your course materials if you have them. Myelinate routes the request to the right skill, teaches in manageable steps, and checks what you can do with it. It is honest, not agreeable: it won’t confirm a wrong answer or cave when you push back on a correct correction, and it changes its mind on evidence. It is a set of Markdown skills for a capable AI assistant, not a separate model or a hosted tutoring service. Its examples and depth can fit children, high-school students, university learners, professionals, and people studying on their own.
 
-[Website](https://baney75.github.io/myelinate/) · [Read the router skill](myelinate.md) · [Try the sample lesson](https://baney75.github.io/myelinate/examples/lesson.html) · [See the evidence](references/evidence.md)
+[Website](https://students-of-local.github.io/myelinate/) · [Read the router skill](myelinate.md) · [Try the sample lesson](https://students-of-local.github.io/myelinate/examples/lesson.html) · [See the evidence](references/evidence.md)
 
 **Contents:** [Quick start](#quick-start) · [What's inside](#whats-inside) · [Start with one good question](#start-with-one-good-question) · [What makes the lesson useful](#what-makes-the-lesson-useful) · [Install](#install) · [See the approach](#see-the-approach) · [Evidence](#evidence-without-mythology) · [Improve it](#improve-it)
 
@@ -20,7 +20,7 @@ Ask about a concept. Bring your course materials if you have them. Myelinate rou
 **Use it in any chat (no install).** Paste this into an assistant that can open links, in chat or voice mode:
 
 ```text
-Use the Myelinate learning skill: https://github.com/baney75/myelinate — read SKILL.md and follow it to teach me.
+Use the Myelinate learning skill: https://github.com/Students-of-Local/myelinate — read SKILL.md and follow it to teach me.
 ```
 
 The assistant fetches [SKILL.md](SKILL.md) and follows it. If yours can't browse, [install the folder](#install) or paste SKILL.md itself.
@@ -28,7 +28,7 @@ The assistant fetches [SKILL.md](SKILL.md) and follows it. If yours can't browse
 **Or install it as a Claude Code plugin** (every skill loads by itself when it fits):
 
 ```text
-/plugin marketplace add baney75/myelinate
+/plugin marketplace add Students-of-Local/myelinate
 /plugin install myelinate@baney75
 ```
 
@@ -58,7 +58,7 @@ The Claude apps, Codex and other assistants: see [Install](#install).
 | [study-plan](skills/study-plan/SKILL.md) | Plans study blocks, review and sleep around an exam or study deadline. Creates reminders only with a real, authorized calendar tool. |
 | [find-media](skills/find-media/SKILL.md) | Finds learning diagrams, photos, models and videos, with licenses noted. Gives a real, checked link rather than telling you to go search. |
 | [video](skills/video/SKILL.md) | Turns a video, lecture, playlist or transcript into something you can do: recall before any summary, questions and cards pointed at timestamps. |
-| [make-video](skills/make-video/SKILL.md) | Makes a narrated, animated teaching video from your own course materials: every fact traced to an exact quote, questions that stop the video until you answer, captions, chapters and sources. A checker refuses unbacked facts, wrong arithmetic and invented quotes, and gives a numbered fix for each, so a weaker model's draft cannot pass as checked. [Paste a lesson into the player](https://baney75.github.io/myelinate/templates/video-player.html#load). |
+| [make-video](skills/make-video/SKILL.md) | Makes a narrated, animated teaching video from your own course materials: every fact traced to an exact quote, questions that stop the video until you answer, captions, chapters and sources. A checker refuses unbacked facts, wrong arithmetic and invented quotes, and gives a numbered fix for each, so a weaker model's draft cannot pass as checked. [Paste a lesson into the player](https://students-of-local.github.io/myelinate/templates/video-player.html#load). |
 | [progress](skills/progress/SKILL.md) | The moments around the learning: wrapping up a session, coming back after a gap, not being able to start, "how am I doing?" and "am I ready?", answered from what you did unaided and never with a predicted score. |
 | [debrief](skills/debrief/SKILL.md) | A graded exam, quiz or practical came back. Sorts every miss by its cause (never studied, recognized but not recalled, recalled but not used, mixed up look-alikes, format, lost it, slip, time), checks each with a cold retest, ties the causes to how you studied, and schedules one change for the next exam. Keeps a ledger across exams if you want one. |
 | [teacher](skills/teacher/SKILL.md) | For teachers and trainers: unit and lesson plans built backward from the outcome, rubrics with observable levels, quizzes and differentiation. |
@@ -104,7 +104,7 @@ Myelinate is one plugin for Claude Code, the Claude apps (claude.ai, desktop), C
 ### Claude Code
 
 ```text
-/plugin marketplace add baney75/myelinate
+/plugin marketplace add Students-of-Local/myelinate
 /plugin install myelinate@baney75
 ```
 
@@ -116,18 +116,18 @@ Each skill then loads by itself when it fits; force one with `/myelinate:myelina
 - **An answer-key agent** (`key-worker`) that solves a problem without seeing your answer, so the verdict can't drift toward what you said.
 - **The Myelinate output style** (pick it in `/config`): Claude does the engineering and hands you one decision at a time.
 
-**Updates.** The plugin carries no fixed version, so Claude Code updates it whenever the repository changes. Turn on auto-update for the `baney75` marketplace under `/plugin` → Marketplaces, or run `claude plugin update myelinate@baney75`. To follow a branch instead of `main`, add the marketplace as `baney75/myelinate#<branch>`.
+**Updates.** The plugin carries no fixed version, so Claude Code updates it whenever the repository changes. Turn on auto-update for the `baney75` marketplace under `/plugin` → Marketplaces, or run `claude plugin update myelinate@baney75`. To follow a branch instead of `main`, add the marketplace as `Students-of-Local/myelinate#<branch>`.
 
 ### Claude apps (claude.ai and desktop)
 
-In **Customize → Plugins**, choose **Add marketplace** and enter `baney75/myelinate`, then install **myelinate**. Or download `myelinate-plugin.zip` from the [latest release](https://github.com/baney75/myelinate/releases/latest) and use **Add → Upload plugin**. If you installed an older Myelinate as a skill, remove it first so only one copy is listed.
+In **Customize → Plugins**, choose **Add marketplace** and enter `Students-of-Local/myelinate`, then install **myelinate**. Or download `myelinate-plugin.zip` from the [latest release](https://github.com/Students-of-Local/myelinate/releases/latest) and use **Add → Upload plugin**. If you installed an older Myelinate as a skill, remove it first so only one copy is listed.
 
 ### Codex
 
 The repository is a Codex plugin marketplace (`.agents/plugins/marketplace.json`, manifest `.codex-plugin/plugin.json`). Add it as a marketplace in Codex, or clone it and link one skill folder at a time into `~/.agents/skills` (each folder is self-contained):
 
 ```sh
-git clone https://github.com/baney75/myelinate.git
+git clone https://github.com/Students-of-Local/myelinate.git
 mkdir -p ~/.agents/skills
 for d in myelinate/skills/*/; do ln -s "$PWD/$d" ~/.agents/skills/"$(basename "$d")"; done
 ```
@@ -139,7 +139,7 @@ Search for Myelinate in the ChatGPT plugin directory once it's listed. Until the
 ### Grok Build
 
 ```sh
-grok plugin marketplace add baney75/myelinate
+grok plugin marketplace add Students-of-Local/myelinate
 grok plugin install myelinate@baney75 --trust
 ```
 
@@ -150,13 +150,13 @@ Search for Myelinate in the Cursor marketplace once it's listed. Until then, add
 ### Gemini CLI
 
 ```sh
-gemini extensions install https://github.com/baney75/myelinate
+gemini extensions install https://github.com/Students-of-Local/myelinate
 ```
 
 ### Any tool that reads Agent Skills
 
 ```sh
-npx skills add baney75/myelinate
+npx skills add Students-of-Local/myelinate
 ```
 
 ### Any other assistant
@@ -179,7 +179,7 @@ Myelinate is instructions, templates and a few small local scripts. It has no se
 
 ## See the approach
 
-The [interactive sample](https://baney75.github.io/myelinate/examples/lesson.html) teaches limiting reactants with a worked example, a fresh numerical problem, hints, and answer feedback. It distinguishes independent, hinted, and revealed work. It does not collect responses or pretend to measure long-term retention. [Open the source](examples/lesson.html) to use it offline.
+The [interactive sample](https://students-of-local.github.io/myelinate/examples/lesson.html) teaches limiting reactants with a worked example, a fresh numerical problem, hints, and answer feedback. It distinguishes independent, hinted, and revealed work. It does not collect responses or pretend to measure long-term retention. [Open the source](examples/lesson.html) to use it offline.
 
 For course material, Myelinate can produce a compact scope map, concept explanation, practice set, explained answer key, and review queue. The included [templates](references/session-template.md) keep those outputs consistent without forcing every lesson into a document.
 
