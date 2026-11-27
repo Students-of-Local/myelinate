@@ -8,4 +8,4 @@ Effective 2026-11-07. Myelinate is free, open-source software published by Donov
 - **Your assistant's terms apply.** Myelinate runs inside an assistant you already use, under that provider's terms.
 - **Third-party material** linked or suggested by Myelinate keeps its own license and terms (see [NOTICE.md](NOTICE.md)).
 
-Questions: https://github.com/baney75/myelinate/issues
+Questions: https://github.com/Students-of-Local/myelinate/issues
