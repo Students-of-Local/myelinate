@@ -44,12 +44,15 @@ Drop or skim: lightly tested, already retrieved-after-delay, or costly-to-learn-
 
 Use `templates/study-plan.md`:
 - Exam clock: "Exam Fri 10:00, 3 days, ~11 study hours available."
-- Ranked target list with state
+- Targets in rank order, one line each: the target and why it comes first. Keep states and scores in the record, not as columns the learner has to read.
 - Day-by-day blocks: target → activity (tutor drill / lab section / problem set / flashcard review / mixed practice test) → check
 - **Next block** (start now)
 - **If time runs out, drop**: …
 - **Won't be covered**: …
 - Sleep and exam-morning plan (brief warm-up retrieval, no new material)
+- **Recall sheet**, when the material has a shape to rebuild (a reaction map, formula sheet, pathway, timeline): one table with the cells blank, which they fill from memory and then check against their notes.
+
+Two tables at most: the blocks and the recall sheet. Everything else is a short line.
 
 Calendar entries and reminders: see §4a. A suggested review date is not a reminder. If they want it kept, save the plan and topic states to their learner profile so the next session can pick up where this left off.
 
