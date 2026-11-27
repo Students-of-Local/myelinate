@@ -6,6 +6,12 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+## [3.3.0] - 2026-11-27
+
+- **Tutor verdicts judge the reasoning.** A true fact given as the wrong reason ("it's a strong base" for why a bulky base won't do SN2) is now *not yet*, not *partly right*. The verdict is one bold word for the whole answer, then the warmth, and a reply that works an example asks its one question on a new case. A contrast between two cases goes in a small side-by-side table.
+- **Study plans are easier to read.** Targets are a ranked list with one reason each instead of a table of states and scores, and a plan for material with a shape to rebuild (a reaction map, a pathway, a timeline) ends with a blank recall sheet to fill from memory. Two tables at most.
+- **Short quotes from copyrighted texts.** The router keeps a quote under 15 words and cites the rest by section, because Gemini replaces a whole reply that recites a long passage with an error.
+- **Measured.** Blind before and after replies from Gemini 4 Neon (through `agy`) and Sonnet, judged by Opus and Grok in both orders (4 verdicts per scenario and responder). The after text won the wrong-reason scenario 8 of 8 (means about 5 to 8.5 for both responders), the study plan 8 of 8 for each responder (Neon 5.0 to 8.0), and know-when-done 4 of 4 for Sonnet (4.0 to 9.0). Hint-leak was mixed on the final text: Neon 2 wins and 2 ties, Sonnet 1 of 4, every margin one point. Fresh paired samples of the Zaitsev and Hofmann contrast put after ahead, 6.0 to 4.0 over 8 verdicts; an earlier loss there came from one unusually strong before reply. Are-you-sure split or lost by a point on style, with both arms holding the verdict. A router copy of the reasoning rule was tried and dropped because the tutor rule alone did as well.
 - **runs7 recorded.** On 3.2.2 the blind judge preferred the 1.7B skill lesson in all 3 pairs and every skill lesson played, but two taught a false fact the checker had flagged and the model never fixed, so the result is not committed and the floors stay. Details in `evals/verification.md`.
 
 ## [3.2.2] - 2026-11-23
