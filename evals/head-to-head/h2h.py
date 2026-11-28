@@ -62,7 +62,7 @@ _EMOJI_BASE = (
 )
 EMOJI_RE = re.compile(f"{_EMOJI_BASE}(?:\u200D{_EMOJI_BASE})*")
 PLACEHOLDER_RE = re.compile(
-    r"(?<!\[)\[(?:[A-Z][A-Za-z0-9 _/-]{0,40}|(?:your|insert|enter|add|fill|replace)\s+[A-Za-z0-9 _/-]{1,30})\](?!\s*[\(\[:])"
+    r"(?<!\[)\[(?:[A-Z][A-Za-z0-9 _/-]{1,40}|(?:your|insert|enter|add|fill|replace)\s+[A-Za-z0-9 _/-]{1,30})\](?!\s*[\(\[:])"
 )
 REDIRECT_RE = re.compile(r"(?i)vertexaisearch\.cloud\.google\.com")
 LINT_KEYS = ("dashes", "emoji", "placeholders", "search_redirects")
@@ -180,8 +180,7 @@ def call_agy(model: str, prompt: str, json_schema: dict | None = None, timeout: 
         except FileNotFoundError as exc:
             raise FatalError("agy not found on PATH") from exc
     combined = f"{proc.stdout}\n{proc.stderr}".strip()
-    if proc.stderr and QUOTA_RE.search(proc.stderr):
-        raise QuotaError(combined[:300])
+    # Quota text on stderr alone is not a stop: agy logs a 429 it retried and then still answers.
     if proc.returncode != 0:
         if QUOTA_RE.search(combined):
             raise QuotaError(combined[:300])
@@ -207,14 +206,20 @@ def call_agy(model: str, prompt: str, json_schema: dict | None = None, timeout: 
     if resp is None or (isinstance(resp, str) and not resp.strip()):
         if QUOTA_RE.search(combined):
             raise QuotaError(combined[:300])
+        if AUTH_RE.search(combined):
+            raise FatalError("agy authentication required; sign in with `agy` first")
         raise CallError("agy JSON output missing or empty .response")
     return resp if isinstance(resp, str) else json.dumps(resp)
 
 
 def call_claude(model: str, system: str, prompt: str, timeout: int = 600) -> str:
-    cmd = CLAUDE_BASE + ["--model", model, "--system-prompt", system, prompt]
+    # The prompt goes on stdin, so a message that starts with "-" is never read as an option.
+    cmd = CLAUDE_BASE + ["--model", model, "--system-prompt", system]
     with tempfile.TemporaryDirectory(prefix="h2h-claude-") as tmpdir:
-        proc = subprocess.run(cmd, stdin=subprocess.DEVNULL, capture_output=True, text=True, timeout=timeout, cwd=tmpdir)
+        try:
+            proc = subprocess.run(cmd, input=prompt, capture_output=True, text=True, timeout=timeout, cwd=tmpdir)
+        except FileNotFoundError as exc:
+            raise FatalError("claude not found on PATH") from exc
     combined = f"{proc.stdout}\n{proc.stderr}".strip()
     if (proc.returncode != 0 or not proc.stdout.strip()) and QUOTA_RE.search(combined):
         raise QuotaError(combined[:300])
@@ -378,6 +383,8 @@ def run_eval(args: argparse.Namespace, caller=invoke_model) -> tuple[dict, str]:
     if args.limit is not None:
         scens = scens[:args.limit]
     jobs = [(s, k) for s in scens for k in range(args.repeats)]
+    if not jobs:
+        raise FatalError("no scenarios selected; check --only, --limit and --repeats")
     # Hash before any model call: a bad path fails at once, and the record names the text that ran.
     old_sha, new_sha = hash_skill_path(args.old), hash_skill_path(args.new)
     frozen = {str(p): hash_skill_path(p) for p in args.freeze}
@@ -438,8 +445,8 @@ def run_eval(args: argparse.Namespace, caller=invoke_model) -> tuple[dict, str]:
         "date": dt.date.today().isoformat(), "disclosure": DISCLOSURE, "normalizations": NORMALIZATIONS,
         "runner": args.runner, "models": {"responder": resp_m, "judge": judge_m}, "scenarios_file": str(args.scenarios),
         "skills": {
-            "old": {"label": args.old_label or args.old.name, "path": str(args.old), "sha256": old_sha},
-            "new": {"label": args.new_label or args.new.name, "path": str(args.new), "sha256": new_sha},
+            "old": {"label": args.old_label or args.old.resolve().name, "path": str(args.old), "sha256": old_sha},
+            "new": {"label": args.new_label or args.new.resolve().name, "path": str(args.new), "sha256": new_sha},
         },
         "frozen": frozen,
         "scenario_counts": {"total": len(results), "keyed": sum(r["has_key"] for r in results), "heldout": len(ho_items)},
