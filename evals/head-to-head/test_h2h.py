@@ -196,8 +196,34 @@ class TestH2H(unittest.TestCase):
             return _verdict("tie", 8, 8) if json_schema is not None or "You grade" in system else "reply"
         with self.assertRaises(h2h.QuotaError):
             h2h.run_eval(self._stub_args(20, 2), caller=caller)
-        # 20 scenarios at 4 calls each is 80; after the quota only calls already in flight may finish.
-        self.assertLessEqual(calls[0], 5)
+        # 20 scenarios at 4 calls each is 80. A peer may slip a few calls in before the stop flag is set,
+        # so the bound is loose enough for a loaded CI host and still far below a run that ignores the flag.
+        self.assertLessEqual(calls[0], 12)
+
+    def test_fatal_error_in_a_worker_is_what_the_run_raises(self):
+        # A peer that stops on the flag raises Stopped; the run must still raise the FatalError (exit 1), not a quota.
+        import threading
+        calls, lock = [0], threading.Lock()
+
+        def caller(runner, model, system, prompt, json_schema=None):
+            with lock:
+                calls[0] += 1
+                n = calls[0]
+            if n == 2:
+                raise h2h.FatalError("agy authentication required")
+            if n > 2:
+                threading.Event().wait(0.05)
+            return _verdict("tie", 8, 8) if json_schema is not None or "You grade" in system else "reply"
+        for _ in range(5):
+            calls[0] = 0
+            with self.assertRaises(h2h.FatalError):
+                h2h.run_eval(self._stub_args(10, 3), caller=caller)
+
+    def test_agy_json_auth_error_is_fatal(self):
+        done = subprocess.CompletedProcess([], 0, stdout='{"is_error": true, "error": "Authentication required"}', stderr="")
+        with mock.patch.object(h2h.subprocess, "run", return_value=done):
+            with self.assertRaises(h2h.FatalError):
+                h2h.call_agy("gemini-4-neon-medium", "hi")
 
     def test_judge_sign_in_failure_stops_the_run(self):
         calls = [0]

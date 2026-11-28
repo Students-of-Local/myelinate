@@ -102,6 +102,10 @@ class FatalError(RuntimeError):
     """A failure every later call would repeat (sign-in, missing binary, a judge that keeps failing): stop the run."""
 
 
+class Stopped(RuntimeError):
+    """This worker stopped because another one hit a quota or fatal error; run_eval re-raises that first error."""
+
+
 JUDGE_FAIL_LIMIT = 4  # judge failures in a row that mean the judge itself is broken, not one bad reply
 
 
@@ -196,6 +200,8 @@ def call_agy(model: str, prompt: str, json_schema: dict | None = None, timeout: 
         err = json.dumps(payload)
         if QUOTA_RE.search(err):
             raise QuotaError(err[:300])
+        if AUTH_RE.search(err):
+            raise FatalError("agy authentication required; sign in with `agy` first")
         raise CallError(f"agy error payload: {err[:240]}")
     resp = payload.get("response")
     if resp is None or (isinstance(resp, str) and not resp.strip()):
@@ -268,7 +274,7 @@ def judge_both_orders(scen: dict, old_reply: str, new_reply: str, runner: str, j
             raw = caller(runner, judge_model, "You grade tutoring replies. Output JSON only.", prompt,
                          VERDICT_SCHEMA if runner == "agy" else None)
             v = parse_verdict(raw)
-        except (QuotaError, FatalError):
+        except (QuotaError, FatalError, Stopped):
             raise
         except Exception as exc:
             verdicts.append({"order": [side_a, side_b], "status": "failed", "raw_winner": None, "mapped_winner": "failed", "error": str(exc)})
@@ -373,25 +379,35 @@ def run_eval(args: argparse.Namespace, caller=invoke_model) -> tuple[dict, str]:
         scens = scens[:args.limit]
     jobs = [(s, k) for s in scens for k in range(args.repeats)]
     # One stop flag for every worker: after a quota or fatal error no worker makes another model call.
+    # The first quota or fatal error is kept and re-raised, so a peer's Stopped never decides the exit code.
     stop = threading.Event()
     lock = threading.Lock()
     fails = [0]
+    first: list[BaseException] = []
+
+    def halt(exc: BaseException) -> None:
+        with lock:
+            if not first:
+                first.append(exc)
+            stop.set()
 
     def guarded(*a):
         if stop.is_set():
-            raise QuotaError("stopped: another worker hit a quota limit or a fatal error")
+            raise Stopped("another worker hit a quota limit or a fatal error")
         try:
             return caller(*a)
-        except (QuotaError, FatalError):
-            stop.set()
+        except (QuotaError, FatalError) as exc:
+            halt(exc)
             raise
 
     def on_judge(ok: bool, err: str) -> None:
         with lock:
             fails[0] = 0 if ok else fails[0] + 1
-            if fails[0] >= JUDGE_FAIL_LIMIT:
-                stop.set()
-                raise FatalError(f"the judge failed {fails[0]} times in a row; last error: {err[:200]}")
+            n = fails[0]
+        if n >= JUDGE_FAIL_LIMIT:
+            exc = FatalError(f"the judge failed {n} times in a row; last error: {err[:200]}")
+            halt(exc)
+            raise exc
 
     def one(s, k):
         return run_scenario(s, k, args.old, args.new, args.runner, resp_m, judge_m, guarded, on_judge)
@@ -406,11 +422,11 @@ def run_eval(args: argparse.Namespace, caller=invoke_model) -> tuple[dict, str]:
             try:
                 for f in cf.as_completed(futs):
                     done[futs[f]] = f.result()
-            except BaseException:
-                stop.set()
+            except BaseException as exc:
+                halt(exc)
                 for f in futs:
                     f.cancel()
-                raise
+                raise first[0] from None
             results = [done[i] for i in range(len(jobs))]
     tot, vt = _tally(results)
     ho_items = [r for r in results if r["split"] == "heldout"]
