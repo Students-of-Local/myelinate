@@ -163,6 +163,64 @@ class TestH2H(unittest.TestCase):
         self.assertTrue(seen["cmd"][-1].startswith("-p="))
         self.assertNotEqual(Path(seen["cwd"]).resolve(), Path.cwd().resolve())
 
+    def test_swap_puts_each_reply_under_the_other_letter(self):
+        # The second order must swap the replies, not only the labels: old under A first, then under B.
+        rec, _, prompts, *_ = self._run_stub([{"id": "s1", "message": "Explain osmosis."}],
+                                             [_verdict("A", 9, 6), _verdict("B", 6, 9)], old_text="OLDSKILL",
+                                             new_text="NEWSKILL", reply_map={"OLDSKILL": "OLD-REPLY", "NEWSKILL": "NEW-REPLY"})
+        a0, b0 = prompts[0].split("Reply B:")
+        a1, b1 = prompts[1].split("Reply B:")
+        self.assertIn("OLD-REPLY", a0); self.assertIn("NEW-REPLY", b0)
+        self.assertIn("NEW-REPLY", a1); self.assertIn("OLD-REPLY", b1)
+        v = rec["results"][0]["verdicts"]
+        self.assertEqual((v[0]["score_old"], v[0]["score_new"], v[1]["score_old"], v[1]["score_new"]), (9, 6, 9, 6))
+
+    def _stub_args(self, n: int, jobs: int):
+        tmp = Path(tempfile.mkdtemp(prefix="test-h2h-"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        (tmp / "o.md").write_text("o", encoding="utf-8"); (tmp / "n.md").write_text("n", encoding="utf-8")
+        (tmp / "s.json").write_text(json.dumps([{"id": f"s{i}", "message": "m"} for i in range(n)]), encoding="utf-8")
+        return h2h.parse_args(["--old", str(tmp / "o.md"), "--new", str(tmp / "n.md"), "--scenarios", str(tmp / "s.json"),
+                               "--out", str(tmp / "out"), "--no-ledger", "--jobs", str(jobs)])
+
+    def test_quota_in_one_worker_stops_the_other(self):
+        import threading
+        calls, lock = [0], threading.Lock()
+
+        def caller(runner, model, system, prompt, json_schema=None):
+            with lock:
+                calls[0] += 1
+                n = calls[0]
+            if n == 3:
+                raise h2h.QuotaError("429 quota")
+            return _verdict("tie", 8, 8) if json_schema is not None or "You grade" in system else "reply"
+        with self.assertRaises(h2h.QuotaError):
+            h2h.run_eval(self._stub_args(20, 2), caller=caller)
+        # 20 scenarios at 4 calls each is 80; after the quota only calls already in flight may finish.
+        self.assertLessEqual(calls[0], 5)
+
+    def test_judge_sign_in_failure_stops_the_run(self):
+        calls = [0]
+
+        def caller(runner, model, system, prompt, json_schema=None):
+            calls[0] += 1
+            if json_schema is not None or "You grade" in system:
+                raise h2h.FatalError("agy authentication required")
+            return "reply"
+        with self.assertRaises(h2h.FatalError):
+            h2h.run_eval(self._stub_args(5, 1), caller=caller)
+        self.assertEqual(calls[0], 3)  # two replies, then the first judge call
+
+    def test_four_judge_failures_in_a_row_stop_the_run(self):
+        calls = [0]
+
+        def caller(runner, model, system, prompt, json_schema=None):
+            calls[0] += 1
+            return "not json" if json_schema is not None or "You grade" in system else "reply"
+        with self.assertRaises(h2h.FatalError):
+            h2h.run_eval(self._stub_args(10, 1), caller=caller)
+        self.assertEqual(calls[0], 8)  # two scenarios: 2 replies and 2 failed verdicts each
+
 
 if __name__ == "__main__":
     res = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(TestH2H))

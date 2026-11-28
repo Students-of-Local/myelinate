@@ -15,6 +15,7 @@ import re
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -97,6 +98,13 @@ class CallError(RuntimeError):
     """Non-quota model call failure."""
 
 
+class FatalError(RuntimeError):
+    """A failure every later call would repeat (sign-in, missing binary, a judge that keeps failing): stop the run."""
+
+
+JUDGE_FAIL_LIMIT = 4  # judge failures in a row that mean the judge itself is broken, not one bad reply
+
+
 def hash_skill_path(path: Path) -> str:
     if path.is_file():
         return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -166,7 +174,7 @@ def call_agy(model: str, prompt: str, json_schema: dict | None = None, timeout: 
         except subprocess.TimeoutExpired as exc:
             raise CallError(f"agy timed out after {timeout}s") from exc
         except FileNotFoundError as exc:
-            raise CallError("agy not found on PATH") from exc
+            raise FatalError("agy not found on PATH") from exc
     combined = f"{proc.stdout}\n{proc.stderr}".strip()
     if proc.stderr and QUOTA_RE.search(proc.stderr):
         raise QuotaError(combined[:300])
@@ -174,10 +182,10 @@ def call_agy(model: str, prompt: str, json_schema: dict | None = None, timeout: 
         if QUOTA_RE.search(combined):
             raise QuotaError(combined[:300])
         if AUTH_RE.search(combined):
-            raise CallError("agy authentication required; sign in with `agy` first")
+            raise FatalError("agy authentication required; sign in with `agy` first")
         raise CallError(f"agy exited {proc.returncode}: {combined[:240]}")
     if AUTH_RE.search(combined) and not proc.stdout.strip().startswith("{"):
-        raise CallError("agy authentication required; sign in with `agy` first")
+        raise FatalError("agy authentication required; sign in with `agy` first")
     try:
         payload = _extract_json(proc.stdout)
     except ValueError as exc:
@@ -250,7 +258,8 @@ def respond(skill_path: Path, scen: dict, runner: str, model: str, caller=invoke
     return caller(runner, model, system, ctx + scen["message"] + tail, None)
 
 
-def judge_both_orders(scen: dict, old_reply: str, new_reply: str, runner: str, judge_model: str, caller=invoke_model) -> dict:
+def judge_both_orders(scen: dict, old_reply: str, new_reply: str, runner: str, judge_model: str, caller=invoke_model,
+                      on_judge=None) -> dict:
     orders = [("old", "new", old_reply, new_reply), ("new", "old", new_reply, old_reply)]
     verdicts = []
     for side_a, side_b, reply_a, reply_b in orders:
@@ -259,11 +268,15 @@ def judge_both_orders(scen: dict, old_reply: str, new_reply: str, runner: str, j
             raw = caller(runner, judge_model, "You grade tutoring replies. Output JSON only.", prompt,
                          VERDICT_SCHEMA if runner == "agy" else None)
             v = parse_verdict(raw)
-        except QuotaError:
+        except (QuotaError, FatalError):
             raise
         except Exception as exc:
             verdicts.append({"order": [side_a, side_b], "status": "failed", "raw_winner": None, "mapped_winner": "failed", "error": str(exc)})
+            if on_judge:
+                on_judge(False, str(exc))
             continue
+        if on_judge:
+            on_judge(True, "")
         rw = v["winner"]
         mapped = "tie" if rw == "tie" else (side_a if rw == "A" else side_b)
         verdicts.append({
@@ -280,10 +293,11 @@ def judge_both_orders(scen: dict, old_reply: str, new_reply: str, runner: str, j
     return {"verdicts": verdicts, "old_wins": ow, "new_wins": nw, "ties": ties, "failed": failed, "outcome": outcome}
 
 
-def run_scenario(scen: dict, rep: int, old_p: Path, new_p: Path, runner: str, resp_m: str, judge_m: str, caller=invoke_model) -> dict:
+def run_scenario(scen: dict, rep: int, old_p: Path, new_p: Path, runner: str, resp_m: str, judge_m: str, caller=invoke_model,
+                 on_judge=None) -> dict:
     old_r, new_r = respond(old_p, scen, runner, resp_m, caller), respond(new_p, scen, runner, resp_m, caller)
     lint = {"old": lint_reply(old_r), "new": lint_reply(new_r)}
-    judged = judge_both_orders(scen, old_r, new_r, runner, judge_m, caller)
+    judged = judge_both_orders(scen, old_r, new_r, runner, judge_m, caller, on_judge)
     return {
         "id": scen["id"], "rep": rep, "split": "heldout" if is_heldout(scen) else scen.get("split", "dev"),
         "has_key": bool(scen.get("key")), "replies": {"old": old_r, "new": new_r}, "lint": lint, **judged,
@@ -358,18 +372,46 @@ def run_eval(args: argparse.Namespace, caller=invoke_model) -> tuple[dict, str]:
     if args.limit is not None:
         scens = scens[:args.limit]
     jobs = [(s, k) for s in scens for k in range(args.repeats)]
+    # One stop flag for every worker: after a quota or fatal error no worker makes another model call.
+    stop = threading.Event()
+    lock = threading.Lock()
+    fails = [0]
+
+    def guarded(*a):
+        if stop.is_set():
+            raise QuotaError("stopped: another worker hit a quota limit or a fatal error")
+        try:
+            return caller(*a)
+        except (QuotaError, FatalError):
+            stop.set()
+            raise
+
+    def on_judge(ok: bool, err: str) -> None:
+        with lock:
+            fails[0] = 0 if ok else fails[0] + 1
+            if fails[0] >= JUDGE_FAIL_LIMIT:
+                stop.set()
+                raise FatalError(f"the judge failed {fails[0]} times in a row; last error: {err[:200]}")
+
+    def one(s, k):
+        return run_scenario(s, k, args.old, args.new, args.runner, resp_m, judge_m, guarded, on_judge)
+
     results: list[dict] = []
     if args.jobs <= 1 or len(jobs) <= 1:
-        results = [run_scenario(s, k, args.old, args.new, args.runner, resp_m, judge_m, caller) for s, k in jobs]
+        results = [one(s, k) for s, k in jobs]
     else:
         with cf.ThreadPoolExecutor(max_workers=args.jobs) as ex:
-            futs = [ex.submit(run_scenario, s, k, args.old, args.new, args.runner, resp_m, judge_m, caller) for s, k in jobs]
+            futs = {ex.submit(one, s, k): i for i, (s, k) in enumerate(jobs)}
+            done: dict[int, dict] = {}
             try:
-                results = [f.result() for f in futs]
-            except QuotaError:
+                for f in cf.as_completed(futs):
+                    done[futs[f]] = f.result()
+            except BaseException:
+                stop.set()
                 for f in futs:
                     f.cancel()
                 raise
+            results = [done[i] for i in range(len(jobs))]
     tot, vt = _tally(results)
     ho_items = [r for r in results if r["split"] == "heldout"]
     ho_tot, ho_vt = _tally(ho_items)
@@ -402,6 +444,9 @@ def main(argv: list[str] | None = None, caller=invoke_model) -> int:
     except QuotaError as exc:
         print(f"QUOTA STOP: {exc}", file=sys.stderr)
         sys.exit(QUOTA_EXIT_CODE)
+    except FatalError as exc:
+        print(f"FATAL STOP: {exc}", file=sys.stderr)
+        sys.exit(1)
     print(row)
     t, v = rec["totals"], rec["verdict_totals"]
     print(f"Scenarios: {t['scenarios']} (old={t['old']}, new={t['new']}, tie={t['tie']}, failed={t['failed']}) | "
