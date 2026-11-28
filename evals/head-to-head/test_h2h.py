@@ -247,6 +247,17 @@ class TestH2H(unittest.TestCase):
             h2h.run_eval(self._stub_args(10, 1), caller=caller)
         self.assertEqual(calls[0], 8)  # two scenarios: 2 replies and 2 failed verdicts each
 
+    def test_bad_freeze_path_fails_before_any_model_call(self):
+        calls = [0]
+
+        def caller(*a, **k):
+            calls[0] += 1
+            return "reply"
+        args = self._stub_args(3, 1)
+        args.freeze = [Path("/nonexistent/typo.md")]
+        with self.assertRaises(FileNotFoundError):
+            h2h.run_eval(args, caller=caller)
+        self.assertEqual(calls[0], 0)
 
 if __name__ == "__main__":
     res = unittest.TextTestRunner(verbosity=2).run(unittest.defaultTestLoader.loadTestsFromTestCase(TestH2H))

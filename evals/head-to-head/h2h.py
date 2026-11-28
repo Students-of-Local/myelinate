@@ -378,6 +378,9 @@ def run_eval(args: argparse.Namespace, caller=invoke_model) -> tuple[dict, str]:
     if args.limit is not None:
         scens = scens[:args.limit]
     jobs = [(s, k) for s in scens for k in range(args.repeats)]
+    # Hash before any model call: a bad path fails at once, and the record names the text that ran.
+    old_sha, new_sha = hash_skill_path(args.old), hash_skill_path(args.new)
+    frozen = {str(p): hash_skill_path(p) for p in args.freeze}
     # One stop flag for every worker: after a quota or fatal error no worker makes another model call.
     # The first quota or fatal error is kept and re-raised, so a peer's Stopped never decides the exit code.
     stop = threading.Event()
@@ -435,10 +438,10 @@ def run_eval(args: argparse.Namespace, caller=invoke_model) -> tuple[dict, str]:
         "date": dt.date.today().isoformat(), "disclosure": DISCLOSURE, "normalizations": NORMALIZATIONS,
         "runner": args.runner, "models": {"responder": resp_m, "judge": judge_m}, "scenarios_file": str(args.scenarios),
         "skills": {
-            "old": {"label": args.old_label or args.old.name, "path": str(args.old), "sha256": hash_skill_path(args.old)},
-            "new": {"label": args.new_label or args.new.name, "path": str(args.new), "sha256": hash_skill_path(args.new)},
+            "old": {"label": args.old_label or args.old.name, "path": str(args.old), "sha256": old_sha},
+            "new": {"label": args.new_label or args.new.name, "path": str(args.new), "sha256": new_sha},
         },
-        "frozen": {str(p): hash_skill_path(p) for p in args.freeze},
+        "frozen": frozen,
         "scenario_counts": {"total": len(results), "keyed": sum(r["has_key"] for r in results), "heldout": len(ho_items)},
         "totals": tot, "verdict_totals": vt, "heldout_totals": {**ho_tot, "verdict_totals": ho_vt},
         "lint_totals": {s: {k: sum(r["lint"][s][k] for r in results) for k in LINT_KEYS} for s in ("old", "new")},
