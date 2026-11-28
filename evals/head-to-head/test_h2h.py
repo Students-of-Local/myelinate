@@ -7,6 +7,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -218,6 +219,54 @@ class TestH2H(unittest.TestCase):
             calls[0] = 0
             with self.assertRaises(h2h.FatalError):
                 h2h.run_eval(self._stub_args(10, 3), caller=caller)
+
+    def test_agy_reply_that_succeeded_survives_quota_text_on_stderr(self):
+        # neon-d r3 on #44: agy logs a 429 it retried, then answers; the reply must not become a quota stop.
+        done = subprocess.CompletedProcess([], 0, stdout='{"response": "a real reply"}',
+                                           stderr="warning: 429 rate limit exceeded, retrying")
+        with mock.patch.object(h2h.subprocess, "run", return_value=done):
+            self.assertEqual(h2h.call_agy("gemini-4-neon-medium", "hi"), "a real reply")
+
+    def test_agy_empty_reply_with_sign_in_text_is_fatal(self):
+        done = subprocess.CompletedProcess([], 0, stdout='{"response": ""}', stderr="Authentication required")
+        with mock.patch.object(h2h.subprocess, "run", return_value=done):
+            with self.assertRaises(h2h.FatalError):
+                h2h.call_agy("gemini-4-neon-medium", "hi")
+
+    def test_claude_prompt_goes_on_stdin_and_a_missing_binary_is_fatal(self):
+        seen = {}
+
+        def fake_run(cmd, **kw):
+            seen["cmd"], seen["input"] = cmd, kw.get("input")
+            return subprocess.CompletedProcess(cmd, 0, "ok", "")
+        with mock.patch.object(h2h.subprocess, "run", side_effect=fake_run):
+            self.assertEqual(h2h.call_claude("sonnet", "sys", "--flag looks like an option"), "ok")
+        self.assertNotIn("--flag looks like an option", seen["cmd"])
+        self.assertEqual(seen["input"], "--flag looks like an option")
+        with mock.patch.object(h2h.subprocess, "run", side_effect=FileNotFoundError):
+            with self.assertRaises(h2h.FatalError):
+                h2h.call_claude("sonnet", "sys", "hi")
+
+    def test_no_selected_scenario_stops_before_writing_a_ledger_row(self):
+        with self.assertRaises(h2h.FatalError):
+            self._run_stub([{"id": "1", "message": "m", "rubric": "r"}], [], extra_args=["--only", "nope"])
+
+    def test_dot_skill_path_gets_the_folder_name_as_its_label(self):
+        here = Path.cwd()
+        tmp = Path(tempfile.mkdtemp(prefix="test-h2h-dot-"))
+        self.addCleanup(shutil.rmtree, tmp, ignore_errors=True)
+        (tmp / "SKILL.md").write_text("skill", encoding="utf-8")
+        os.chdir(tmp)
+        self.addCleanup(os.chdir, here)
+        args = h2h.parse_args(["--old", ".", "--new", ".", "--scenarios", "s.json", "--out", "o", "--no-ledger"])
+        (tmp / "s.json").write_text('[{"id":"1","message":"m","rubric":"r"}]', encoding="utf-8")
+        judge = json.dumps({"winner": "tie", "reason": "same"})
+        rec, _ = h2h.run_eval(args, caller=lambda *a, **k: judge if (k.get("json_schema") or "grade" in a[2]) else "reply")
+        self.assertEqual(rec["skills"]["old"]["label"], tmp.name)
+
+    def test_one_letter_bracket_is_not_a_placeholder(self):
+        self.assertIsNone(h2h.PLACEHOLDER_RE.search("The rate depends on [S] and [E]."))
+        self.assertIsNotNone(h2h.PLACEHOLDER_RE.search("Hi [Name], welcome."))
 
     def test_agy_json_auth_error_is_fatal(self):
         done = subprocess.CompletedProcess([], 0, stdout='{"is_error": true, "error": "Authentication required"}', stderr="")
