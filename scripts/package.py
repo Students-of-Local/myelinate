@@ -28,6 +28,21 @@ CODEX_ZIP = ROOT / 'dist' / 'myelinate-codex.zip'
 CODEX_FILES = ['.codex-plugin/plugin.json', 'LICENSE', 'README.md', 'PRIVACY.md', 'TERMS.md']
 # OpenAI's directory bars local tools that fetch from third-party sites: the YouTube finder stays out of its zip.
 CODEX_EXCLUDE = ('scripts/yt.py',)
+# Google NotebookLM / Gemini Notebook export: Custom Chat persona (<= 9,500 chars under 10k cap)
+# plus one optional clean-room handbook source and Studio Customize prompt recipes.
+NOTEBOOKLM_ZIP = ROOT / 'dist' / 'myelinate-notebooklm.zip'
+NOTEBOOKLM_DIR = ROOT / 'notebooklm'
+NOTEBOOKLM_HANDBOOK = NOTEBOOKLM_DIR / 'myelinate-notebooklm-handbook.md'
+NOTEBOOKLM_CHAT_MAX = 9500
+NOTEBOOKLM_SHORT_MAX = 490
+NOTEBOOKLM_HANDBOOK_MAX_WORDS = 50000
+NOTEBOOKLM_HANDBOOK_SKILLS = ('tutor', 'assignment', 'assess', 'debrief', 'study-plan', 'flashcards', 'verify')
+NOTEBOOKLM_LEAK_RE = re.compile(
+    r'show_widget|/myelinate:|CLAUDE_PLUGIN_ROOT|session-start\.sh|learner\.json|yt-dlp|make_pdf\.py'
+    r'|\.\./[a-z-]+/SKILL\.md|skills/[a-z-]+/SKILL\.md|<!--\s*local-tools\s*-->',
+    re.I,
+)
+INVISIBLE_UNICODE_RE = re.compile(r'[\u200b-\u200f\u202a-\u202e\u2060\u2066-\u2069]')
 
 
 def codex_excluded(rel):
@@ -128,6 +143,58 @@ def codex_transform(rel, data):
     return LOCAL_TOOLS.sub(b'', data) if rel.endswith('.md') else data
 
 
+def _strip_notebooklm_host_lines(text):
+    """Sanitize a skill markdown file for NotebookLM: remove frontmatter, local-tools, and IDE/Claude-only paths."""
+    text = re.sub(r'^---\n.*?\n---\n+', '', text, count=1, flags=re.S)
+    text = LOCAL_TOOLS.sub(b'', text.encode()).decode()
+    out = []
+    for line in text.splitlines():
+        if line.startswith('Paths like `references/'):
+            continue
+        if line.startswith('Other Myelinate skills are siblings'):
+            continue
+        if NOTEBOOKLM_LEAK_RE.search(line):
+            # Rewrite sibling skill references cleanly; drop lines that are purely local-tool/IDE instructions.
+            cleaned = re.sub(r'`\.\./([a-z-]+)/SKILL\.md`', r'`\1`', line)
+            cleaned = re.sub(r'`skills/([a-z-]+)/SKILL\.md`', r'`\1`', cleaned)
+            cleaned = re.sub(r'/myelinate:([a-z-]+)', r'"\1"', cleaned)
+            if NOTEBOOKLM_LEAK_RE.search(cleaned):
+                continue
+            line = cleaned
+        out.append(line)
+    return '\n'.join(out).strip()
+
+
+def build_notebooklm_handbook():
+    """Generate one clean-room Markdown handbook source for Google NotebookLM (1 of 50 free slots)."""
+    header = (
+        '# Myelinate Pedagogy Handbook (Google NotebookLM / Gemini Notebook)\n\n'
+        '> **PEDAGOGY MANUAL ONLY — NOT COURSE CONTENT.**\n'
+        '> Never cite this file as subject-matter evidence for the learner\'s course.\n'
+        '> Uncheck this source in the Sources panel before generating Studio Audio Overviews, '
+        'Video Overviews, Flashcards, Quizzes, or Study Guides.\n\n'
+    )
+    sections = []
+    for name in NOTEBOOKLM_HANDBOOK_SKILLS:
+        raw = (ROOT / 'skills' / name / 'SKILL.md').read_text(encoding='utf-8')
+        body = _strip_notebooklm_host_lines(raw)
+        sections.append(f'---\n\n{body}')
+    return (header + '\n\n'.join(sections) + '\n').encode('utf-8')
+
+
+def notebooklm_files():
+    rels = [
+        'notebooklm/configure-chat.txt',
+        'notebooklm/configure-chat-short.txt',
+        'notebooklm/myelinate-notebooklm-handbook.md',
+        'notebooklm/studio-prompts.md',
+        'notebooklm/SETUP.md',
+        'LICENSE',
+        'PRIVACY.md',
+    ]
+    return [r for r in rels if (ROOT / r).is_file()]
+
+
 def plugin_files():
     files = [f for f in PLUGIN_FILES if (ROOT / f).is_file()]
     for d in PLUGIN_DIRS:
@@ -156,9 +223,13 @@ def build():
     for d in sorted((ROOT / 'skills').rglob('*'), reverse=True):
         if d.is_dir() and not any(d.iterdir()):
             d.rmdir()
+    if NOTEBOOKLM_DIR.is_dir():
+        NOTEBOOKLM_HANDBOOK.write_bytes(build_notebooklm_handbook())
     build_zip(plugin_files())
     build_zip(codex_files(), CODEX_ZIP, '', codex_transform)
-    print(f'built {len(all_generated())} generated files, {ZIP.relative_to(ROOT)} and {CODEX_ZIP.relative_to(ROOT)}')
+    if NOTEBOOKLM_DIR.is_dir():
+        build_zip(notebooklm_files(), NOTEBOOKLM_ZIP, 'myelinate-notebooklm/')
+    print(f'built {len(all_generated())} generated files, {ZIP.relative_to(ROOT)}, {CODEX_ZIP.relative_to(ROOT)} and {NOTEBOOKLM_ZIP.relative_to(ROOT)}')
 
 
 def verify():
@@ -224,6 +295,41 @@ def verify():
     for name in skill_names():
         if f'../{name}/SKILL.md' not in router:
             errors.append(f'skills/myelinate/SKILL.md does not route to ../{name}/SKILL.md')
+    # Verify Google NotebookLM / Gemini Notebook export bundle.
+    if NOTEBOOKLM_DIR.is_dir():
+        want_hb = build_notebooklm_handbook()
+        if not NOTEBOOKLM_HANDBOOK.is_file() or NOTEBOOKLM_HANDBOOK.read_bytes() != want_hb:
+            errors.append('notebooklm/myelinate-notebooklm-handbook.md: out of date; run python3 scripts/package.py build')
+        chat_path = NOTEBOOKLM_DIR / 'configure-chat.txt'
+        short_path = NOTEBOOKLM_DIR / 'configure-chat-short.txt'
+        for p, limit in ((chat_path, NOTEBOOKLM_CHAT_MAX), (short_path, NOTEBOOKLM_SHORT_MAX)):
+            if not p.is_file():
+                errors.append(f'{p.relative_to(ROOT)}: missing NotebookLM prompt file')
+                continue
+            txt = p.read_text(encoding='utf-8')
+            if len(txt) > limit:
+                errors.append(f'{p.relative_to(ROOT)}: {len(txt)} chars exceeds NotebookLM limit ({limit})')
+            if NOTEBOOKLM_LEAK_RE.search(txt):
+                errors.append(f'{p.relative_to(ROOT)}: contains non-NotebookLM host/tool reference ({NOTEBOOKLM_LEAK_RE.search(txt).group(0)!r})')
+            if INVISIBLE_UNICODE_RE.search(txt):
+                errors.append(f'{p.relative_to(ROOT)}: contains invisible/bidi Unicode')
+        if NOTEBOOKLM_HANDBOOK.is_file():
+            hb_txt = NOTEBOOKLM_HANDBOOK.read_text(encoding='utf-8')
+            if 'PEDAGOGY MANUAL ONLY' not in hb_txt[:500]:
+                errors.append('notebooklm/myelinate-notebooklm-handbook.md: missing PEDAGOGY MANUAL ONLY isolation header')
+            if len(hb_txt.split()) > NOTEBOOKLM_HANDBOOK_MAX_WORDS:
+                errors.append(f'notebooklm/myelinate-notebooklm-handbook.md: exceeds {NOTEBOOKLM_HANDBOOK_MAX_WORDS} words')
+            if NOTEBOOKLM_LEAK_RE.search(hb_txt):
+                errors.append(f'notebooklm/myelinate-notebooklm-handbook.md: leaks host/tool reference ({NOTEBOOKLM_LEAK_RE.search(hb_txt).group(0)!r})')
+            if INVISIBLE_UNICODE_RE.search(hb_txt):
+                errors.append('notebooklm/myelinate-notebooklm-handbook.md: contains invisible/bidi Unicode')
+        if not NOTEBOOKLM_ZIP.is_file():
+            build_zip(notebooklm_files(), NOTEBOOKLM_ZIP, 'myelinate-notebooklm/')
+        with zipfile.ZipFile(NOTEBOOKLM_ZIP) as z:
+            nb_names = {n[len('myelinate-notebooklm/'):] for n in z.namelist()}
+            for rel in notebooklm_files():
+                if rel not in nb_names:
+                    errors.append(f'{NOTEBOOKLM_ZIP.relative_to(ROOT)}: {rel} missing; run python3 scripts/package.py build')
     return errors, counts
 
 

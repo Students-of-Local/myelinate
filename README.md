@@ -153,6 +153,14 @@ Search for Myelinate in the Cursor marketplace once it's listed. Until then, add
 gemini extensions install https://github.com/Students-of-Local/myelinate
 ```
 
+### Google NotebookLM (Gemini Notebook)
+
+Myelinate ships a dedicated NotebookLM bundle ([setup guide](notebooklm/SETUP.md), built into `dist/myelinate-notebooklm.zip`):
+
+1. Upload your course materials (PDFs, slides, notes, syllabus) into a notebook at `notebooklm.google.com`.
+2. Open **Chat → Configure Chat → Custom** and paste [`notebooklm/configure-chat.txt`](notebooklm/configure-chat.txt) (under 5,000 characters, well inside the 10,000-character cap; [`configure-chat-short.txt`](notebooklm/configure-chat-short.txt) fits a 500-character box).
+3. *(Optional)* Upload [`notebooklm/myelinate-notebooklm-handbook.md`](notebooklm/myelinate-notebooklm-handbook.md) as 1 source for full rubrics and exam-debrief checklists (uncheck it before generating Studio Audio/Flashcards/Quizzes), and copy [`notebooklm/studio-prompts.md`](notebooklm/studio-prompts.md) into Studio's **Customize** fields.
+
 ### Any tool that reads Agent Skills
 
 ```sh

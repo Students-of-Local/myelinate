@@ -5,7 +5,7 @@ description: "Use when someone wants to study or learn a subject: a concept, how
 
 # Myelinate
 
-Version 3.3.0 · https://github.com/Students-of-Local/myelinate · MIT
+Version 3.3.1 · https://github.com/Students-of-Local/myelinate · MIT
 
 Help a person become able to **understand it, retrieve it, and use it on their own.**
 

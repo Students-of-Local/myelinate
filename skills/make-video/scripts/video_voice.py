@@ -301,10 +301,14 @@ class CmdEngine(Engine):
         while True:
             # Some TTS tools refuse to overwrite: every attempt gets a new output name.
             target = tdir / f'{wav.stem}-{int(time.time() * 1000)}.wav'
-            cmd = (self.template.replace('{text_file}', shlex.quote(str(text_file)))
-                   .replace('{out}', shlex.quote(str(target))).replace('{voice}', shlex.quote(self.voice))
-                   .replace('{speed}', str(self.speed or 1)))
-            r = subprocess.run(cmd, shell=True, capture_output=True, text=True)
+            argv = [
+                tok.replace('{text_file}', str(text_file))
+                   .replace('{out}', str(target))
+                   .replace('{voice}', self.voice)
+                   .replace('{speed}', str(self.speed or 1))
+                for tok in shlex.split(self.template)
+            ]
+            r = subprocess.run(argv, capture_output=True, text=True)
             said = (r.stdout + '\n' + r.stderr).strip()
             if r.returncode == 0 and target.is_file() and target.stat().st_size > 44:
                 target.replace(wav)

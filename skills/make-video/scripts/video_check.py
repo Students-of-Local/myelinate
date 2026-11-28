@@ -300,7 +300,7 @@ _OPS = {ast.Add: operator.add, ast.Sub: operator.sub, ast.Mult: operator.mul, as
 
 
 def safe_eval(expr, names):
-    """Evaluate + - * / ** ( ) sqrt() abs() on numbers and earlier calc ids. Nothing else is allowed. Never eval()."""
+    """Evaluate + - * / ** ( ) sqrt() abs() on numbers and earlier calc ids. Nothing else is allowed; AST-walked only."""
     src = str(expr).replace('^', '**').replace('×', '*').replace('·', '*').replace('÷', '/').replace('−', '-')
     if len(src) > 240:
         raise ValueError('it is longer than 240 characters')

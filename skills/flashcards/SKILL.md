@@ -93,7 +93,7 @@ Cloze cards go in a separate file with `#notetype:Cloze` and text like `Hemoglob
 
 ## 5. Scheduling and use
 
-- Encourage an SRS (Anki/FSRS, Quizlet's spaced mode, Obsidian SR) over massed review.
+- Encourage an SRS (Anki/FSRS, Quizlet's spaced mode, Obsidian SR) over massed review; where a shell is available, `scripts/fsrs.py` computes adaptive FSRS-lite DSR intervals clamped to an exam date without advancing hinted or revealed reviews.
 - First session: 3 correct recalls per card. Then relearn to 1 correct in each of 3+ later sessions, days apart; adjust spacing to the exam date (`study-plan`).
 - Say aloud or write the answer before flipping. Do not self-grade with "I knew that."
 - Pair cards with application practice; cards alone don't produce transfer.

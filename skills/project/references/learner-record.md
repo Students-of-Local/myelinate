@@ -57,15 +57,15 @@ Dates are ISO `YYYY-MM-DD` in the learner's time zone. `state` is one of: Not ch
 
 ## Scheduling the next review
 
-Start from the default ladder, 1 → 3 → 7 → 14 → 30 days, compressed to the exam date (`study-plan` has the horizon rule: the best gap is roughly 20 to 40% of a week-long horizon and 5 to 10% of a year-long one; for an exam in 7 days, review about days 1, 3 and 6).
+Start from the default ladder (1 → 3 → 7 → 14 → 30 days) or, where a shell is available, compute adaptive DSR intervals with `scripts/fsrs.py` (FSRS power forgetting curve $R(t, S) = (1 + t/(9S))^{-1}$, clamped to the exam date). Topics may carry an optional `fsrs` object (`difficulty`, `stability`, `retrievability_target`, `reps`, `lapses`) alongside `interval_days` and `next_review` for backward compatibility.
 
 | Outcome on a review | Next interval |
 | --- | --- |
-| unassisted-correct | next rung up (1 → 3 → 7 → 14 → 30), capped so the last review lands a day or two before the exam |
-| hinted-correct or self-assessed | same interval again |
-| revealed or incorrect | back to 1 day, and note the error |
+| unassisted-correct | next rung up (or FSRS recall update), capped so the last review lands 1 to 2 days before the exam |
+| hinted-correct or self-assessed | same interval again (stability does not increase; exposure is not mastery) |
+| revealed or incorrect | back to 1 day (FSRS lapse branch), and note the error |
 
-These are product defaults, not a research-optimal schedule; adjust to the learner's errors. A `next_review` date is a suggestion, not a reminder: create calendar reminders only when asked, with a real tool, and confirm them.
+A `next_review` date is a suggestion, not a reminder: create calendar reminders only when asked, with a real tool, and confirm them.
 
 ## Using it
 

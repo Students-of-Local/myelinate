@@ -2,7 +2,7 @@
 
 Read this before you write the `say` lines of a video lesson. A listener can't skim back, can't see punctuation and hears every word at the voice's pace. These rules make a sentence easy to follow the first time.
 
-Credit: the craft here is paraphrased from Hildegard's podcast and writing guides (Donovan Baney, `baney75/hildegard`, AGPL-3.0), which draw on NPR Training, Transom and Jessica Abel's *Out on the Wire* (2015). Nothing is copied; Myelinate does not need Hildegard to run. If Hildegard is installed, hand it any sound design beyond plain narration (music beds, effects, mixing).
+Credit: the craft here is paraphrased from Hildegard's podcast and writing guides (Donovan Baney, `Students-of-Local/hildegard`, AGPL-3.0), which draw on NPR Training, Transom and Jessica Abel's *Out on the Wire* (2015). Nothing is copied; Myelinate does not need Hildegard to run. If Hildegard is installed, hand it any sound design beyond plain narration (music beds, effects, mixing).
 
 ## Sentences
 

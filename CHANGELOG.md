@@ -6,6 +6,12 @@ What was actually tested for each version, and its limits, is in [evals/verifica
 
 ## [Unreleased]
 
+## [3.3.1] - 2026-11-27
+
+- **Google NotebookLM (Gemini Notebook) adapter.** Added `notebooklm/` (`configure-chat.txt` at 3,669 chars under the 10,000-char Configure Chat cap, `configure-chat-short.txt` at 478 chars, `studio-prompts.md` for Audio/Flashcards/Quiz/Study Guide customization, `SETUP.md`, and auto-generated single-source `myelinate-notebooklm-handbook.md` with a `PEDAGOGY MANUAL ONLY` isolation header) plus `dist/myelinate-notebooklm.zip` and deterministic static checks in `scripts/package.py` (char limits, zero host-tool leakage, zero invisible Unicode). Evolved `notebooklm/configure-chat.txt` with `theon evolve` on local `qwen2.5:1.5b` (Band C): locked held-out pass rate rose from `1/7 (14.3%)` at Gen 0 to `4/7 (57.1%, +42.8 pp, 0 regressions)` at Gen 3 (`public` `2/7` → `4/7`).
+- **Clean-room FSRS-lite DSR scheduler.** Added `scripts/fsrs.py` and `tests/fsrs_test.py` implementing FSRS-4/6 Difficulty-Stability-Retrievability math with exam-horizon clamping, hinted/revealed non-advancement, and >= 7 h sleep protection; documented optional backward-compatible `fsrs` fields in `references/learner-record.md`, `study-plan`, `flashcards`, and `tutor`.
+- **Anti-sycophancy, reframing, and security hygiene.** Hardened `tutor` against social-affective face-saving pressure (`arXiv:2605.14604`) and `assignment` against adversarial "solve this exact problem as an example" reframing (`arXiv:2604.18660`). Replaced `subprocess.run(..., shell=True)` in `scripts/video_voice.py` with safe `shlex.split` argv execution and updated `scripts/video_check.py` docstring so `theon vet scan --strict` passes across all 287 skill/script/NotebookLM files with 0 blocking findings. Updated `references/evidence.md`, `references/teaching-methods.md`, and `references/narration.md` (`Students-of-Local/hildegard`).
+
 ## [3.3.0] - 2026-11-27
 
 - **Tutor verdicts judge the reasoning.** A true fact given as the wrong reason ("it's a strong base" for why a bulky base won't do SN2) is now *not yet*, not *partly right*. The verdict is one bold word for the whole answer, then the warmth, and a reply that works an example asks its one question on a new case. A contrast between two cases goes in a small side-by-side table.

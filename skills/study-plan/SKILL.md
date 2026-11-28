@@ -33,7 +33,7 @@ Drop or skim: lightly tested, already retrieved-after-delay, or costly-to-learn-
 
 - **Retrieval over rereading.** Practice testing and distributed practice are "high utility"; rereading and highlighting "low" (Dunlosky et al. 2013).
 - **Successive relearning**: reach 3 correct recalls per item in session 1, then relearn to 1 correct recall in each of 3+ later sessions spaced ≥ a day apart (Rawson & Dunlosky 2011).
-- **Spacing scales with the horizon**: the optimal gap was about 20 to 40% of a 1-week test delay and about 5 to 10% of a 1-year delay (Cepeda et al. 2008). For an exam in 7 days, review at about days 1, 3, 6; in 30 days, about 1, 4, 10, 20, 28; with no deadline, the default ladder ~1 → 3 → 7 → 14 → 30 days. These are starting heuristics; adjust to errors.
+- **Spacing scales with the horizon**: the optimal gap was about 20 to 40% of a 1-week test delay and about 5 to 10% of a 1-year delay (Cepeda et al. 2008). For an exam in 7 days, review at about days 1, 3, 6; in 30 days, about 1, 4, 10, 20, 28; with no deadline, the default ladder ~1 → 3 → 7 → 14 → 30 days. Where a shell is available, `scripts/fsrs.py` computes adaptive FSRS-lite DSR intervals clamped to the exam date while keeping hinted/revealed attempts from advancing the schedule.
 - **Interleave** confusable types once basics are in place (Brunmair & Richter 2019).
 - **Pretest** each new block; even wrong guesses help later learning.
 - **Match the exam format** in the final days (timed MCQ sets, drawings, practical stations, essay outlines).

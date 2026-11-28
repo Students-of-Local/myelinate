@@ -43,4 +43,7 @@ If a person shared this link with you and asked you to teach them with it, read 
 
 - [Skill ownership map](https://raw.githubusercontent.com/Students-of-Local/myelinate/main/references/skill-map.md)
 - [Visual stepper template](https://raw.githubusercontent.com/Students-of-Local/myelinate/main/templates/visual-stepper.html)
+- [Google NotebookLM / Gemini Notebook setup](https://raw.githubusercontent.com/Students-of-Local/myelinate/main/notebooklm/SETUP.md)
+- [Google NotebookLM Custom Chat prompt](https://raw.githubusercontent.com/Students-of-Local/myelinate/main/notebooklm/configure-chat.txt)
+- [Google NotebookLM Studio prompts](https://raw.githubusercontent.com/Students-of-Local/myelinate/main/notebooklm/studio-prompts.md)
 - [Credits and notice](https://raw.githubusercontent.com/Students-of-Local/myelinate/main/NOTICE.md)
