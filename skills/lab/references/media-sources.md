@@ -39,6 +39,7 @@ Verified **2026-10-06** by loading each site and reading its license or terms pa
 | MolView | molview.org | © Herman Bergwerf; data from PubChem, RCSB, COD, NIST | Draw a structure, view it in 3D, look up spectra | Tool, not a reusable image library; check data-source terms. |
 | Desmos | desmos.com/calculator | Free tool (terms not reviewed here) | Shareable, manipulable graphs | Share by link. |
 | GeoGebra | geogebra.org | Non-commercial use free; commercial needs a license | Geometry, calculus, 3D graphs | Credit GeoGebra with name, notice and link. |
+| NVIDIA SimReady Assets | huggingface.co/datasets/nvidia/simready-assets | CC BY 4.0 (verified 2026-11-28; check per-asset `licenses/LICENSE.txt`) | 2,919 OpenUSD (`.usd`) physics-ready 3D objects, tools, and industrial equipment with collision/mass/friction metadata, semantic labels, and PNG thumbnails for engineering, physics, and robotics labs | Large library (518 GB total); fetch individual assets rather than cloning all; convert `.usd` to glTF/GLB or use its PNG thumbnails for browser labs; attribute NVIDIA (`nvidia/simready-assets`, CC BY 4.0). |
 
 ## Video and course libraries
 
